@@ -1,0 +1,35 @@
+.members {
+  .avatar {
+    border: 2px solid var(--background-foreground);
+    box-sizing: border-box;
+    height: 36px;
+    margin-right: -8px;
+    margin-top: var(--padding-4);
+    width: 36px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
+
+.labels {
+
+  .label {
+    @apply rounded text-xs mt-1 px-2 select-none h-8 min-w-[3rem] leading-[3rem] inline-flex items-center;
+
+    &:last-of-type {
+      padding: 0;
+    }
+  }
+}
+
+.content {
+  max-height: 40vh;
+}
+
+@screen sm {
+  .content {
+    max-height: 50vh;
+  }
+}

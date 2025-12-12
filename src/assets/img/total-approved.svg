@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">
+  <g id="Group_8713" data-name="Group 8713" transform="translate(-1070 -203)">
+    <g id="Group_8711" data-name="Group 8711" transform="translate(271 -1)">
+      <circle id="Ellipse_8" data-name="Ellipse 8" cx="15" cy="15" r="15" transform="translate(799 204)" fill="#4a25a9"/>
+    </g>
+    <g id="Group_8718" data-name="Group 8718">
+      <g id="Group_8715" data-name="Group 8715" transform="translate(1.677 0.713)">
+        <path id="Rectangle_3321" data-name="Rectangle 3321" d="M2,0H2A2,2,0,0,1,4,2V3A0,0,0,0,1,4,3H0A0,0,0,0,1,0,3V2A2,2,0,0,1,2,0Z" transform="translate(1075.323 208.287)" fill="#fff"/>
+        <path id="Rectangle_3323" data-name="Rectangle 3323" d="M0,0H4A0,0,0,0,1,4,0V1A2,2,0,0,1,2,3H2A2,2,0,0,1,0,1V0A0,0,0,0,1,0,0Z" transform="translate(1075.323 223.287)" fill="#fff"/>
+        <rect id="Rectangle_3322" data-name="Rectangle 3322" width="4" height="10" transform="translate(1075.323 212.287)" fill="#fff"/>
+      </g>
+      <g id="Group_8716" data-name="Group 8716" transform="translate(7.677 0.713)">
+        <path id="Rectangle_3321-2" data-name="Rectangle 3321" d="M2,0H2A2,2,0,0,1,4,2V3A0,0,0,0,1,4,3H0A0,0,0,0,1,0,3V2A2,2,0,0,1,2,0Z" transform="translate(1075.323 208.287)" fill="#fff"/>
+        <path id="Rectangle_3323-2" data-name="Rectangle 3323" d="M0,0H4A0,0,0,0,1,4,0V1A2,2,0,0,1,2,3H2A2,2,0,0,1,0,1V0A0,0,0,0,1,0,0Z" transform="translate(1075.323 223.287)" fill="#fff"/>
+        <rect id="Rectangle_3322-2" data-name="Rectangle 3322" width="4" height="10" transform="translate(1075.323 212.287)" fill="#fff"/>
+      </g>
+      <g id="Group_8717" data-name="Group 8717" transform="translate(13.677 0.713)">
+        <path id="Rectangle_3321-3" data-name="Rectangle 3321" d="M2,0H2A2,2,0,0,1,4,2V3A0,0,0,0,1,4,3H0A0,0,0,0,1,0,3V2A2,2,0,0,1,2,0Z" transform="translate(1075.323 208.287)" fill="#fff"/>
+        <path id="Rectangle_3323-3" data-name="Rectangle 3323" d="M0,0H4A0,0,0,0,1,4,0V1A2,2,0,0,1,2,3H2A2,2,0,0,1,0,1V0A0,0,0,0,1,0,0Z" transform="translate(1075.323 223.287)" fill="#fff"/>
+        <rect id="Rectangle_3322-3" data-name="Rectangle 3322" width="4" height="10" transform="translate(1075.323 212.287)" fill="#fff"/>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <g id="Group_14" data-name="Group 14" transform="translate(-1113 -435)">
+    <g id="Group_10" data-name="Group 10" transform="translate(0 1)">
+      <path id="Icon_material-mail-outline" data-name="Icon material-mail-outline" d="M24.6,6H5.4A2.4,2.4,0,0,0,3.012,8.4L3,22.8a2.407,2.407,0,0,0,2.4,2.4H24.6A2.407,2.407,0,0,0,27,22.8V8.4A2.407,2.407,0,0,0,24.6,6Zm0,16.8H5.4v-12l9.6,6,9.6-6ZM15,14.4l-9.6-6H24.6Z" transform="translate(1114 434)" fill="#c7c7c7"/>
+      <rect id="Rectangle_9" data-name="Rectangle 9" width="21" height="16" transform="translate(1119 442)" fill="#c7c7c7" opacity="0.3"/>
+    </g>
+    <rect id="Rectangle_11" data-name="Rectangle 11" width="32" height="32" transform="translate(1113 435)" fill="none"/>
+  </g>
+</svg>

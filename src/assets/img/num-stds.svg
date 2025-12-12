@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">
+  <g id="Group_8714" data-name="Group 8714" transform="translate(-837 -203)">
+    <g id="Group_8290" data-name="Group 8290" transform="translate(38 -1)">
+      <circle id="Ellipse_8" data-name="Ellipse 8" cx="15" cy="15" r="15" transform="translate(799 204)" fill="#ffb432"/>
+    </g>
+    <g id="Group_8710" data-name="Group 8710" transform="translate(203.403 -214.371)">
+      <path id="Icon_awesome-users-cog" data-name="Icon awesome-users-cog" d="M3.058,8.6A2.039,2.039,0,1,0,1.019,6.564,2.04,2.04,0,0,0,3.058,8.6Zm2.456,1.612a2.033,2.033,0,0,0-1.437-.592H2.039A2.04,2.04,0,0,0,0,11.661V12.68A1.018,1.018,0,0,0,1.019,13.7h2.1a4.671,4.671,0,0,1,2.4-3.485Z" transform="translate(638.215 422.584)" fill="#fff"/>
+      <path id="Icon_awesome-user" data-name="Icon awesome-user" d="M6.45,7.371A3.686,3.686,0,1,0,2.764,3.686,3.685,3.685,0,0,0,6.45,7.371Zm2.58.921H8.549a5.012,5.012,0,0,1-4.2,0H3.87A3.871,3.871,0,0,0,0,12.162v1.2a1.382,1.382,0,0,0,1.382,1.382H11.517A1.382,1.382,0,0,0,12.9,13.36v-1.2A3.871,3.871,0,0,0,9.03,8.292Z" transform="translate(642.234 425)" fill="#fff"/>
+      <path id="Icon_awesome-users-cog-2" data-name="Icon awesome-users-cog" d="M2.456,8.6A2.039,2.039,0,1,1,4.494,6.565,2.04,2.04,0,0,1,2.456,8.6ZM0,10.215a2.033,2.033,0,0,1,1.437-.592H3.475a2.04,2.04,0,0,1,2.039,2.039v1.019A1.018,1.018,0,0,1,4.494,13.7H2.4A4.671,4.671,0,0,0,0,10.215Z" transform="translate(653.465 422.584)" fill="#fff"/>
+    </g>
+  </g>
+</svg>

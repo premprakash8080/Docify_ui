@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="17.5" height="17.5" viewBox="0 0 17.5 17.5">
+  <g id="clock_icn" transform="translate(-2.25 -2.25)">
+    <path id="Path_7000" data-name="Path 7000" d="M19,11a8,8,0,1,1-8-8,8,8,0,0,1,8,8Z" fill="none" stroke="#ffb432" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>
+    <path id="Path_7001" data-name="Path 7001" d="M18,9v4.8l3.2,1.6" transform="translate(-7 -2.8)" fill="none" stroke="#ffb432" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>
+  </g>
+</svg>

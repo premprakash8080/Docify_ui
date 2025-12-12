@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16.419" height="21.112" viewBox="0 0 16.419 21.112">
+  <g id="role_delete_icn" transform="translate(-921.223 -589.888)">
+    <path id="Icon_material-delete" data-name="Icon material-delete" d="M8.389,22.129a2.353,2.353,0,0,0,2.346,2.346h9.383a2.353,2.353,0,0,0,2.346-2.346V8.056H8.389Z" transform="translate(914.008 586.525)" fill="#ffb432"/>
+    <path id="Icon_material-delete-2" data-name="Icon material-delete" d="M23.919,5.673h-4.1L18.642,4.5H12.778L11.6,5.673H7.5V8.018H23.919Z" transform="translate(913.723 585.388)" fill="#4a25a9"/>
+    <line id="Line_44" data-name="Line 44" y2="9.236" transform="translate(926.43 598.464)" fill="none" stroke="#4a25a9" stroke-linecap="round" stroke-width="1"/>
+    <line id="Line_45" data-name="Line 45" y2="9.236" transform="translate(929.434 598.464)" fill="none" stroke="#4a25a9" stroke-linecap="round" stroke-width="1"/>
+    <line id="Line_46" data-name="Line 46" y2="9.236" transform="translate(932.439 598.464)" fill="none" stroke="#4a25a9" stroke-linecap="round" stroke-width="1"/>
+  </g>
+</svg>

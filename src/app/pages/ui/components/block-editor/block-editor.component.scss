@@ -1,0 +1,114 @@
+@use 'src/styles/tokens' as tokens;
+
+.block-editor-container {
+    padding: tokens.space(2) 0;
+    padding-bottom: 400px; // Space at bottom for smooth scrolling
+    position: relative;
+    min-height: 100%;
+    width: 100%; // Ensure full width
+    max-width: 100%; // Prevent overflow
+    
+    // Smooth scrolling
+    scroll-behavior: smooth;
+}
+
+.block-wrapper {
+    position: relative;
+    display: flex; // Keep flex for proper alignment
+    align-items: flex-start;
+    margin-bottom: tokens.space(2); // Increased vertical spacing
+    padding-left: tokens.space(6); // Space for drag handle
+    transition: background-color 0.15s ease;
+    width: 100%; // Ensure full width
+    max-width: 100%; // Prevent overflow
+    min-width: 0; // Allow flex shrinking
+    box-sizing: border-box; // Include padding in width calculation
+    
+    // Ensure app-block takes full width
+    app-block {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    &:hover {
+        .drag-handle {
+            opacity: 1;
+        }
+    }
+
+    &.cdk-drag-preview {
+        opacity: 0.9;
+        transform: rotate(2deg);
+    }
+}
+
+.drag-handle {
+    position: absolute;
+    left: tokens.space(1);
+    top: tokens.space(1);
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+    color: var(--color-text-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-sm);
+    
+    &:hover {
+        color: var(--color-text-body);
+        background: var(--color-surface-hover);
+        opacity: 1;
+    }
+
+    mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+
+    &:active {
+        cursor: grabbing;
+        color: var(--color-primary);
+    }
+    
+}
+
+// Show handle when block is selected
+.block-wrapper:has(.block-container.selected) .drag-handle {
+    opacity: 1;
+    color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.1);
+}
+
+.cdk-drag-preview {
+    box-sizing: border-box;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    opacity: 0.95;
+    padding: tokens.space(2);
+    transform: rotate(1deg);
+}
+
+.cdk-drag-placeholder {
+    opacity: 0.3;
+    background: var(--color-surface-hover);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    margin: tokens.space(1) 0;
+}
+
+.cdk-drag-animating {
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.block-editor-container.cdk-drop-list-dragging .block-wrapper:not(.cdk-drag-placeholder) {
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}

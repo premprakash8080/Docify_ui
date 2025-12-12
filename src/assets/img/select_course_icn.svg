@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <g id="select_course_icn" transform="translate(-310 -525)">
+    <rect id="Rectangle_269" data-name="Rectangle 269" width="24" height="24" rx="12" transform="translate(310 525)" fill="#ece8f6"/>
+    <g id="Group_8745" data-name="Group 8745" transform="translate(8199.56 -1584.4)">
+      <path id="Rectangle_3321" data-name="Rectangle 3321" d="M1.5,0h0A1.5,1.5,0,0,1,3,1.5V2A0,0,0,0,1,3,2H0A0,0,0,0,1,0,2V1.5A1.5,1.5,0,0,1,1.5,0Z" transform="translate(-7883.56 2115.4)" fill="#4a25a9"/>
+      <path id="Rectangle_3323" data-name="Rectangle 3323" d="M0,0H3A0,0,0,0,1,3,0V.5A1.5,1.5,0,0,1,1.5,2h0A1.5,1.5,0,0,1,0,.5V0A0,0,0,0,1,0,0Z" transform="translate(-7883.56 2126.4)" fill="#4a25a9"/>
+      <rect id="Rectangle_3322" data-name="Rectangle 3322" width="3" height="7" transform="translate(-7883.56 2118.4)" fill="#4a25a9"/>
+      <path id="Rectangle_3324" data-name="Rectangle 3324" d="M2,0H2A2,2,0,0,1,4,2V2A0,0,0,0,1,4,2H0A0,0,0,0,1,0,2V2A2,2,0,0,1,2,0Z" transform="translate(-7879.56 2115.4)" fill="#4a25a9"/>
+      <path id="Rectangle_3325" data-name="Rectangle 3325" d="M0,0H4A0,0,0,0,1,4,0V0A2,2,0,0,1,2,2H2A2,2,0,0,1,0,0V0A0,0,0,0,1,0,0Z" transform="translate(-7879.56 2126.4)" fill="#4a25a9"/>
+      <rect id="Rectangle_3326" data-name="Rectangle 3326" width="4" height="7" transform="translate(-7879.56 2118.4)" fill="#4a25a9"/>
+      <path id="Rectangle_3327" data-name="Rectangle 3327" d="M1.5,0h0A1.5,1.5,0,0,1,3,1.5V2A0,0,0,0,1,3,2H0A0,0,0,0,1,0,2V1.5A1.5,1.5,0,0,1,1.5,0Z" transform="translate(-7874.56 2115.4)" fill="#4a25a9"/>
+      <path id="Rectangle_3328" data-name="Rectangle 3328" d="M0,0H3A0,0,0,0,1,3,0V.5A1.5,1.5,0,0,1,1.5,2h0A1.5,1.5,0,0,1,0,.5V0A0,0,0,0,1,0,0Z" transform="translate(-7874.56 2126.4)" fill="#4a25a9"/>
+      <rect id="Rectangle_3329" data-name="Rectangle 3329" width="3" height="7" transform="translate(-7874.56 2118.4)" fill="#4a25a9"/>
+    </g>
+  </g>
+</svg>

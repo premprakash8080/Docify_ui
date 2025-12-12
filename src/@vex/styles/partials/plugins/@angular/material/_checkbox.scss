@@ -1,0 +1,5 @@
+.mat-mdc-checkbox {
+  &.mat-primary {
+    --mdc-checkbox-selected-checkmark-color: theme('textColor.primary-contrast');
+  }
+}

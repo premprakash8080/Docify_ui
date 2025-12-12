@@ -1,0 +1,164 @@
+@use 'src/styles/tokens' as tokens;
+
+:host {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.block-container {
+    display: flex;
+    align-items: flex-start;
+    padding: tokens.space(1) tokens.space(2);
+    position: relative;
+    border-radius: var(--radius-md);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    width: 100%;
+    max-width: 100%; // Ensure full width
+    min-height: 28px; // Minimum height for better click target
+    min-width: 0; // Allow flex shrinking
+    box-sizing: border-box; // Include padding in width calculation
+    flex: 1 1 100%; // Ensure it takes full available width
+
+    &:hover {
+        background-color: var(--color-surface-hover);
+
+        .block-marker {
+            opacity: 1;
+        }
+    }
+
+    &.selected {
+        background-color: rgba(var(--color-primary-rgb), 0.1);
+        box-shadow: inset 0 0 0 2px var(--color-primary);
+        border-radius: var(--radius-md);
+    }
+
+    &:focus-within {
+        background-color: var(--color-surface-hover);
+    }
+}
+
+.block-marker {
+    margin-right: tokens.space(3);
+    color: var(--color-text-subtle);
+    user-select: none;
+    width: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: tokens.space(0.5);
+    opacity: 0.6;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+    font-size: tokens.font-size(sm);
+}
+
+.block-content {
+    flex: 1 1 auto; // Take remaining space
+    outline: none;
+    min-height: 1.5em;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.7;
+    color: var(--color-text-body);
+    font-size: tokens.font-size(md);
+    padding: tokens.space(0.5) 0;
+    transition: color 0.15s ease;
+    width: 100%; // Ensure full width
+    max-width: 100%; // Prevent overflow
+    min-width: 0; // Allow text to wrap
+    box-sizing: border-box; // Include padding in width
+
+    &:focus {
+        outline: none;
+    }
+
+    // Show placeholder only when focused and empty
+    &.has-placeholder:empty:before {
+        content: attr(placeholder);
+        color: var(--color-text-subtle);
+        pointer-events: none;
+        font-style: italic;
+        opacity: 0.6;
+    }
+    
+    // Hide placeholder when not focused (even if empty)
+    &:not(.has-placeholder):empty:before {
+        content: '';
+    }
+
+    // Better cursor visibility
+    &::selection {
+        background: rgba(var(--color-primary-rgb), 0.2);
+    }
+}
+
+// Block Types
+.block-h1 .block-content {
+    font-size: tokens.font-size('3xl');
+    font-weight: 700;
+    line-height: 1.2;
+    margin-top: tokens.space(4);
+    margin-bottom: tokens.space(2);
+    color: var(--color-text-heading);
+    letter-spacing: -0.02em;
+}
+
+.block-h2 .block-content {
+    font-size: tokens.font-size('2xl');
+    font-weight: 600;
+    line-height: 1.3;
+    margin-top: tokens.space(3);
+    margin-bottom: tokens.space(2);
+    color: var(--color-text-heading);
+}
+
+.block-h3 .block-content {
+    font-size: tokens.font-size(xl);
+    font-weight: 600;
+    line-height: 1.4;
+    margin-top: tokens.space(2);
+    margin-bottom: tokens.space(1);
+    color: var(--color-text-heading);
+}
+
+.block-quote {
+    border-left: 3px solid var(--color-border);
+    padding-left: tokens.space(4);
+    margin-left: tokens.space(2);
+    margin-top: tokens.space(2);
+    margin-bottom: tokens.space(2);
+
+    .block-marker {
+        display: none;
+    }
+
+    .block-content {
+        font-style: italic;
+        color: var(--color-text-subtle);
+        font-size: tokens.font-size(lg);
+    }
+}
+
+.block-code {
+    background: var(--color-surface-secondary);
+    border-radius: var(--radius-md);
+    padding: tokens.space(3);
+    margin: tokens.space(2) 0;
+    border: 1px solid var(--color-border);
+
+    .block-marker {
+        display: none;
+    }
+
+    .block-content {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: tokens.font-size(sm);
+        color: var(--color-text-body);
+        background: transparent;
+        padding: 0;
+    }
+}

@@ -1,0 +1,13 @@
+<div class="slash-menu" [style.top.px]="position.y" [style.left.px]="position.x">
+    <div class="menu-header">Basic blocks</div>
+    <div class="menu-items">
+        <div *ngFor="let item of items; let i = index" class="menu-item" [class.selected]="i === selectedIndex"
+            (click)="selectItem(item)" (mouseenter)="selectedIndex = i">
+            <div class="menu-icon">{{ item.icon }}</div>
+            <div class="menu-content">
+                <div class="menu-label">{{ item.label }}</div>
+                <div class="menu-description">{{ item.description }}</div>
+            </div>
+        </div>
+    </div>
+</div>

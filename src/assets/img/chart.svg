@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="558.131" height="336" viewBox="0 0 558.131 336">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.5" y1="-0.358" x2="0.5" y2="0.825" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#ffb432"/>
+      <stop offset="1" stop-color="#fff"/>
+    </linearGradient>
+    <filter id="point_copy_4" x="21.131" y="95.084" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feFlood flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="point_copy_4-2" x="66.959" y="86.109" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="8" result="blur-2"/>
+      <feFlood flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur-2"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="point_copy_4-3" x="96.813" y="148.713" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="8" result="blur-3"/>
+      <feFlood flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur-3"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="point_copy_4-4" x="142.108" y="61.635" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="8" result="blur-4"/>
+      <feFlood flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur-4"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="point_copy_4-5" x="187.402" y="105.219" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="8" result="blur-5"/>
+      <feFlood flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur-5"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="point_copy_4-6" x="232.696" y="105.219" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="8" result="blur-6"/>
+      <feFlood flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur-6"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="point_copy_4-7" x="319.167" y="127.098" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="8" result="blur-7"/>
+      <feFlood flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur-7"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="point_copy_4-8" x="364.46" y="86.109" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="8" result="blur-8"/>
+      <feFlood flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur-8"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="point_copy_4-9" x="408.931" y="51.928" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="8" result="blur-9"/>
+      <feFlood flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur-9"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="point_copy_4-10" x="438.131" y="96.244" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="8" result="blur-10"/>
+      <feFlood flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur-10"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="point_copy_4-11" x="494.131" y="118.121" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="8" result="blur-11"/>
+      <feFlood flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur-11"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="chart" transform="translate(-300 -448)">
+    <g id="Group_8294" data-name="Group 8294" transform="translate(338.8 478.488)">
+      <line id="Line_79" data-name="Line 79" x2="504.8" transform="translate(0 213.171)" fill="none" stroke="#e7e7e7" stroke-width="1"/>
+      <line id="Line_80" data-name="Line 80" x2="504.8" transform="translate(0 170.537)" fill="none" stroke="#e7e7e7" stroke-width="1"/>
+      <line id="Line_81" data-name="Line 81" x2="504.8" transform="translate(0 127.902)" fill="none" stroke="#e7e7e7" stroke-width="1"/>
+      <line id="Line_82" data-name="Line 82" x2="504.8" transform="translate(0 85.268)" fill="none" stroke="#e7e7e7" stroke-width="1"/>
+      <line id="Line_83" data-name="Line 83" x2="504.8" transform="translate(0 42.634)" fill="none" stroke="#e7e7e7" stroke-width="1"/>
+      <line id="Line_84" data-name="Line 84" x2="504.8" fill="none" stroke="#e7e7e7" stroke-width="1"/>
+      <line id="Line_85" data-name="Line 85" x2="504.8" transform="translate(0 255.805)" fill="none" stroke="#e7e7e7" stroke-width="1"/>
+    </g>
+    <path id="Path_7010" data-name="Path 7010" d="M122.8,3580.556s4.506,16.114,11.284,18.849c10.284,4.151,25.851-4.7,41.455-8.3,25.289-5.834,25.323,62.829,45.3,62.829s27.85-89.756,43.536-89.756,30.415,46.791,44.176,45.776,34.908.9,44.5,0S383.129,3536.8,395.3,3536.8s19.826,94.693,42.255,94.693,21.768-41.961,42.9-42.41,20.432-35,43.535-35,30.09,47.122,44.5,47.122,33.594,21.541,45.136,21.541,14.085-33.658,14.085-33.658v192.078H122.8Z" transform="translate(216 -3023.195)" fill="url(#linear-gradient)"/>
+    <path id="Line_5_Copy_3" data-name="Line 5 Copy 3" d="M1,0V181.756" transform="translate(352.131 574.977)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb" transform="translate(354 781)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-9.674" y="0">Jan</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 300, 448)" filter="url(#point_copy_4)">
+      <circle id="point_copy_4-12" data-name="point copy 4" cx="8" cy="8" r="8" transform="translate(45.13 119.08)" fill="#ff8b32"/>
+    </g>
+    <path id="Line_5_Copy_3-2" data-name="Line 5 Copy 3" d="M1,0V191.293" transform="translate(397.737 565.439)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb-2" data-name="Feb" transform="translate(399.844 780.512)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-10.339" y="0">Feb</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 300, 448)" filter="url(#point_copy_4-2)">
+      <circle id="point_copy_4-13" data-name="point copy 4" cx="8" cy="8" r="8" transform="translate(90.96 110.11)" fill="#ff8b32"/>
+    </g>
+    <path id="Line_5_Copy_3-3" data-name="Line 5 Copy 3" d="M1,0V127.042" transform="translate(427.141 629.688)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb-3" data-name="Feb" transform="translate(429.353 780.512)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-10.333" y="0">Mar</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 300, 448)" filter="url(#point_copy_4-3)">
+      <circle id="point_copy_4-14" data-name="point copy 4" cx="8" cy="8" r="8" transform="translate(120.81 172.71)" fill="#ff8b32"/>
+    </g>
+    <path id="Line_5_Copy_3-4" data-name="Line 5 Copy 3" d="M1,0V214.121" transform="translate(472.648 542.609)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb-4" data-name="Feb" transform="translate(474.984 780.512)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-9.337" y="0">Apr</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 300, 448)" filter="url(#point_copy_4-4)">
+      <circle id="point_copy_4-15" data-name="point copy 4" cx="8" cy="8" r="8" transform="translate(166.11 85.63)" fill="#ff8b32"/>
+    </g>
+    <path id="Line_5_Copy_3-5" data-name="Line 5 Copy 3" d="M1,0V170.537" transform="translate(518.155 586.195)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb-5" data-name="Feb" transform="translate(520.656 780.512)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-11.335" y="0">May</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 300, 448)" filter="url(#point_copy_4-5)">
+      <circle id="point_copy_4-16" data-name="point copy 4" cx="8" cy="8" r="8" transform="translate(211.4 129.22)" fill="#ff8b32"/>
+    </g>
+    <text id="Feb-6" data-name="Feb" transform="translate(300 753)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">1k</tspan></text>
+    <text id="Feb-7" data-name="Feb" transform="translate(300 726)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">2k</tspan></text>
+    <text id="Feb-8" data-name="Feb" transform="translate(300 699)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">3k</tspan></text>
+    <text id="Feb-9" data-name="Feb" transform="translate(300 672)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">4k</tspan></text>
+    <text id="Feb-10" data-name="Feb" transform="translate(300 645)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">5k</tspan></text>
+    <text id="Feb-11" data-name="Feb" transform="translate(300 618)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">6k</tspan></text>
+    <text id="Feb-12" data-name="Feb" transform="translate(300 591)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">7k</tspan></text>
+    <path id="Line_5_Copy_3-6" data-name="Line 5 Copy 3" d="M1,0V170.537" transform="translate(563.662 586.195)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb-13" data-name="Feb" transform="translate(565.342 780.512)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-9.674" y="0">Jun</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 300, 448)" filter="url(#point_copy_4-6)">
+      <circle id="point_copy_4-17" data-name="point copy 4" cx="8" cy="8" r="8" transform="translate(256.7 129.22)" fill="#ff8b32"/>
+    </g>
+    <path id="Line_5_Copy_3-7" data-name="Line 5 Copy 3" d="M1,0V243.538" transform="translate(607.405 513.23)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb-14" data-name="Feb" transform="translate(608.951 780.512)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-7.67" y="0">Jul</tspan></text>
+    <path id="Line_5_Copy_3-8" data-name="Line 5 Copy 3" d="M1,0V149.78" transform="translate(650.539 606.391)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb-15" data-name="Feb" transform="translate(651.882 780.512)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-10.676" y="0">Aug</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 300, 448)" filter="url(#point_copy_4-7)">
+      <circle id="point_copy_4-18" data-name="point copy 4" cx="8" cy="8" r="8" transform="translate(343.17 151.1)" fill="#ff8b32"/>
+    </g>
+    <path id="Line_5_Copy_3-9" data-name="Line 5 Copy 3" d="M1,0V191.33" transform="translate(696.045 565.439)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb-16" data-name="Feb" transform="translate(696.6 780.512)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-10.676" y="0">Sep</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 300, 448)" filter="url(#point_copy_4-8)">
+      <circle id="point_copy_4-19" data-name="point copy 4" cx="8" cy="8" r="8" transform="translate(388.46 110.11)" fill="#ff8b32"/>
+    </g>
+    <path id="Line_5_Copy_3-10" data-name="Line 5 Copy 3" d="M1,0V225.512" transform="translate(740.725 530.658)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb-17" data-name="Feb" transform="translate(741.303 780.512)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-9.334" y="0">Oct</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 300, 448)" filter="url(#point_copy_4-9)">
+      <circle id="point_copy_4-20" data-name="point copy 4" cx="8" cy="8" r="8" transform="translate(432.93 75.93)" fill="#ff8b32"/>
+    </g>
+    <path id="Line_5_Copy_3-11" data-name="Line 5 Copy 3" d="M1,0V181.756" transform="translate(769.131 574.977)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb-18" data-name="Feb" transform="translate(771 781)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-10.67" y="0">Nov</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 300, 448)" filter="url(#point_copy_4-10)">
+      <circle id="point_copy_4-21" data-name="point copy 4" cx="8" cy="8" r="8" transform="translate(462.13 120.24)" fill="#ff8b32"/>
+    </g>
+    <path id="Line_5_Copy_3-12" data-name="Line 5 Copy 3" d="M1,0V157.634" transform="translate(825.131 599.098)" fill="none" stroke="#555" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1" stroke-dasharray="7" opacity="0.598"/>
+    <text id="Feb-19" data-name="Feb" transform="translate(827 781)" fill="#555" font-size="12" font-family="Helvetica"><tspan x="-10.67" y="0">Dec</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 300, 448)" filter="url(#point_copy_4-11)">
+      <circle id="point_copy_4-22" data-name="point copy 4" cx="8" cy="8" r="8" transform="translate(518.13 142.12)" fill="#ff8b32"/>
+    </g>
+    <text id="Feb-20" data-name="Feb" transform="translate(300 564)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">8k</tspan></text>
+    <text id="Feb-21" data-name="Feb" transform="translate(300 537)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">9k</tspan></text>
+    <text id="Feb-22" data-name="Feb" transform="translate(300 510)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">10k</tspan></text>
+    <text id="Feb-23" data-name="Feb" transform="translate(300 483)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">11k</tspan></text>
+    <text id="Feb-24" data-name="Feb" transform="translate(300 456)" fill="#555" font-size="11" font-family="Helvetica-Light, Helvetica" font-weight="300"><tspan x="0" y="0">12k</tspan></text>
+    <g id="Group_9175" data-name="Group 9175" transform="translate(598.01 489.146)">
+      <rect id="Rectangle_3636" data-name="Rectangle 3636" width="57" height="32.537" rx="10" fill="#ff8b32"/>
+      <text id="Feb-25" data-name="Feb" transform="translate(10 19.854)" fill="#fff" font-size="12" font-family="Helvetica-Bold, Helvetica" font-weight="700"><tspan x="0" y="0">10293</tspan></text>
+    </g>
+  </g>
+</svg>

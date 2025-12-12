@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <g id="mr_icn" transform="translate(-538 -275)">
+    <rect id="Rectangle_269" data-name="Rectangle 269" width="24" height="24" rx="12" transform="translate(538 275)" fill="#ece8f6"/>
+    <path id="Icon_metro-profile" data-name="Icon metro-profile" d="M17.65,9.23h-.99V7.743l-2.045-.031.011,1.517H8.482l.042-1.517-2,.031V9.261L5.51,9.23A1.012,1.012,0,0,0,4.5,10.241v7.082A1.012,1.012,0,0,0,5.51,18.334H17.65a1.012,1.012,0,0,0,1.012-1.012V10.241A1.012,1.012,0,0,0,17.65,9.23ZM15.121,8.218h1.012v2.023H15.121Zm-8.093,0H8.04v2.023H7.028Z" transform="translate(538.501 274.288)" fill="#4a25a9"/>
+    <rect id="Rectangle_3412" data-name="Rectangle 3412" width="6" height="5" rx="1" transform="translate(544.082 286.311)" fill="#ece8f6"/>
+    <rect id="Rectangle_3413" data-name="Rectangle 3413" width="5" height="1" rx="0.5" transform="translate(551.082 286.311)" fill="#ece8f6"/>
+    <rect id="Rectangle_3414" data-name="Rectangle 3414" width="5" height="1" rx="0.5" transform="translate(551.082 288.311)" fill="#ece8f6"/>
+    <rect id="Rectangle_3415" data-name="Rectangle 3415" width="5" height="1" rx="0.5" transform="translate(551.082 290.311)" fill="#ece8f6"/>
+  </g>
+</svg>

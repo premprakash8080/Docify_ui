@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <g id="delete_icn" transform="translate(-688.967 -863.967)">
+    <g id="Rectangle_3794" data-name="Rectangle 3794" transform="translate(688.967 863.967)" fill="none" stroke="#4a25a9" stroke-width="1">
+      <rect width="24" height="24" rx="4" stroke="none"/>
+      <rect x="0.5" y="0.5" width="23" height="23" rx="3.5" fill="none"/>
+    </g>
+    <g id="Group_10117" data-name="Group 10117" transform="translate(-224.962 280.079)">
+      <path id="Icon_material-delete" data-name="Icon material-delete" d="M8.389,16.123a1.349,1.349,0,0,0,1.345,1.345h5.378a1.349,1.349,0,0,0,1.345-1.345V8.056H8.389Z" transform="translate(913.507 584.421)" fill="#ffb432"/>
+      <path id="Icon_material-delete-2" data-name="Icon material-delete" d="M16.912,5.172H14.559L13.887,4.5H10.525l-.672.672H7.5V6.517h9.412Z" transform="translate(913.723 585.388)" fill="#4a25a9"/>
+      <line id="Line_44" data-name="Line 44" y2="5.294" transform="translate(924.182 594.702)" fill="none" stroke="#4a25a9" stroke-linecap="round" stroke-width="1"/>
+      <line id="Line_45" data-name="Line 45" y2="5.294" transform="translate(925.89 594.702)" fill="none" stroke="#4a25a9" stroke-linecap="round" stroke-width="1"/>
+      <line id="Line_46" data-name="Line 46" y2="5.294" transform="translate(927.598 594.702)" fill="none" stroke="#4a25a9" stroke-linecap="round" stroke-width="1"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">
+  <g id="chat" transform="translate(-1378.32 -736.32)">
+    <rect id="Rectangle_1729" data-name="Rectangle 1729" width="30" height="30" transform="translate(1378.32 736.32)" fill="none"/>
+    <g id="Icon_ionic-ios-chatboxes" data-name="Icon ionic-ios-chatboxes" transform="translate(1382.292 740.29)">
+      <path id="Path_7008" data-name="Path 7008" d="M25.459,11.981H13.707A2.023,2.023,0,0,0,11.686,14v8.183A2.019,2.019,0,0,0,13.707,24.2h6.725a.58.58,0,0,1,.4.17l3.341,3.081c.186.18.493.106.493-.154V24.614c0-.318.2-.419.52-.419h.053a2.207,2.207,0,0,0,2.233-2.015V14A2.012,2.012,0,0,0,25.459,11.981Z" transform="translate(-5.417 -5.49)" fill="#4a25a9"/>
+      <path id="Path_7009" data-name="Path 7009" d="M10.079,8.567h9.408V5.1a1.729,1.729,0,0,0-1.729-1.729H5.1A1.729,1.729,0,0,0,3.375,5.1v8.761A1.729,1.729,0,0,0,5.1,15.594h3.24V10.3A1.737,1.737,0,0,1,10.079,8.567Z" transform="translate(-3.375 -3.375)" fill="#ffb432"/>
+    </g>
+  </g>
+</svg>

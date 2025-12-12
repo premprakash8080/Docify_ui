@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <g id="birth_icn" transform="translate(-538 -275)">
+    <rect id="Rectangle_269" data-name="Rectangle 269" width="24" height="24" rx="12" transform="translate(538 275)" fill="#ece8f6"/>
+    <rect id="Rectangle_3412" data-name="Rectangle 3412" width="6" height="5" rx="1" transform="translate(544.082 286.311)" fill="#ece8f6"/>
+    <rect id="Rectangle_3413" data-name="Rectangle 3413" width="5" height="1" rx="0.5" transform="translate(551.082 286.311)" fill="#ece8f6"/>
+    <rect id="Rectangle_3414" data-name="Rectangle 3414" width="5" height="1" rx="0.5" transform="translate(551.082 288.311)" fill="#ece8f6"/>
+    <rect id="Rectangle_3415" data-name="Rectangle 3415" width="5" height="1" rx="0.5" transform="translate(551.082 290.311)" fill="#ece8f6"/>
+    <path id="Icon_awesome-transgender-alt" data-name="Icon awesome-transgender-alt" d="M10.969,0H9.117a.282.282,0,0,0-.2.48l.4.4L7.423,2.768a3.378,3.378,0,0,0-3.6,0l-.387-.387L3.9,1.917a.282.282,0,0,0,0-.4L3.241.855a.282.282,0,0,0-.4,0l-.464.464L1.934.874l.4-.4A.279.279,0,0,0,2.133,0H.281A.282.282,0,0,0,0,.281V2.133a.282.282,0,0,0,.48.2l.4-.4.445.445-.464.464a.282.282,0,0,0,0,.4l.663.663a.282.282,0,0,0,.4,0l.464-.464.387.387a3.326,3.326,0,0,0-.52,1.8A3.376,3.376,0,0,0,4.875,8.916v.647H4.031a.282.282,0,0,0-.281.281v.938a.282.282,0,0,0,.281.281h.844v.656A.282.282,0,0,0,5.156,12h.938a.282.282,0,0,0,.281-.281v-.656h.844a.282.282,0,0,0,.281-.281V9.844a.282.282,0,0,0-.281-.281H6.375V8.916A3.376,3.376,0,0,0,8.482,3.827l1.891-1.891.4.4a.281.281,0,0,0,.48-.2V.281A.282.282,0,0,0,10.969,0ZM5.625,7.5A1.875,1.875,0,1,1,7.5,5.625,1.877,1.877,0,0,1,5.625,7.5Z" transform="translate(544.375 281)" fill="#4a25a9"/>
+  </g>
+</svg>

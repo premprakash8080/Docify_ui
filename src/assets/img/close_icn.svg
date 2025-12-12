@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <g id="close_icn" transform="translate(-688.633 -863.633)">
+    <g id="Rectangle_3794" data-name="Rectangle 3794" transform="translate(688.633 863.633)" fill="none" stroke="#4a25a9" stroke-width="1">
+      <rect width="24" height="24" rx="4" stroke="none"/>
+      <rect x="0.5" y="0.5" width="23" height="23" rx="3.5" fill="none"/>
+    </g>
+    <rect id="Rectangle_3919" data-name="Rectangle 3919" width="2" height="11" transform="translate(696.317 872.628) rotate(-45)" fill="#4a25a9"/>
+    <g id="Ellipse_20" data-name="Ellipse 20" transform="translate(694.633 869.633)" fill="none" stroke="#ffb432" stroke-width="1.2">
+      <circle cx="6" cy="6" r="6" stroke="none"/>
+      <circle cx="6" cy="6" r="5.4" fill="none"/>
+    </g>
+  </g>
+</svg>

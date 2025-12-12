@@ -1,0 +1,34 @@
+<vex-secondary-toolbar current="Dashboard">
+  <vex-breadcrumbs [crumbs]="['Dashboards', 'Analytics']" class="flex-auto"></vex-breadcrumbs>
+
+  <button class="ml-2" color="primary" mat-icon-button type="button">
+    <mat-icon svgIcon="mat:more_vert"></mat-icon>
+  </button>
+</vex-secondary-toolbar>
+
+<div class="container p-gutter grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+  <vex-widget-assistant class="sm:col-span-2"></vex-widget-assistant>
+
+  <vex-widget-quick-line-chart icon="mat:pageview" [series]="pageViewsSeries" iconClass="text-primary bg-primary/10"
+    label="Page Views" value="92.4k"></vex-widget-quick-line-chart>
+
+  <vex-widget-quick-line-chart icon="mat:group" [options]="uniqueUsersOptions" [series]="uniqueUsersSeries"
+    iconClass="text-orange bg-orange/10" label="Unique Users" value="67.2k"></vex-widget-quick-line-chart>
+
+  <vex-widget-large-chart [series]="userSessionsSeries" class="sm:col-span-2"></vex-widget-large-chart>
+
+  <vex-widget-table [columns]="tableColumns" [data]="tableData" class="sm:col-span-2"></vex-widget-table>
+
+  <vex-widget-quick-value-center [change]="124.4" icon="mat:group" iconClass="text-primary bg-primary/10" label="Users"
+    value="67.4k"></vex-widget-quick-value-center>
+  <vex-widget-quick-value-center [change]="-23.7" icon="mat:pageview" iconClass="text-orange bg-orange/10"
+    helpText="Additional information" label="Sessions" value="96.2k"></vex-widget-quick-value-center>
+  <vex-widget-quick-value-center [change]="23.2" icon="mat:cloud_off" iconClass="text-deep-orange bg-deep-orange/10"
+    helpText="Explain something" label="Bounce Rate" value="6.92%"></vex-widget-quick-value-center>
+  <vex-widget-quick-value-center [change]="34.5" icon="mat:timer" iconClass="text-teal bg-teal/10"
+    label="Session Duration" value="16m 48s"></vex-widget-quick-value-center>
+
+  <vex-widget-large-goal-chart [series]="salesSeries" class="sm:col-span-full"
+    total="4,374"></vex-widget-large-goal-chart>
+
+</div>
