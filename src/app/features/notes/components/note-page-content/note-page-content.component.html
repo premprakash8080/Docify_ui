@@ -1,0 +1,97 @@
+<div class="note-page-content" *ngIf="note">
+  <!-- Note Content Area -->
+  <div class="note-content-area">
+    <!-- Note Header -->
+    <div class="note-header">
+      <div class="note-metadata">
+        <span class="edited-date">Edited {{ getFormattedDate(note.updatedAt) }}</span>
+        <div class="note-tags">
+          <span 
+            *ngIf="note.tasks && note.tasks.length > 0" 
+            class="tag tag-checklist">
+            <mat-icon>checklist</mat-icon>
+            {{ getCompletedTasksCount(note.tasks) }}/{{ note.tasks.length }}
+          </span>
+          <span 
+            *ngFor="let tag of getDisplayTags(note.tags)" 
+            class="tag">
+            <mat-icon>description</mat-icon>
+            {{ tag }}
+          </span>
+        </div>
+      </div>
+      <h1 class="note-title">{{ note.title || 'Untitled' }}</h1>
+    </div>
+
+    <!-- Tasks List -->
+    <div class="tasks-section" *ngIf="note.tasks && note.tasks.length > 0">
+      <div 
+        *ngFor="let task of note.tasks; trackBy: trackByTaskId"
+        class="task-item"
+        [class.completed]="task.completed">
+        
+        <div class="task-handle">
+          <mat-icon class="drag-handle">drag_indicator</mat-icon>
+        </div>
+        
+        <mat-checkbox 
+          class="task-checkbox"
+          [checked]="task.completed"
+          (change)="toggleTask(task.id, $event.checked)"
+          color="primary">
+        </mat-checkbox>
+        
+        <div class="task-content">
+          <span class="task-text" [class.strikethrough]="task.completed">{{ task.content }}</span>
+          <span class="task-due" *ngIf="task.dueDate" [class.overdue]="isOverdue(task.dueDate)">
+            Due {{ getFormattedDate(task.dueDate) }}
+          </span>
+        </div>
+        
+        <div class="task-actions">
+          <button mat-icon-button aria-label="History" (click)="showTaskHistory(task.id)">
+            <mat-icon>history</mat-icon>
+          </button>
+          <button mat-icon-button aria-label="Sync" (click)="syncTask(task.id)">
+            <mat-icon>sync</mat-icon>
+          </button>
+          <button mat-icon-button aria-label="Add reminder" (click)="addTaskReminder(task.id)">
+            <mat-icon>add_alert</mat-icon>
+          </button>
+          <button mat-icon-button aria-label="Flag" (click)="flagTask(task.id)">
+            <mat-icon [class.flagged]="task.priority === 'high'">flag</mat-icon>
+          </button>
+          <button mat-icon-button aria-label="Assign" (click)="assignTask(task.id)">
+            <mat-icon>person</mat-icon>
+          </button>
+          <button mat-icon-button aria-label="More options" (click)="showTaskMenu(task.id, $event)">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <button mat-icon-button aria-label="Delete task" (click)="deleteTask(task.id)" class="delete-button">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Note Content Editor -->
+    <div class="note-editor-section">
+      <app-note-editor
+        [note]="note"
+        (noteUpdated)="onNoteUpdated($event)">
+      </app-note-editor>
+    </div>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="note-bottom-bar">
+    <button mat-icon-button aria-label="Add reminder" (click)="addReminder()">
+      <mat-icon>notifications_none</mat-icon>
+    </button>
+    <button mat-icon-button aria-label="Add tag" (click)="addTag()" class="add-tag-button">
+      <mat-icon>label</mat-icon>
+      <span>Add tag</span>
+    </button>
+  </div>
+</div>
+

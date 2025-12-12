@@ -1,0 +1,53 @@
+<div class="note-preview"
+     [class.selected]="selected"
+     [class.pinned]="note.pinned"
+     (click)="onSelect()"
+     [attr.role]="'button'"
+     [attr.tabindex]="0"
+     [attr.aria-label]="'Note: ' + note.title">
+  <div class="note-preview-header">
+    <div class="note-title-row">
+      <h3 class="note-title">{{ note.title || 'Untitled' }}</h3>
+      <div class="note-actions" (click)="$event.stopPropagation()">
+        <button mat-icon-button 
+                [class.pinned]="note.pinned"
+                (click)="onPin($event)"
+                [attr.aria-label]="note.pinned ? 'Unpin note' : 'Pin note'"
+                type="button">
+          <mat-icon [svgIcon]="note.pinned ? 'mat:push_pin' : 'mat:push_pin_outlined'"></mat-icon>
+        </button>
+        <button mat-icon-button 
+                (click)="onArchive($event)"
+                aria-label="Archive note"
+                type="button">
+          <mat-icon svgIcon="mat:archive"></mat-icon>
+        </button>
+        <button mat-icon-button 
+                (click)="onDelete($event)"
+                aria-label="Delete note"
+                type="button">
+          <mat-icon svgIcon="mat:delete"></mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="note-content" *ngIf="note.content">
+    <p class="note-snippet">{{ getPreviewSnippet(note.content) }}</p>
+  </div>
+  
+  <div class="note-footer">
+    <div class="note-tags" *ngIf="note.tags && note.tags.length > 0">
+      <span class="tag" *ngFor="let tag of note.tags.slice(0, 3)">
+        {{ tag }}
+      </span>
+      <span class="tag-more" *ngIf="note.tags.length > 3">
+        +{{ note.tags.length - 3 }}
+      </span>
+    </div>
+    <div class="note-date">
+      {{ formatDate(note.updatedAt) }}
+    </div>
+  </div>
+</div>
+

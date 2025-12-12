@@ -1,0 +1,33 @@
+.notes-page-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/**
+ * Cursor Layer for Collaborative Editing
+ * 
+ * This layer is positioned absolutely to allow collaborator cursors
+ * to be rendered above the editor content. It does not interfere with
+ * normal pointer events on the underlying content.
+ */
+.cursor-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1000; /* Above editor content but below modals/dialogs */
+  overflow: hidden; /* Prevent cursors from extending outside bounds */
+}
+
+/* Ensure the page layout content allows relative positioning */
+:host ::ng-deep vex-page-layout-content {
+  position: relative;
+  height: 100%;
+  overflow: hidden; /* Prevent page-level scrolling (handled by inner components) */
+}
+

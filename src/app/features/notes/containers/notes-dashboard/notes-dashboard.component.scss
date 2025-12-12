@@ -1,0 +1,130 @@
+.notes-dashboard {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--background-foreground);
+}
+
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 280px 400px 1fr; /* Left: Sidebar, Center: List, Right: Editor */
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  gap: 0;
+}
+
+.dashboard-sidebar-left {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-card);
+  border-right: 1px solid var(--foreground-divider);
+}
+
+.dashboard-center {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-card);
+  border-right: 1px solid var(--foreground-divider);
+}
+
+.dashboard-right {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-foreground);
+  position: relative;
+}
+
+.editor-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  
+  .empty-content {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    
+    .empty-icon {
+      font-size: 4rem;
+      width: 4rem;
+      height: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+      color: var(--text-hint);
+    }
+    
+    .empty-title {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    
+    .empty-description {
+      margin: 0 0 2rem 0;
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+    }
+    
+    button {
+      mat-icon {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+}
+
+.editor-content {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+// Mobile layout
+.mobile-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+// Responsive breakpoints
+@media (max-width: 1279px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-sidebar-left,
+  .dashboard-right {
+    // Sidebar and editor become full-screen routes on mobile
+    display: none;
+  }
+}
+
+// Medium desktop - adjust column widths
+@media (min-width: 1280px) and (max-width: 1919px) {
+  .dashboard-layout {
+    grid-template-columns: 260px 380px 1fr;
+  }
+}
+
+// Large desktop - wider columns
+@media (min-width: 1920px) {
+  .dashboard-layout {
+    grid-template-columns: 300px 450px 1fr;
+  }
+}

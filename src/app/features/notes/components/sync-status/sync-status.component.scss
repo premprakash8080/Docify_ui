@@ -1,0 +1,66 @@
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 1rem;
+  background-color: var(--background-hover);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  
+  &:hover,
+  &:focus {
+    background-color: var(--background-app-bar);
+    outline: none;
+  }
+  
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-rgb);
+    outline-offset: 2px;
+  }
+  
+  &.syncing {
+    color: var(--color-primary-rgb);
+  }
+  
+  &.error {
+    color: var(--color-warn-rgb);
+  }
+  
+  &.offline {
+    color: var(--text-hint);
+  }
+}
+
+.sync-icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  
+  &.spinning {
+    animation: spin 1s linear infinite;
+  }
+}
+
+.sync-text {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sync-time {
+  font-size: 0.6875rem;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+

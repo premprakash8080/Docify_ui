@@ -31,7 +31,13 @@ export class NotesService {
 
   private async loadLocalData(): Promise<void> {
     const userId = this.authService.currentUserValue?.id;
-    if (!userId) return;
+    if (!userId) {
+      // If no user, set empty arrays
+      this.notesSubject.next([]);
+      this.notebooksSubject.next([]);
+      this.tagsSubject.next([]);
+      return;
+    }
 
     try {
       // Load from local storage (in-memory cache)
@@ -49,6 +55,13 @@ export class NotesService {
       this.notebooksSubject.next([]);
       this.tagsSubject.next([]);
     }
+  }
+
+  /**
+   * Reload data from storage (useful after data initialization)
+   */
+  reloadData(): void {
+    this.loadLocalData();
   }
 
   getNotes(): Observable<Note[]> {

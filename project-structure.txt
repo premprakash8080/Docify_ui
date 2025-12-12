@@ -1,0 +1,1030 @@
+
+.
+├── @vex
+│   ├── animations
+│   │   ├── dropdown.animation.ts
+│   │   ├── fade-in-right.animation.ts
+│   │   ├── fade-in-up.animation.ts
+│   │   ├── popover.animation.ts
+│   │   ├── scale-fade-in.animation.ts
+│   │   ├── scale-in-out.animation.ts
+│   │   ├── scale-in.animation.ts
+│   │   └── stagger.animation.ts
+│   ├── components
+│   │   ├── breadcrumbs
+│   │   │   ├── breadcrumb
+│   │   │   │   └── breadcrumb.component.ts
+│   │   │   ├── breadcrumbs.component.ts
+│   │   │   └── breadcrumbs.module.ts
+│   │   ├── chart
+│   │   │   ├── chart.component.spec.ts
+│   │   │   ├── chart.component.ts
+│   │   │   └── chart.module.ts
+│   │   ├── config-panel
+│   │   │   ├── color-variables.ts
+│   │   │   ├── config-panel-toggle
+│   │   │   │   ├── config-panel-toggle.component.html
+│   │   │   │   ├── config-panel-toggle.component.scss
+│   │   │   │   └── config-panel-toggle.component.ts
+│   │   │   ├── config-panel.component.html
+│   │   │   ├── config-panel.component.scss
+│   │   │   ├── config-panel.component.ts
+│   │   │   └── config-panel.module.ts
+│   │   ├── highlight
+│   │   │   ├── highlight.directive.spec.ts
+│   │   │   ├── highlight.directive.ts
+│   │   │   ├── highlight.model.ts
+│   │   │   ├── highlight.module.ts
+│   │   │   ├── highlight.service.spec.ts
+│   │   │   └── highlight.service.ts
+│   │   ├── mega-menu
+│   │   │   ├── mega-menu.component.html
+│   │   │   ├── mega-menu.component.spec.ts
+│   │   │   ├── mega-menu.component.ts
+│   │   │   └── mega-menu.module.ts
+│   │   ├── navigation-item
+│   │   │   ├── navigation-item.component.html
+│   │   │   ├── navigation-item.component.scss
+│   │   │   ├── navigation-item.component.spec.ts
+│   │   │   ├── navigation-item.component.ts
+│   │   │   └── navigation-item.module.ts
+│   │   ├── page-layout
+│   │   │   ├── page-layout-content.directive.ts
+│   │   │   ├── page-layout-header.directive.ts
+│   │   │   ├── page-layout.component.scss
+│   │   │   ├── page-layout.component.ts
+│   │   │   └── page-layout.module.ts
+│   │   ├── popover
+│   │   │   ├── popover-ref.ts
+│   │   │   ├── popover.component.html
+│   │   │   ├── popover.component.scss
+│   │   │   ├── popover.component.ts
+│   │   │   ├── popover.module.ts
+│   │   │   └── popover.service.ts
+│   │   ├── progress-bar
+│   │   │   ├── progress-bar.component.html
+│   │   │   ├── progress-bar.component.scss
+│   │   │   ├── progress-bar.component.spec.ts
+│   │   │   ├── progress-bar.component.ts
+│   │   │   └── progress-bar.module.ts
+│   │   ├── scrollbar
+│   │   │   ├── scrollbar.component.scss
+│   │   │   ├── scrollbar.component.ts
+│   │   │   └── scrollbar.module.ts
+│   │   ├── search
+│   │   │   ├── search.component.html
+│   │   │   ├── search.component.scss
+│   │   │   ├── search.component.spec.ts
+│   │   │   ├── search.component.ts
+│   │   │   └── search.module.ts
+│   │   ├── search-modal
+│   │   │   └── search-modal.component.ts
+│   │   ├── secondary-toolbar
+│   │   │   ├── secondary-toolbar.component.scss
+│   │   │   ├── secondary-toolbar.component.ts
+│   │   │   └── secondary-toolbar.module.ts
+│   │   ├── share-bottom-sheet
+│   │   │   ├── share-bottom-sheet.component.html
+│   │   │   ├── share-bottom-sheet.component.scss
+│   │   │   ├── share-bottom-sheet.component.spec.ts
+│   │   │   ├── share-bottom-sheet.component.ts
+│   │   │   └── share-bottom-sheet.module.ts
+│   │   ├── sidebar
+│   │   │   ├── sidebar.component.html
+│   │   │   ├── sidebar.component.scss
+│   │   │   ├── sidebar.component.ts
+│   │   │   └── sidebar.module.ts
+│   │   ├── user-menu
+│   │   │   ├── user-menu.component.html
+│   │   │   ├── user-menu.component.scss
+│   │   │   ├── user-menu.component.spec.ts
+│   │   │   ├── user-menu.component.ts
+│   │   │   └── user-menu.module.ts
+│   │   └── widgets
+│   │       ├── widget-assistant
+│   │       │   ├── widget-assistant.component.html
+│   │       │   ├── widget-assistant.component.scss
+│   │       │   ├── widget-assistant.component.spec.ts
+│   │       │   ├── widget-assistant.component.ts
+│   │       │   └── widget-assistant.module.ts
+│   │       ├── widget-large-chart
+│   │       │   ├── widget-large-chart.component.html
+│   │       │   ├── widget-large-chart.component.scss
+│   │       │   ├── widget-large-chart.component.spec.ts
+│   │       │   ├── widget-large-chart.component.ts
+│   │       │   └── widget-large-chart.module.ts
+│   │       ├── widget-large-goal-chart
+│   │       │   ├── widget-large-goal-chart.component.html
+│   │       │   ├── widget-large-goal-chart.component.spec.ts
+│   │       │   ├── widget-large-goal-chart.component.ts
+│   │       │   └── widget-large-goal-chart.module.ts
+│   │       ├── widget-quick-line-chart
+│   │       │   ├── widget-quick-line-chart.component.html
+│   │       │   ├── widget-quick-line-chart.component.spec.ts
+│   │       │   ├── widget-quick-line-chart.component.ts
+│   │       │   └── widget-quick-line-chart.module.ts
+│   │       ├── widget-quick-value-center
+│   │       │   ├── widget-quick-value-center.component.html
+│   │       │   ├── widget-quick-value-center.component.spec.ts
+│   │       │   ├── widget-quick-value-center.component.ts
+│   │       │   └── widget-quick-value-center.module.ts
+│   │       ├── widget-quick-value-start
+│   │       │   ├── widget-quick-value-start.component.html
+│   │       │   ├── widget-quick-value-start.component.spec.ts
+│   │       │   ├── widget-quick-value-start.component.ts
+│   │       │   └── widget-quick-value-start.module.ts
+│   │       └── widget-table
+│   │           ├── widget-table.component.html
+│   │           ├── widget-table.component.spec.ts
+│   │           ├── widget-table.component.ts
+│   │           └── widget-table.module.ts
+│   ├── config
+│   │   ├── colorSchemeName.ts
+│   │   ├── config-name.model.ts
+│   │   ├── config.service.ts
+│   │   ├── configs.ts
+│   │   ├── constants.ts
+│   │   └── vex-config.interface.ts
+│   ├── interfaces
+│   │   ├── css-value.type.ts
+│   │   ├── deep-partial.type.ts
+│   │   ├── link.interface.ts
+│   │   ├── navigation-item.interface.ts
+│   │   ├── table-column.interface.ts
+│   │   └── vex-route.interface.ts
+│   ├── layout
+│   │   ├── footer
+│   │   │   ├── footer.component.html
+│   │   │   ├── footer.component.scss
+│   │   │   ├── footer.component.ts
+│   │   │   └── footer.module.ts
+│   │   ├── layout.component.html
+│   │   ├── layout.component.scss
+│   │   ├── layout.component.ts
+│   │   ├── layout.module.ts
+│   │   ├── navigation
+│   │   │   ├── navigation.component.html
+│   │   │   ├── navigation.component.scss
+│   │   │   ├── navigation.component.ts
+│   │   │   └── navigation.module.ts
+│   │   ├── quickpanel
+│   │   │   ├── quickpanel.component.html
+│   │   │   ├── quickpanel.component.scss
+│   │   │   ├── quickpanel.component.ts
+│   │   │   └── quickpanel.module.ts
+│   │   ├── sidenav
+│   │   │   ├── sidenav-item
+│   │   │   │   ├── sidenav-item.component.html
+│   │   │   │   ├── sidenav-item.component.scss
+│   │   │   │   ├── sidenav-item.component.ts
+│   │   │   │   └── sidenav-item.module.ts
+│   │   │   ├── sidenav.component.html
+│   │   │   ├── sidenav.component.scss
+│   │   │   ├── sidenav.component.ts
+│   │   │   └── sidenav.module.ts
+│   │   └── toolbar
+│   │       ├── toolbar-notifications
+│   │       │   ├── interfaces
+│   │       │   │   └── notification.interface.ts
+│   │       │   ├── toolbar-notifications-dropdown
+│   │       │   │   ├── toolbar-notifications-dropdown.component.html
+│   │       │   │   ├── toolbar-notifications-dropdown.component.scss
+│   │       │   │   └── toolbar-notifications-dropdown.component.ts
+│   │       │   ├── toolbar-notifications.component.html
+│   │       │   ├── toolbar-notifications.component.scss
+│   │       │   ├── toolbar-notifications.component.ts
+│   │       │   └── toolbar-notifications.module.ts
+│   │       ├── toolbar-search
+│   │       │   ├── toolbar-search.component.html
+│   │       │   ├── toolbar-search.component.scss
+│   │       │   ├── toolbar-search.component.ts
+│   │       │   └── toolbar-search.module.ts
+│   │       ├── toolbar-user
+│   │       │   ├── interfaces
+│   │       │   │   └── menu-item.interface.ts
+│   │       │   ├── toolbar-user-dropdown
+│   │       │   │   ├── toolbar-user-dropdown.component.html
+│   │       │   │   ├── toolbar-user-dropdown.component.scss
+│   │       │   │   ├── toolbar-user-dropdown.component.spec.ts
+│   │       │   │   └── toolbar-user-dropdown.component.ts
+│   │       │   ├── toolbar-user.component.html
+│   │       │   ├── toolbar-user.component.ts
+│   │       │   └── toolbar-user.module.ts
+│   │       ├── toolbar.component.html
+│   │       ├── toolbar.component.scss
+│   │       ├── toolbar.component.ts
+│   │       └── toolbar.module.ts
+│   ├── modules
+│   │   └── showdown
+│   │       ├── index.ts
+│   │       ├── showdown-config.provider.ts
+│   │       ├── showdown-converter.provider.ts
+│   │       ├── showdown.component.ts
+│   │       ├── showdown.module.ts
+│   │       ├── showdown.pipe.ts
+│   │       └── source.directive.ts
+│   ├── pipes
+│   │   ├── date-tokens
+│   │   │   ├── date-tokens.module.ts
+│   │   │   ├── date-tokens.pipe.spec.ts
+│   │   │   └── date-tokens.pipe.ts
+│   │   ├── relative-date-time
+│   │   │   ├── relative-date-time.module.ts
+│   │   │   ├── relative-date-time.pipe.spec.ts
+│   │   │   └── relative-date-time.pipe.ts
+│   │   └── strip-html
+│   │       ├── strip-html.module.ts
+│   │       ├── strip-html.pipe.spec.ts
+│   │       └── strip-html.pipe.ts
+│   ├── services
+│   │   ├── layout.service.ts
+│   │   ├── navigation.service.ts
+│   │   ├── search.service.ts
+│   │   └── splash-screen.service.ts
+│   ├── styles
+│   │   ├── _base.scss
+│   │   ├── _utilities.scss
+│   │   ├── _var.scss
+│   │   ├── core.scss
+│   │   ├── partials
+│   │   │   ├── _horizontal.scss
+│   │   │   ├── _misc.scss
+│   │   │   ├── _mixins.scss
+│   │   │   ├── _print.scss
+│   │   │   ├── _typography.scss
+│   │   │   ├── _vertical.scss
+│   │   │   ├── fonts
+│   │   │   │   └── _inter.scss
+│   │   │   ├── layouts
+│   │   │   │   ├── _layout-apollo.scss
+│   │   │   │   ├── _layout-ares.scss
+│   │   │   │   ├── _layout-hermes.scss
+│   │   │   │   ├── _layout-ikaros.scss
+│   │   │   │   ├── _layout-poseidon.scss
+│   │   │   │   └── _layout-zeus.scss
+│   │   │   ├── plugins
+│   │   │   │   ├── @angular
+│   │   │   │   │   └── material
+│   │   │   │   │       ├── _button.scss
+│   │   │   │   │       ├── _checkbox.scss
+│   │   │   │   │       ├── _dialog.scss
+│   │   │   │   │       ├── _index.scss
+│   │   │   │   │       ├── _input.scss
+│   │   │   │   │       ├── _menu.scss
+│   │   │   │   │       ├── _misc.scss
+│   │   │   │   │       ├── _progress-bar.scss
+│   │   │   │   │       └── _select.scss
+│   │   │   │   ├── angular-calendar
+│   │   │   │   │   └── _angular-calendar.scss
+│   │   │   │   ├── apexcharts
+│   │   │   │   │   └── _apexcharts.scss
+│   │   │   │   └── quill
+│   │   │   │       └── _quill.scss
+│   │   │   └── styles
+│   │   │       ├── _style-dark.scss
+│   │   │       ├── _style-default.scss
+│   │   │       └── _style-light.scss
+│   │   └── tailwind.scss
+│   ├── utils
+│   │   ├── check-router-childs-data.ts
+│   │   ├── create-date-array.ts
+│   │   ├── default-chart-options.ts
+│   │   ├── isNil.ts
+│   │   ├── merge-deep.ts
+│   │   └── track-by.ts
+│   └── vex.module.ts
+├── app
+│   ├── app-routing.module.ts
+│   ├── app.component.html
+│   ├── app.component.scss
+│   ├── app.component.ts
+│   ├── app.module.ts
+│   ├── core
+│   │   ├── guards
+│   │   │   ├── auth.guard.ts
+│   │   │   └── index.ts
+│   │   ├── models
+│   │   │   ├── attachment.model.ts
+│   │   │   ├── index.ts
+│   │   │   ├── note.model.ts
+│   │   │   ├── notebook.model.ts
+│   │   │   ├── sync-queue.model.ts
+│   │   │   ├── tag.model.ts
+│   │   │   └── user.model.ts
+│   │   └── services
+│   │       ├── api.service.ts
+│   │       ├── auth.service.ts
+│   │       ├── index.ts
+│   │       ├── storage.service.ts
+│   │       └── sync.service.ts
+│   ├── custom-layout
+│   │   ├── custom-layout.component.html
+│   │   ├── custom-layout.component.scss
+│   │   ├── custom-layout.component.spec.ts
+│   │   ├── custom-layout.component.ts
+│   │   └── custom-layout.module.ts
+│   ├── features
+│   │   └── notes
+│   │       ├── models
+│   │       └── services
+│   │           ├── index.ts
+│   │           ├── notes.service.ts
+│   │           └── search.service.ts
+│   └── pages
+│       ├── apps
+│       │   ├── aio-table
+│       │   │   ├── aio-table-routing.module.ts
+│       │   │   ├── aio-table.component.html
+│       │   │   ├── aio-table.component.scss
+│       │   │   ├── aio-table.component.spec.ts
+│       │   │   ├── aio-table.component.ts
+│       │   │   ├── aio-table.module.ts
+│       │   │   ├── customer-create-update
+│       │   │   │   ├── customer-create-update.component.html
+│       │   │   │   ├── customer-create-update.component.scss
+│       │   │   │   ├── customer-create-update.component.ts
+│       │   │   │   └── customer-create-update.module.ts
+│       │   │   └── interfaces
+│       │   │       └── customer.model.ts
+│       │   ├── calendar
+│       │   │   ├── calendar-edit
+│       │   │   │   ├── calendar-edit.component.html
+│       │   │   │   ├── calendar-edit.component.scss
+│       │   │   │   └── calendar-edit.component.ts
+│       │   │   ├── calendar-routing.module.ts
+│       │   │   ├── calendar.component.html
+│       │   │   ├── calendar.component.scss
+│       │   │   ├── calendar.component.spec.ts
+│       │   │   ├── calendar.component.ts
+│       │   │   └── calendar.module.ts
+│       │   ├── chat
+│       │   │   ├── chat-conversation
+│       │   │   │   ├── chat-conversation.component.html
+│       │   │   │   ├── chat-conversation.component.scss
+│       │   │   │   ├── chat-conversation.component.spec.ts
+│       │   │   │   └── chat-conversation.component.ts
+│       │   │   ├── chat-empty
+│       │   │   │   ├── chat-empty.component.html
+│       │   │   │   ├── chat-empty.component.spec.ts
+│       │   │   │   └── chat-empty.component.ts
+│       │   │   ├── chat-routing.module.ts
+│       │   │   ├── chat.component.html
+│       │   │   ├── chat.component.scss
+│       │   │   ├── chat.component.spec.ts
+│       │   │   ├── chat.component.ts
+│       │   │   ├── chat.module.ts
+│       │   │   └── chat.service.ts
+│       │   ├── contacts
+│       │   │   ├── components
+│       │   │   │   ├── contacts-card
+│       │   │   │   │   ├── contacts-card.component.html
+│       │   │   │   │   ├── contacts-card.component.scss
+│       │   │   │   │   ├── contacts-card.component.spec.ts
+│       │   │   │   │   ├── contacts-card.component.ts
+│       │   │   │   │   └── contacts-card.module.ts
+│       │   │   │   └── contacts-edit
+│       │   │   │       ├── contacts-edit.component.html
+│       │   │   │       ├── contacts-edit.component.scss
+│       │   │   │       ├── contacts-edit.component.spec.ts
+│       │   │   │       ├── contacts-edit.component.ts
+│       │   │   │       └── contacts-edit.module.ts
+│       │   │   ├── contacts-grid
+│       │   │   │   ├── contacts-grid-routing.module.ts
+│       │   │   │   ├── contacts-grid.component.html
+│       │   │   │   ├── contacts-grid.component.scss
+│       │   │   │   ├── contacts-grid.component.spec.ts
+│       │   │   │   ├── contacts-grid.component.ts
+│       │   │   │   └── contacts-grid.module.ts
+│       │   │   ├── contacts-routing.module.ts
+│       │   │   ├── contacts-table
+│       │   │   │   ├── contacts-data-table
+│       │   │   │   │   ├── contacts-data-table.component.html
+│       │   │   │   │   ├── contacts-data-table.component.scss
+│       │   │   │   │   ├── contacts-data-table.component.spec.ts
+│       │   │   │   │   └── contacts-data-table.component.ts
+│       │   │   │   ├── contacts-table-menu
+│       │   │   │   │   ├── contacts-table-menu.component.html
+│       │   │   │   │   ├── contacts-table-menu.component.spec.ts
+│       │   │   │   │   └── contacts-table-menu.component.ts
+│       │   │   │   ├── contacts-table-routing.module.ts
+│       │   │   │   ├── contacts-table.component.html
+│       │   │   │   ├── contacts-table.component.ts
+│       │   │   │   └── contacts-table.module.ts
+│       │   │   ├── contacts.module.ts
+│       │   │   └── interfaces
+│       │   │       └── contact.interface.ts
+│       │   ├── editor
+│       │   │   ├── editor-routing.module.ts
+│       │   │   ├── editor.component.html
+│       │   │   ├── editor.component.scss
+│       │   │   ├── editor.component.spec.ts
+│       │   │   ├── editor.component.ts
+│       │   │   └── editor.module.ts
+│       │   ├── help-center
+│       │   │   ├── help-center-faq
+│       │   │   │   ├── help-center-faq-routing.module.ts
+│       │   │   │   ├── help-center-faq.component.html
+│       │   │   │   ├── help-center-faq.component.scss
+│       │   │   │   ├── help-center-faq.component.spec.ts
+│       │   │   │   ├── help-center-faq.component.ts
+│       │   │   │   └── help-center-faq.module.ts
+│       │   │   ├── help-center-getting-started
+│       │   │   │   ├── help-center-getting-started-routing.module.ts
+│       │   │   │   ├── help-center-getting-started.component.html
+│       │   │   │   ├── help-center-getting-started.component.scss
+│       │   │   │   ├── help-center-getting-started.component.spec.ts
+│       │   │   │   ├── help-center-getting-started.component.ts
+│       │   │   │   └── help-center-getting-started.module.ts
+│       │   │   ├── help-center-guides
+│       │   │   │   ├── help-center-guides-guide
+│       │   │   │   │   ├── help-center-guides-guide.component.html
+│       │   │   │   │   ├── help-center-guides-guide.component.scss
+│       │   │   │   │   ├── help-center-guides-guide.component.spec.ts
+│       │   │   │   │   └── help-center-guides-guide.component.ts
+│       │   │   │   ├── help-center-guides-routing.module.ts
+│       │   │   │   ├── help-center-guides.component.html
+│       │   │   │   ├── help-center-guides.component.scss
+│       │   │   │   ├── help-center-guides.component.spec.ts
+│       │   │   │   ├── help-center-guides.component.ts
+│       │   │   │   └── help-center-guides.module.ts
+│       │   │   ├── help-center-pricing
+│       │   │   │   ├── help-center-pricing-routing.module.ts
+│       │   │   │   ├── help-center-pricing.component.html
+│       │   │   │   ├── help-center-pricing.component.scss
+│       │   │   │   ├── help-center-pricing.component.spec.ts
+│       │   │   │   ├── help-center-pricing.component.ts
+│       │   │   │   └── help-center-pricing.module.ts
+│       │   │   ├── help-center-routing.module.ts
+│       │   │   ├── help-center.component.html
+│       │   │   ├── help-center.component.scss
+│       │   │   ├── help-center.component.spec.ts
+│       │   │   ├── help-center.component.ts
+│       │   │   └── help-center.module.ts
+│       │   ├── mail
+│       │   │   ├── components
+│       │   │   │   ├── mail-attachment
+│       │   │   │   │   ├── mail-attachment.component.html
+│       │   │   │   │   ├── mail-attachment.component.scss
+│       │   │   │   │   ├── mail-attachment.component.spec.ts
+│       │   │   │   │   └── mail-attachment.component.ts
+│       │   │   │   ├── mail-compose
+│       │   │   │   │   ├── mail-compose.component.html
+│       │   │   │   │   ├── mail-compose.component.scss
+│       │   │   │   │   ├── mail-compose.component.spec.ts
+│       │   │   │   │   └── mail-compose.component.ts
+│       │   │   │   ├── mail-label
+│       │   │   │   │   ├── mail-label.component.html
+│       │   │   │   │   ├── mail-label.component.scss
+│       │   │   │   │   ├── mail-label.component.spec.ts
+│       │   │   │   │   └── mail-label.component.ts
+│       │   │   │   ├── mail-list-entry
+│       │   │   │   │   ├── mail-list-entry.component.html
+│       │   │   │   │   ├── mail-list-entry.component.scss
+│       │   │   │   │   ├── mail-list-entry.component.spec.ts
+│       │   │   │   │   └── mail-list-entry.component.ts
+│       │   │   │   ├── mail-sidenav
+│       │   │   │   │   ├── mail-sidenav.component.html
+│       │   │   │   │   ├── mail-sidenav.component.scss
+│       │   │   │   │   ├── mail-sidenav.component.spec.ts
+│       │   │   │   │   └── mail-sidenav.component.ts
+│       │   │   │   └── mail-sidenav-link
+│       │   │   │       ├── mail-sidenav-link.component.html
+│       │   │   │       ├── mail-sidenav-link.component.scss
+│       │   │   │       ├── mail-sidenav-link.component.spec.ts
+│       │   │   │       └── mail-sidenav-link.component.ts
+│       │   │   ├── containers
+│       │   │   │   ├── mail-list.component.html
+│       │   │   │   ├── mail-list.component.scss
+│       │   │   │   ├── mail-list.component.spec.ts
+│       │   │   │   ├── mail-list.component.ts
+│       │   │   │   ├── mail-view-empty.component.html
+│       │   │   │   ├── mail-view-empty.component.scss
+│       │   │   │   ├── mail-view-empty.component.spec.ts
+│       │   │   │   ├── mail-view-empty.component.ts
+│       │   │   │   ├── mail-view.component.html
+│       │   │   │   ├── mail-view.component.scss
+│       │   │   │   ├── mail-view.component.spec.ts
+│       │   │   │   ├── mail-view.component.ts
+│       │   │   │   ├── mail.component.html
+│       │   │   │   ├── mail.component.scss
+│       │   │   │   ├── mail.component.spec.ts
+│       │   │   │   └── mail.component.ts
+│       │   │   ├── interfaces
+│       │   │   │   ├── mail-attachment.interface.ts
+│       │   │   │   ├── mail-label.interface.ts
+│       │   │   │   ├── mail-sidenav-link.interface.ts
+│       │   │   │   └── mail.interface.ts
+│       │   │   ├── mail-routing.module.ts
+│       │   │   ├── mail.module.ts
+│       │   │   └── services
+│       │   │       └── mail.service.ts
+│       │   ├── scrumboard
+│       │   │   ├── components
+│       │   │   │   └── scrumboard-dialog
+│       │   │   │       ├── scrumboard-dialog.component.html
+│       │   │   │       ├── scrumboard-dialog.component.scss
+│       │   │   │       ├── scrumboard-dialog.component.spec.ts
+│       │   │   │       ├── scrumboard-dialog.component.ts
+│       │   │   │       └── scrumboard-dialog.module.ts
+│       │   │   ├── interfaces
+│       │   │   │   ├── scrumboard-attachment.interface.ts
+│       │   │   │   ├── scrumboard-card.interface.ts
+│       │   │   │   ├── scrumboard-comment.interface.ts
+│       │   │   │   ├── scrumboard-label.interface.ts
+│       │   │   │   ├── scrumboard-list.interface.ts
+│       │   │   │   ├── scrumboard-user.interface.ts
+│       │   │   │   └── scrumboard.interface.ts
+│       │   │   ├── scrumboard-routing.module.ts
+│       │   │   ├── scrumboard.component.html
+│       │   │   ├── scrumboard.component.scss
+│       │   │   ├── scrumboard.component.spec.ts
+│       │   │   ├── scrumboard.component.ts
+│       │   │   └── scrumboard.module.ts
+│       │   └── social
+│       │       ├── social-profile
+│       │       │   ├── social-profile-routing.module.ts
+│       │       │   ├── social-profile.component.html
+│       │       │   ├── social-profile.component.scss
+│       │       │   ├── social-profile.component.ts
+│       │       │   └── social-profile.module.ts
+│       │       ├── social-routing.module.ts
+│       │       ├── social-timeline
+│       │       │   ├── components
+│       │       │   │   └── social-timeline-entry
+│       │       │   │       ├── social-timeline-entry.component.html
+│       │       │   │       ├── social-timeline-entry.component.scss
+│       │       │   │       └── social-timeline-entry.component.ts
+│       │       │   ├── social-timeline-routing.module.ts
+│       │       │   ├── social-timeline.component.html
+│       │       │   ├── social-timeline.component.scss
+│       │       │   ├── social-timeline.component.ts
+│       │       │   └── social-timeline.module.ts
+│       │       ├── social.component.html
+│       │       ├── social.component.scss
+│       │       ├── social.component.ts
+│       │       └── social.module.ts
+│       ├── dashboards
+│       │   └── dashboard-analytics
+│       │       ├── dashboard-analytics-routing.module.ts
+│       │       ├── dashboard-analytics.component.html
+│       │       ├── dashboard-analytics.component.scss
+│       │       ├── dashboard-analytics.component.spec.ts
+│       │       ├── dashboard-analytics.component.ts
+│       │       └── dashboard-analytics.module.ts
+│       ├── documentation
+│       │   ├── changelog
+│       │   │   ├── changelog-routing.module.ts
+│       │   │   ├── changelog.component.html
+│       │   │   ├── changelog.component.scss
+│       │   │   ├── changelog.component.spec.ts
+│       │   │   ├── changelog.component.ts
+│       │   │   └── changelog.module.ts
+│       │   ├── documentation-routing.module.ts
+│       │   ├── documentation.component.html
+│       │   ├── documentation.component.scss
+│       │   ├── documentation.component.spec.ts
+│       │   ├── documentation.component.ts
+│       │   ├── documentation.module.ts
+│       │   └── markdown.module.ts
+│       ├── pages
+│       │   ├── auth
+│       │   │   ├── forgot-password
+│       │   │   │   ├── forgot-password-routing.module.ts
+│       │   │   │   ├── forgot-password.component.html
+│       │   │   │   ├── forgot-password.component.scss
+│       │   │   │   ├── forgot-password.component.spec.ts
+│       │   │   │   ├── forgot-password.component.ts
+│       │   │   │   └── forgot-password.module.ts
+│       │   │   ├── login
+│       │   │   │   ├── login-routing.module.ts
+│       │   │   │   ├── login.component.html
+│       │   │   │   ├── login.component.scss
+│       │   │   │   ├── login.component.spec.ts
+│       │   │   │   ├── login.component.ts
+│       │   │   │   └── login.module.ts
+│       │   │   └── register
+│       │   │       ├── register-routing.module.ts
+│       │   │       ├── register.component.html
+│       │   │       ├── register.component.scss
+│       │   │       ├── register.component.spec.ts
+│       │   │       ├── register.component.ts
+│       │   │       └── register.module.ts
+│       │   ├── coming-soon
+│       │   │   ├── coming-soon-routing.module.ts
+│       │   │   ├── coming-soon.component.html
+│       │   │   ├── coming-soon.component.scss
+│       │   │   ├── coming-soon.component.spec.ts
+│       │   │   ├── coming-soon.component.ts
+│       │   │   └── coming-soon.module.ts
+│       │   ├── errors
+│       │   │   ├── error-404
+│       │   │   │   ├── error-404-routing.module.ts
+│       │   │   │   ├── error-404.component.html
+│       │   │   │   ├── error-404.component.scss
+│       │   │   │   ├── error-404.component.spec.ts
+│       │   │   │   ├── error-404.component.ts
+│       │   │   │   └── error-404.module.ts
+│       │   │   └── error-500
+│       │   │       ├── error-500-routing.module.ts
+│       │   │       ├── error-500.component.html
+│       │   │       ├── error-500.component.scss
+│       │   │       ├── error-500.component.spec.ts
+│       │   │       ├── error-500.component.ts
+│       │   │       └── error-500.module.ts
+│       │   ├── faq
+│       │   │   ├── faq-routing.module.ts
+│       │   │   ├── faq.component.html
+│       │   │   ├── faq.component.scss
+│       │   │   ├── faq.component.spec.ts
+│       │   │   ├── faq.component.ts
+│       │   │   └── faq.module.ts
+│       │   ├── guides
+│       │   │   ├── guides-routing.module.ts
+│       │   │   ├── guides.component.html
+│       │   │   ├── guides.component.scss
+│       │   │   ├── guides.component.spec.ts
+│       │   │   ├── guides.component.ts
+│       │   │   └── guides.module.ts
+│       │   ├── invoice
+│       │   │   ├── invoice-routing.module.ts
+│       │   │   ├── invoice.component.html
+│       │   │   ├── invoice.component.scss
+│       │   │   ├── invoice.component.spec.ts
+│       │   │   ├── invoice.component.ts
+│       │   │   └── invoice.module.ts
+│       │   └── pricing
+│       │       ├── pricing-routing.module.ts
+│       │       ├── pricing.component.html
+│       │       ├── pricing.component.scss
+│       │       ├── pricing.component.spec.ts
+│       │       ├── pricing.component.ts
+│       │       └── pricing.module.ts
+│       └── ui
+│           ├── components
+│           │   ├── block-editor
+│           │   │   ├── block
+│           │   │   │   ├── block.component.html
+│           │   │   │   ├── block.component.scss
+│           │   │   │   └── block.component.ts
+│           │   │   ├── block-editor.component.html
+│           │   │   ├── block-editor.component.scss
+│           │   │   ├── block-editor.component.ts
+│           │   │   ├── models
+│           │   │   │   └── block.model.ts
+│           │   │   └── slash-menu
+│           │   │       ├── slash-menu.component.html
+│           │   │       ├── slash-menu.component.scss
+│           │   │       └── slash-menu.component.ts
+│           │   ├── components-autocomplete
+│           │   │   ├── components-autocomplete-routing.module.ts
+│           │   │   ├── components-autocomplete.component.html
+│           │   │   ├── components-autocomplete.component.scss
+│           │   │   ├── components-autocomplete.component.spec.ts
+│           │   │   ├── components-autocomplete.component.ts
+│           │   │   └── components-autocomplete.module.ts
+│           │   ├── components-button-group
+│           │   │   ├── components-button-group-routing.module.ts
+│           │   │   ├── components-button-group.component.html
+│           │   │   ├── components-button-group.component.scss
+│           │   │   ├── components-button-group.component.spec.ts
+│           │   │   ├── components-button-group.component.ts
+│           │   │   └── components-button-group.module.ts
+│           │   ├── components-buttons
+│           │   │   ├── components-buttons-routing.module.ts
+│           │   │   ├── components-buttons.component.html
+│           │   │   ├── components-buttons.component.scss
+│           │   │   ├── components-buttons.component.spec.ts
+│           │   │   ├── components-buttons.component.ts
+│           │   │   └── components-buttons.module.ts
+│           │   ├── components-cards
+│           │   │   ├── components-cards-routing.module.ts
+│           │   │   ├── components-cards.component.html
+│           │   │   ├── components-cards.component.scss
+│           │   │   ├── components-cards.component.spec.ts
+│           │   │   ├── components-cards.component.ts
+│           │   │   └── components-cards.module.ts
+│           │   ├── components-checkbox
+│           │   │   ├── components-checkbox-routing.module.ts
+│           │   │   ├── components-checkbox.component.html
+│           │   │   ├── components-checkbox.component.scss
+│           │   │   ├── components-checkbox.component.spec.ts
+│           │   │   ├── components-checkbox.component.ts
+│           │   │   └── components-checkbox.module.ts
+│           │   ├── components-dialogs
+│           │   │   ├── components-dialogs-routing.module.ts
+│           │   │   ├── components-dialogs.component.html
+│           │   │   ├── components-dialogs.component.scss
+│           │   │   ├── components-dialogs.component.spec.ts
+│           │   │   ├── components-dialogs.component.ts
+│           │   │   └── components-dialogs.module.ts
+│           │   ├── components-grid-list
+│           │   │   ├── components-grid-list-routing.module.ts
+│           │   │   ├── components-grid-list.component.html
+│           │   │   ├── components-grid-list.component.scss
+│           │   │   ├── components-grid-list.component.spec.ts
+│           │   │   ├── components-grid-list.component.ts
+│           │   │   └── components-grid-list.module.ts
+│           │   ├── components-input
+│           │   │   ├── components-input-routing.module.ts
+│           │   │   ├── components-input.component.html
+│           │   │   ├── components-input.component.scss
+│           │   │   ├── components-input.component.spec.ts
+│           │   │   ├── components-input.component.ts
+│           │   │   └── components-input.module.ts
+│           │   ├── components-lists
+│           │   │   ├── components-lists-routing.module.ts
+│           │   │   ├── components-lists.component.html
+│           │   │   ├── components-lists.component.scss
+│           │   │   ├── components-lists.component.spec.ts
+│           │   │   ├── components-lists.component.ts
+│           │   │   └── components-lists.module.ts
+│           │   ├── components-menu
+│           │   │   ├── components-menu-routing.module.ts
+│           │   │   ├── components-menu.component.html
+│           │   │   ├── components-menu.component.scss
+│           │   │   ├── components-menu.component.spec.ts
+│           │   │   ├── components-menu.component.ts
+│           │   │   └── components-menu.module.ts
+│           │   ├── components-overview
+│           │   │   ├── components
+│           │   │   │   ├── components-overview-autocomplete
+│           │   │   │   │   ├── components-overview-autocomplete.component.html
+│           │   │   │   │   ├── components-overview-autocomplete.component.scss
+│           │   │   │   │   ├── components-overview-autocomplete.component.ts
+│           │   │   │   │   └── components-overview-autocomplete.module.ts
+│           │   │   │   ├── components-overview-button-group
+│           │   │   │   │   ├── components-overview-button-group.component.html
+│           │   │   │   │   ├── components-overview-button-group.component.scss
+│           │   │   │   │   ├── components-overview-button-group.component.spec.ts
+│           │   │   │   │   ├── components-overview-button-group.component.ts
+│           │   │   │   │   └── components-overview-button-group.module.ts
+│           │   │   │   ├── components-overview-buttons
+│           │   │   │   │   ├── components-overview-buttons.component.html
+│           │   │   │   │   ├── components-overview-buttons.component.scss
+│           │   │   │   │   ├── components-overview-buttons.component.ts
+│           │   │   │   │   └── components-overview-buttons.module.ts
+│           │   │   │   ├── components-overview-cards
+│           │   │   │   │   ├── components-overview-cards.component.html
+│           │   │   │   │   ├── components-overview-cards.component.scss
+│           │   │   │   │   ├── components-overview-cards.component.ts
+│           │   │   │   │   └── components-overview-cards.module.ts
+│           │   │   │   ├── components-overview-checkbox
+│           │   │   │   │   ├── components-overview-checkbox.component.html
+│           │   │   │   │   ├── components-overview-checkbox.component.scss
+│           │   │   │   │   ├── components-overview-checkbox.component.ts
+│           │   │   │   │   └── components-overview-checkbox.module.ts
+│           │   │   │   ├── components-overview-dialogs
+│           │   │   │   │   ├── components-overview-dialogs.component.html
+│           │   │   │   │   ├── components-overview-dialogs.component.scss
+│           │   │   │   │   ├── components-overview-dialogs.component.ts
+│           │   │   │   │   └── components-overview-dialogs.module.ts
+│           │   │   │   ├── components-overview-grid-list
+│           │   │   │   │   ├── components-overview-grid-list.component.html
+│           │   │   │   │   ├── components-overview-grid-list.component.scss
+│           │   │   │   │   ├── components-overview-grid-list.component.ts
+│           │   │   │   │   └── components-overview-grid-list.module.ts
+│           │   │   │   ├── components-overview-input
+│           │   │   │   │   ├── components-overview-input.component.html
+│           │   │   │   │   ├── components-overview-input.component.scss
+│           │   │   │   │   ├── components-overview-input.component.ts
+│           │   │   │   │   └── components-overview-input.module.ts
+│           │   │   │   ├── components-overview-lists
+│           │   │   │   │   ├── components-overview-lists.component.html
+│           │   │   │   │   ├── components-overview-lists.component.scss
+│           │   │   │   │   ├── components-overview-lists.component.ts
+│           │   │   │   │   └── components-overview-lists.module.ts
+│           │   │   │   ├── components-overview-menu
+│           │   │   │   │   ├── components-overview-menu.component.html
+│           │   │   │   │   ├── components-overview-menu.component.scss
+│           │   │   │   │   ├── components-overview-menu.component.ts
+│           │   │   │   │   └── components-overview-menu.module.ts
+│           │   │   │   ├── components-overview-progress
+│           │   │   │   │   ├── components-overview-progress.component.html
+│           │   │   │   │   ├── components-overview-progress.component.scss
+│           │   │   │   │   ├── components-overview-progress.component.ts
+│           │   │   │   │   └── components-overview-progress.module.ts
+│           │   │   │   ├── components-overview-progress-spinner
+│           │   │   │   │   ├── components-overview-progress-spinner.component.html
+│           │   │   │   │   ├── components-overview-progress-spinner.component.scss
+│           │   │   │   │   ├── components-overview-progress-spinner.component.ts
+│           │   │   │   │   └── components-overview-progress-spinner.module.ts
+│           │   │   │   ├── components-overview-radio
+│           │   │   │   │   ├── components-overview-radio.component.html
+│           │   │   │   │   ├── components-overview-radio.component.scss
+│           │   │   │   │   ├── components-overview-radio.component.ts
+│           │   │   │   │   └── components-overview-radio.module.ts
+│           │   │   │   ├── components-overview-slide-toggle
+│           │   │   │   │   ├── components-overview-slide-toggle.component.html
+│           │   │   │   │   ├── components-overview-slide-toggle.component.scss
+│           │   │   │   │   ├── components-overview-slide-toggle.component.ts
+│           │   │   │   │   └── components-overview-slide-toggle.module.ts
+│           │   │   │   ├── components-overview-slider
+│           │   │   │   │   ├── components-overview-slider.component.html
+│           │   │   │   │   ├── components-overview-slider.component.scss
+│           │   │   │   │   ├── components-overview-slider.component.ts
+│           │   │   │   │   └── components-overview-slider.module.ts
+│           │   │   │   ├── components-overview-snack-bar
+│           │   │   │   │   ├── components-overview-snack-bar.component.html
+│           │   │   │   │   ├── components-overview-snack-bar.component.scss
+│           │   │   │   │   ├── components-overview-snack-bar.component.ts
+│           │   │   │   │   └── components-overview-snack-bar.module.ts
+│           │   │   │   └── components-overview-tooltip
+│           │   │   │       ├── components-overview-tooltip.component.html
+│           │   │   │       ├── components-overview-tooltip.component.scss
+│           │   │   │       ├── components-overview-tooltip.component.ts
+│           │   │   │       └── components-overview-tooltip.module.ts
+│           │   │   ├── components-overview-routing.module.ts
+│           │   │   ├── components-overview.component.html
+│           │   │   ├── components-overview.component.scss
+│           │   │   ├── components-overview.component.spec.ts
+│           │   │   ├── components-overview.component.ts
+│           │   │   └── components-overview.module.ts
+│           │   ├── components-progress
+│           │   │   ├── components-progress-routing.module.ts
+│           │   │   ├── components-progress.component.html
+│           │   │   ├── components-progress.component.scss
+│           │   │   ├── components-progress.component.spec.ts
+│           │   │   ├── components-progress.component.ts
+│           │   │   └── components-progress.module.ts
+│           │   ├── components-progress-spinner
+│           │   │   ├── components-progress-spinner-routing.module.ts
+│           │   │   ├── components-progress-spinner.component.html
+│           │   │   ├── components-progress-spinner.component.scss
+│           │   │   ├── components-progress-spinner.component.spec.ts
+│           │   │   ├── components-progress-spinner.component.ts
+│           │   │   └── components-progress-spinner.module.ts
+│           │   ├── components-radio
+│           │   │   ├── components-radio-routing.module.ts
+│           │   │   ├── components-radio.component.html
+│           │   │   ├── components-radio.component.scss
+│           │   │   ├── components-radio.component.spec.ts
+│           │   │   ├── components-radio.component.ts
+│           │   │   └── components-radio.module.ts
+│           │   ├── components-routing.module.ts
+│           │   ├── components-slide-toggle
+│           │   │   ├── components-slide-toggle-routing.module.ts
+│           │   │   ├── components-slide-toggle.component.html
+│           │   │   ├── components-slide-toggle.component.scss
+│           │   │   ├── components-slide-toggle.component.spec.ts
+│           │   │   ├── components-slide-toggle.component.ts
+│           │   │   └── components-slide-toggle.module.ts
+│           │   ├── components-slider
+│           │   │   ├── components-slider-routing.module.ts
+│           │   │   ├── components-slider.component.html
+│           │   │   ├── components-slider.component.scss
+│           │   │   ├── components-slider.component.spec.ts
+│           │   │   ├── components-slider.component.ts
+│           │   │   └── components-slider.module.ts
+│           │   ├── components-snack-bar
+│           │   │   ├── components-snack-bar-routing.module.ts
+│           │   │   ├── components-snack-bar.component.html
+│           │   │   ├── components-snack-bar.component.scss
+│           │   │   ├── components-snack-bar.component.spec.ts
+│           │   │   ├── components-snack-bar.component.ts
+│           │   │   └── components-snack-bar.module.ts
+│           │   ├── components-tooltip
+│           │   │   ├── components-tooltip-routing.module.ts
+│           │   │   ├── components-tooltip.component.html
+│           │   │   ├── components-tooltip.component.scss
+│           │   │   ├── components-tooltip.component.spec.ts
+│           │   │   ├── components-tooltip.component.ts
+│           │   │   └── components-tooltip.module.ts
+│           │   └── components.module.ts
+│           ├── forms
+│           │   ├── form-elements
+│           │   │   ├── form-elements-routing.module.ts
+│           │   │   ├── form-elements.component.html
+│           │   │   ├── form-elements.component.scss
+│           │   │   ├── form-elements.component.spec.ts
+│           │   │   ├── form-elements.component.ts
+│           │   │   └── form-elements.module.ts
+│           │   └── form-wizard
+│           │       ├── form-wizard-routing.module.ts
+│           │       ├── form-wizard.component.html
+│           │       ├── form-wizard.component.scss
+│           │       ├── form-wizard.component.spec.ts
+│           │       ├── form-wizard.component.ts
+│           │       └── form-wizard.module.ts
+│           ├── icons
+│           │   ├── icons-fa
+│           │   │   ├── icons-fa-routing.module.ts
+│           │   │   ├── icons-fa.component.html
+│           │   │   ├── icons-fa.component.scss
+│           │   │   ├── icons-fa.component.spec.ts
+│           │   │   ├── icons-fa.component.ts
+│           │   │   └── icons-fa.module.ts
+│           │   ├── icons-ic
+│           │   │   ├── icons-ic-routing.module.ts
+│           │   │   ├── icons-ic.component.html
+│           │   │   ├── icons-ic.component.scss
+│           │   │   ├── icons-ic.component.spec.ts
+│           │   │   ├── icons-ic.component.ts
+│           │   │   └── icons-ic.module.ts
+│           │   ├── icons-routing.module.ts
+│           │   ├── icons.component.html
+│           │   ├── icons.component.scss
+│           │   ├── icons.component.spec.ts
+│           │   ├── icons.component.ts
+│           │   └── icons.module.ts
+│           └── page-layouts
+│               ├── blank
+│               │   ├── blank-routing.module.ts
+│               │   ├── blank.component.html
+│               │   ├── blank.component.scss
+│               │   ├── blank.component.spec.ts
+│               │   ├── blank.component.ts
+│               │   └── blank.module.ts
+│               ├── card
+│               │   ├── page-layout-card
+│               │   │   ├── page-layout-card-routing.module.ts
+│               │   │   ├── page-layout-card.component.html
+│               │   │   ├── page-layout-card.component.scss
+│               │   │   ├── page-layout-card.component.spec.ts
+│               │   │   ├── page-layout-card.component.ts
+│               │   │   └── page-layout-card.module.ts
+│               │   ├── page-layout-card-large-header
+│               │   │   ├── page-layout-card-large-header-routing.module.ts
+│               │   │   ├── page-layout-card-large-header.component.html
+│               │   │   ├── page-layout-card-large-header.component.scss
+│               │   │   ├── page-layout-card-large-header.component.spec.ts
+│               │   │   ├── page-layout-card-large-header.component.ts
+│               │   │   └── page-layout-card-large-header.module.ts
+│               │   ├── page-layout-card-large-header-tabbed
+│               │   │   ├── page-layout-card-large-header-tabbed-routing.module.ts
+│               │   │   ├── page-layout-card-large-header-tabbed.component.html
+│               │   │   ├── page-layout-card-large-header-tabbed.component.scss
+│               │   │   ├── page-layout-card-large-header-tabbed.component.spec.ts
+│               │   │   ├── page-layout-card-large-header-tabbed.component.ts
+│               │   │   └── page-layout-card-large-header-tabbed.module.ts
+│               │   └── page-layout-card-tabbed
+│               │       ├── page-layout-card-tabbed-routing.module.ts
+│               │       ├── page-layout-card-tabbed.component.html
+│               │       ├── page-layout-card-tabbed.component.scss
+│               │       ├── page-layout-card-tabbed.component.spec.ts
+│               │       ├── page-layout-card-tabbed.component.ts
+│               │       └── page-layout-card-tabbed.module.ts
+│               ├── page-layout-demo
+│               │   ├── page-layout-demo.component.html
+│               │   ├── page-layout-demo.component.scss
+│               │   ├── page-layout-demo.component.spec.ts
+│               │   ├── page-layout-demo.component.ts
+│               │   └── page-layout-demo.module.ts
+│               ├── page-layouts-routing.module.ts
+│               ├── page-layouts.module.ts
+│               └── simple
+│                   ├── page-layout-simple
+│                   │   ├── page-layout-simple-routing.module.ts
+│                   │   ├── page-layout-simple.component.html
+│                   │   ├── page-layout-simple.component.scss
+│                   │   ├── page-layout-simple.component.spec.ts
+│                   │   ├── page-layout-simple.component.ts
+│                   │   └── page-layout-simple.module.ts
+│                   ├── page-layout-simple-large-header
+│                   │   ├── page-layout-simple-large-header-routing.module.ts
+│                   │   ├── page-layout-simple-large-header.component.html
+│                   │   ├── page-layout-simple-large-header.component.scss
+│                   │   ├── page-layout-simple-large-header.component.spec.ts
+│                   │   ├── page-layout-simple-large-header.component.ts
+│                   │   └── page-layout-simple-large-header.module.ts
+│                   ├── page-layout-simple-large-header-tabbed
+│                   │   ├── page-layout-simple-large-header-tabbed-routing.module.ts
+│                   │   ├── page-layout-simple-large-header-tabbed.component.html
+│                   │   ├── page-layout-simple-large-header-tabbed.component.scss
+│                   │   ├── page-layout-simple-large-header-tabbed.component.spec.ts
+│                   │   ├── page-layout-simple-large-header-tabbed.component.ts
+│                   │   └── page-layout-simple-large-header-tabbed.module.ts
+│                   └── page-layout-simple-tabbed
+│                       ├── page-layout-simple-tabbed-routing.module.ts
+│                       ├── page-layout-simple-tabbed.component.html
+│                       ├── page-layout-simple-tabbed.component.scss
+│                       ├── page-layout-simple-tabbed.component.spec.ts
+│                       ├── page-layout-simple-tabbed.component.ts
+│                       └── page-layout-simple-tabbed.module.ts
+├── assets
+│   ├── fonts
+│   └── img
+│       ├── demo
+│       ├── icons
+│       │   ├── flags
+│       │   └── logos
+│       └── illustrations
+├── environments
+│   ├── environment.prod.ts
+│   └── environment.ts
+├── index.html
+├── main.ts
+├── polyfills.ts
+├── static-data
+│   ├── aio-table-data.ts
+│   ├── chat-messages.ts
+│   ├── chats.ts
+│   ├── colors.ts
+│   ├── contacts.ts
+│   ├── fakeMails.ts
+│   ├── friend-suggestions.ts
+│   ├── icons-fa.ts
+│   ├── icons-ic.ts
+│   ├── scrumboard.ts
+│   └── table-sales-data.ts
+├── styles.scss
+└── test.ts

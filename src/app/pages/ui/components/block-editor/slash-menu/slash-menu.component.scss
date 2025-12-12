@@ -1,4 +1,4 @@
-@use 'src/styles/tokens' as tokens;
+// Using standard CSS values instead of tokens
 
 .slash-menu {
     position: fixed;
@@ -10,7 +10,7 @@
     width: 320px;
     max-height: 400px;
     overflow-y: auto;
-    padding: tokens.space(1);
+    padding: 0.5rem;
     animation: slideDown 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 
     // Custom scrollbar
@@ -45,24 +45,24 @@
 }
 
 .menu-header {
-    padding: tokens.space(2) tokens.space(3);
-    font-size: tokens.font-size(xs);
+    padding: 1rem 1.5rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--color-text-subtle);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-bottom: 1px solid var(--color-border);
-    margin-bottom: tokens.space(1);
+    margin-bottom: 0.5rem;
 }
 
 .menu-item {
     display: flex;
     align-items: center;
-    padding: tokens.space(2) tokens.space(3);
+    padding: 1rem 1.5rem;
     cursor: pointer;
     border-radius: var(--radius-md);
     transition: background-color 0.15s ease, transform 0.1s ease;
-    margin-bottom: tokens.space(0.5);
+    margin-bottom: 0.25rem;
 
     &.selected,
     &:hover {
@@ -82,8 +82,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: tokens.space(3);
-    font-size: tokens.font-size(lg);
+    margin-right: 1.5rem;
+    font-size: 1.125rem;
     color: var(--color-text-body);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -98,14 +98,14 @@
 }
 
 .menu-label {
-    font-size: tokens.font-size(sm);
+    font-size: 0.875rem;
     font-weight: 500;
     color: var(--color-text-heading);
-    margin-bottom: tokens.space(0.5);
+    margin-bottom: 0.25rem;
 }
 
 .menu-description {
-    font-size: tokens.font-size(xs);
+    font-size: 0.75rem;
     color: var(--color-text-subtle);
     white-space: nowrap;
     overflow: hidden;

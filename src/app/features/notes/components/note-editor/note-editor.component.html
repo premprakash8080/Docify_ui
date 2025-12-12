@@ -1,0 +1,66 @@
+<div class="note-editor">
+  <!-- Editor Header -->
+  <div class="editor-header">
+    <input 
+      type="text"
+      class="note-title-input"
+      [formControl]="titleControl"
+      placeholder="Untitled"
+      [attr.aria-label]="'Note title'">
+    
+    <div class="editor-actions">
+      <span class="save-status" *ngIf="isSaving">
+        <mat-icon class="saving-icon spinning" svgIcon="mat:sync"></mat-icon>
+        <span>Saving...</span>
+      </span>
+      <span class="save-status" *ngIf="!isSaving && lastSaved">
+        Saved {{ formatLastSaved(lastSaved) }}
+      </span>
+      
+      <button 
+        mat-icon-button
+        [class.active]="note?.pinned"
+        (click)="togglePin()"
+        [attr.aria-label]="note?.pinned ? 'Unpin note' : 'Pin note'"
+        type="button">
+        <mat-icon [svgIcon]="note?.pinned ? 'mat:push_pin' : 'mat:push_pin_outlined'"></mat-icon>
+      </button>
+      
+      <button 
+        mat-icon-button
+        (click)="toggleArchive()"
+        [attr.aria-label]="note?.archived ? 'Unarchive note' : 'Archive note'"
+        type="button">
+        <mat-icon svgIcon="mat:archive"></mat-icon>
+      </button>
+      
+      <button 
+        mat-icon-button
+        (click)="deleteNote()"
+        aria-label="Delete note"
+        type="button">
+        <mat-icon svgIcon="mat:delete"></mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Block Editor or Rich Text Editor -->
+  <div class="editor-content">
+    <!-- Block Editor (Default) -->
+    <app-block-editor
+      *ngIf="useBlockEditor"
+      [initialData]="initialBlocks"
+      (change)="onBlocksChange($event)">
+    </app-block-editor>
+
+    <!-- Quill Editor (Fallback) -->
+    <quill-editor
+      *ngIf="!useBlockEditor"
+      [formControl]="contentControl"
+      [placeholder]="'Start writing...'"
+      [modules]="editorModules"
+      style="height: 100%; display: flex; flex-direction: column;">
+    </quill-editor>
+  </div>
+</div>
+

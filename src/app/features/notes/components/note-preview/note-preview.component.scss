@@ -1,0 +1,133 @@
+.note-preview {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: var(--background-foreground);
+  border: 1px solid var(--foreground-divider);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0.75rem;
+  
+  &:hover {
+    background-color: var(--background-hover);
+    border-color: var(--color-primary-rgb);
+    box-shadow: var(--elevation-z2);
+  }
+  
+  &:focus {
+    outline: 2px solid var(--color-primary-rgb);
+    outline-offset: 2px;
+  }
+  
+  &.selected {
+    border-color: var(--color-primary-rgb);
+    background-color: var(--background-hover);
+    box-shadow: var(--elevation-z2);
+  }
+  
+  &.pinned {
+    border-left: 3px solid var(--color-primary-rgb);
+  }
+}
+
+.note-preview-header {
+  margin-bottom: 0.5rem;
+}
+
+.note-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.note-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-actions {
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  
+  .note-preview:hover &,
+  .note-preview:focus-within & {
+    opacity: 1;
+  }
+  
+  button {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    
+    mat-icon {
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+    }
+    
+    &.pinned {
+      color: var(--color-primary-rgb);
+    }
+  }
+}
+
+.note-content {
+  margin-bottom: 0.75rem;
+}
+
+.note-snippet {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.note-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-hint);
+}
+
+.note-tags {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.tag {
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.75rem;
+  background-color: var(--background-hover);
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+.tag-more {
+  color: var(--text-hint);
+  font-size: 0.6875rem;
+}
+
+.note-date {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+

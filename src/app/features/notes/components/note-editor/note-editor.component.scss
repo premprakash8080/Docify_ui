@@ -1,0 +1,115 @@
+@import '../../../../../@vex/styles/partials/plugins/quill/_quill.scss';
+@import '~quill/dist/quill.snow.css';
+
+.note-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--background-foreground);
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--foreground-divider);
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.note-title-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+  outline: none;
+  
+  &::placeholder {
+    color: var(--text-hint);
+  }
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.save-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-right: 0.5rem;
+  
+  .saving-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    
+    &.spinning {
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.editor-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  min-height: 0;
+  
+  // Block Editor Styles
+  app-block-editor {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  
+  // Quill Editor Styles
+  ::ng-deep {
+    .ql-container {
+      border: none;
+      font-size: 1rem;
+      font-family: inherit;
+      min-height: 400px;
+    }
+    
+    .ql-editor {
+      min-height: 400px;
+      padding: 0;
+      color: var(--text-color);
+      
+      &.ql-blank::before {
+        color: var(--text-hint);
+        font-style: normal;
+      }
+    }
+    
+    .ql-toolbar {
+      border: none;
+      border-bottom: 1px solid var(--foreground-divider);
+      padding: 0.5rem;
+      background-color: var(--background-hover);
+      
+      button {
+        color: var(--text-color);
+        
+        &:hover,
+        &.ql-active {
+          color: var(--color-primary-rgb);
+        }
+      }
+    }
+  }
+}
+

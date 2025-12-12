@@ -1,0 +1,65 @@
+.notes-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: var(--background-foreground);
+  border-bottom: 1px solid var(--foreground-divider);
+  gap: 1rem;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 400px;
+  padding: 0.5rem 1rem;
+  background-color: var(--background-hover);
+  border-radius: 0.5rem;
+  
+  .search-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--text-secondary);
+  }
+  
+  .search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--text-color);
+    font-size: 0.875rem;
+    
+    &::placeholder {
+      color: var(--text-secondary);
+    }
+  }
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.25rem;
+  
+  button {
+    &.active {
+      background-color: var(--background-hover);
+      color: var(--color-primary-rgb);
+    }
+  }
+}
+

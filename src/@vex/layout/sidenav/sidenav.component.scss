@@ -3,6 +3,8 @@
   height: 100%;
   transition: var(--trans-ease-out);
   width: var(--sidenav-width);
+  display: flex;
+  flex-direction: column;
 
   &.collapsed {
     width: var(--sidenav-collapsed-width);
@@ -25,7 +27,8 @@
         .vex-sidenav-user__subtitle,
         .vex-sidenav-user__dropdown-icon,
         .vex-sidenav-search__placeholder,
-        .vex-sidenav-search__keybind {
+        .vex-sidenav-search__keybind,
+        .new-note-button span {
           opacity: 0;
         }
 
@@ -95,6 +98,30 @@
 .vex-sidenav-toolbar__divider {
   height: 1px;
   background: var(--sidenav-section-divider-color);
+}
+
+/** NEW NOTE BUTTON */
+.new-note-button-container {
+  background: var(--sidenav-toolbar-background);
+  padding: var(--padding-12);
+  flex-shrink: 0;
+}
+
+.new-note-button {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  width: 100%;
+  
+  mat-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+  }
+
+  span {
+    transition: opacity var(--trans-ease-out-duration) var(--trans-ease-out-timing-function);
+  }
 }
 
 /** VEX SIDENAV USER */

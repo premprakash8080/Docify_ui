@@ -118,6 +118,17 @@ export class AuthService {
     this.currentUserSubject.next(response.user);
   }
 
+  /**
+   * Set current user (for development/demo purposes)
+   * In production, use login/register methods
+   */
+  setCurrentUser(user: User): void {
+    // Set a dummy token for demo purposes
+    localStorage.setItem(this.tokenKey, 'demo_token_' + user.id);
+    localStorage.setItem(this.userKey, JSON.stringify(user));
+    this.currentUserSubject.next(user);
+  }
+
   refreshToken(): Observable<AuthResponse> {
     const refreshToken = localStorage.getItem(this.refreshTokenKey);
     if (!refreshToken) {

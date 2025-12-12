@@ -1,4 +1,5 @@
 import { Attachment } from './attachment.model';
+import { Task } from './task.model';
 
 export interface Note {
   id: string;
@@ -16,4 +17,5 @@ export interface Note {
   attachments?: Attachment[];
   synced?: boolean; // for offline sync
   lastModified?: string; // for conflict resolution
+  tasks?: Task[]; // Optional tasks for checklist/note
 }

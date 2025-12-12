@@ -10,7 +10,7 @@ import { AuthService } from './auth.service';
   providedIn: 'root'
 })
 export class SyncService {
-  private syncStatusSubject = new BehaviorSubject<'idle' | 'syncing' | 'error'>('idle');
+  private syncStatusSubject = new BehaviorSubject<'idle' | 'syncing' | 'error' | 'offline'>('idle');
   public syncStatus$ = this.syncStatusSubject.asObservable();
 
   private lastSyncTimeSubject = new BehaviorSubject<Date | null>(null);
@@ -53,7 +53,12 @@ export class SyncService {
   }
 
   async sync(): Promise<void> {
-    if (!this.isOnline || !this.authService.isAuthenticated) {
+    if (!navigator.onLine || !this.isOnline) {
+      this.syncStatusSubject.next('offline');
+      return;
+    }
+    
+    if (!this.authService.isAuthenticated) {
       return;
     }
 

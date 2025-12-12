@@ -1,0 +1,19 @@
+<div class="sync-status" 
+     [class.syncing]="(syncState$ | async) === 'syncing'"
+     [class.error]="(syncState$ | async) === 'error'"
+     [class.offline]="(syncState$ | async) === 'offline'"
+     (click)="triggerSync()"
+     [attr.role]="'button'"
+     [attr.tabindex]="0"
+     [attr.aria-label]="'Sync status: ' + (syncState$ | async)">
+  <mat-icon class="sync-icon" 
+            [svgIcon]="getStatusIcon(syncState$ | async)"
+            [class.spinning]="(syncState$ | async) === 'syncing'">
+  </mat-icon>
+  <span class="sync-text">{{ getStatusText(syncState$ | async) }}</span>
+  <ng-container *ngIf="(syncState$ | async) !== 'syncing'">
+    <span class="sync-time" *ngIf="lastSyncTime$ | async as lastSync">
+      {{ formatLastSyncTime(lastSync) }}
+    </span>
+  </ng-container>
+</div>

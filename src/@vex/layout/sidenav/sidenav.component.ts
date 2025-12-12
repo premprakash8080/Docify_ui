@@ -1,4 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { NavigationService } from '../../services/navigation.service';
 import { LayoutService } from '../../services/layout.service';
 import { ConfigService } from '../../config/config.service';
@@ -33,7 +34,8 @@ export class SidenavComponent implements OnInit {
               private layoutService: LayoutService,
               private configService: ConfigService,
               private readonly popoverService: PopoverService,
-              private readonly dialog: MatDialog) { }
+              private readonly dialog: MatDialog,
+              private router: Router) { }
 
   ngOnInit() {
   }
@@ -82,5 +84,12 @@ export class SidenavComponent implements OnInit {
       width: '100%',
       maxWidth: '600px'
     });
+  }
+
+  createNewNote(): void {
+    // Navigate to new note creation
+    // This will route to /notes/new when that route is implemented
+    // For now, navigate to /notes list
+    this.router.navigate(['/notes']);
   }
 }

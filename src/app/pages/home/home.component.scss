@@ -1,0 +1,346 @@
+// Import Vex styles if needed
+// @import '../../../../@vex/styles/partials/mixins';
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  
+  .home-title {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+  
+  .edit-button {
+    color: var(--text-secondary);
+    
+    &:hover {
+      color: var(--text-color);
+      background: var(--background-hover);
+    }
+  }
+}
+
+// Top Section: Notes and Scratchpad
+.home-top-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+// Section Title
+.section-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+// Notes Section
+.notes-section {
+  .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+}
+
+// Note Card
+.note-card {
+  padding: 1rem;
+  background: var(--background-card);
+  border-radius: 8px;
+  border: 1px solid var(--foreground-divider);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: var(--color-primary);
+  }
+  
+  &:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  
+  .note-card-notebook {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .note-card-title {
+    margin: 0 0 auto 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color);
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .note-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--foreground-divider);
+    
+    .note-card-date {
+      font-size: 0.75rem;
+      color: var(--text-hint);
+    }
+    
+    .note-card-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      
+      .task-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--color-primary);
+        font-weight: 500;
+        padding: 0.125rem 0.5rem;
+        background: rgba(var(--color-primary-rgb), 0.1);
+        border-radius: 12px;
+        
+        mat-icon {
+          font-size: 0.875rem;
+          width: 0.875rem;
+          height: 0.875rem;
+        }
+      }
+      
+      .note-card-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+      }
+    }
+  }
+  
+  // Create New Note Card
+  &.create-note-card {
+    background: var(--background-card);
+    border: 2px dashed var(--foreground-divider);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    
+    &:hover {
+      border-color: var(--color-primary);
+      background: rgba(var(--color-primary-rgb), 0.05);
+    }
+    
+    .create-note-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.75rem;
+      
+      mat-icon {
+        color: white;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+    
+    .create-note-text {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+  }
+}
+
+.empty-notes {
+  display: flex;
+  justify-content: center;
+}
+
+// Scratchpad Section
+.scratchpad-section {
+  display: flex;
+  flex-direction: column;
+  
+  .scratchpad-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    
+    .scratchpad-actions {
+      display: flex;
+      gap: 0.25rem;
+      
+      button {
+        color: var(--text-secondary);
+        
+        &:hover {
+          color: var(--text-color);
+          background: var(--background-hover);
+        }
+      }
+    }
+  }
+  
+  .scratchpad-content {
+    flex: 1;
+    min-height: 300px;
+    
+    .scratchpad-textarea {
+      width: 100%;
+      height: 100%;
+      min-height: 300px;
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #fef9e7;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      color: var(--text-color);
+      resize: vertical;
+      outline: none;
+      
+      &::placeholder {
+        color: var(--text-hint);
+      }
+      
+      &:focus {
+        box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+      }
+    }
+  }
+}
+
+// Recently Captured Section
+.recently-captured-section {
+  margin-top: 3rem;
+  
+  .recently-captured-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    
+    .captured-filter {
+      width: 150px;
+      font-size: 0.875rem;
+      
+      ::ng-deep {
+        .mat-mdc-form-field-subscript-wrapper {
+          display: none;
+        }
+      }
+    }
+  }
+  
+  .recently-captured-content {
+    min-height: 300px;
+  }
+}
+
+// Empty Captured State
+.empty-captured {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  
+  .empty-captured-icon {
+    margin-bottom: 1.5rem;
+    opacity: 0.8;
+  }
+  
+  .empty-captured-text {
+    margin: 0 0 1.5rem 0;
+    font-size: 1rem;
+    color: var(--text-secondary);
+  }
+  
+  .clip-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    background: var(--background-card);
+    color: var(--text-color);
+    border-color: var(--foreground-divider);
+    
+    &:hover {
+      background: var(--background-hover);
+      border-color: var(--color-primary);
+    }
+  }
+}
+
+// Web Clips Grid
+.web-clips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.web-clip-card {
+  padding: 1rem;
+  background: var(--background-card);
+  border-radius: 8px;
+  border: 1px solid var(--foreground-divider);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: var(--color-primary);
+  }
+  
+  &:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  
+  .web-clip-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color);
+  }
+  
+  .web-clip-date {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-hint);
+  }
+}

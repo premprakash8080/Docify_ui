@@ -13,6 +13,7 @@ import { ColorSchemeName } from '../@vex/config/colorSchemeName';
 import { MatIconRegistry, SafeResourceUrlWithIconOptions } from '@angular/material/icon';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ColorVariable, colorVariables } from '../@vex/components/config-panel/color-variables';
+import { SIDEBAR_CONFIG } from './core/config/sidebar.config';
 
 @Component({
   selector: 'vex-root',
@@ -116,8 +117,16 @@ export class AppComponent {
     });
 
     /**
-     * Add your own routes here
+     * Load sidebar navigation from config
+     * This allows easy updates via sidebar.config.ts without touching component code
      */
+    this.navigationService.items = SIDEBAR_CONFIG.items;
+    
+    /**
+     * Previous navigation configuration (kept for reference)
+     * Uncomment and modify if needed for fallback
+     */
+    /*
     this.navigationService.items = [
       {
         type: 'subheading',
@@ -129,30 +138,24 @@ export class AppComponent {
             route: '/',
             icon: 'mat:insights',
             routerLinkActiveOptions: { exact: true }
-          },
-          /*
-          {
-            type: 'link',
-            label: 'Finance',
-            route: '/',
-            icon: icLayers,
-            routerLinkActiveOptions: { exact: true }
-          },
-           */
+          }
+          // Finance link removed - uncomment if needed:
+          // {
+          //   type: 'link',
+          //   label: 'Finance',
+          //   route: '/',
+          //   icon: icLayers,
+          //   routerLinkActiveOptions: { exact: true }
+          // }
         ]
       },
       {
-            type: 'dropdown',
-            label: 'Notebooks',
-            icon: 'mat:note',
-            children: [
-              {
-                type: 'link',
-                label: 'First Notebook',
-                route: '/apps/editor'
-              }
-            ]
-          },
+        type: 'link',
+        label: 'Notes',
+        route: '/notes',
+        icon: 'mat:note',
+        routerLinkActiveOptions: { exact: false }
+      },
       {
         type: 'subheading',
         label: 'Apps',
@@ -646,5 +649,6 @@ export class AppComponent {
         icon: 'mat:settings'
       }
     ];
+    */
   }
 }

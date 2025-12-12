@@ -1,0 +1,181 @@
+@import '../../../../../../@vex/styles/partials/mixins';
+
+.collaborator-presence-sidebar {
+  padding: 1rem;
+  border-top: 1px solid var(--foreground-divider);
+  margin-top: auto;
+}
+
+.presence-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.presence-count {
+  background-color: var(--background-hover);
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.collaborator-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.collaborator-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:hover,
+  &:focus {
+    background-color: var(--background-hover);
+    outline: none;
+  }
+  
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-rgb);
+    outline-offset: 2px;
+  }
+}
+
+.collaborator-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  .avatar-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .avatar-initials {
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+}
+
+.collaborator-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.collaborator-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collaborator-status {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  
+  &.idle {
+    color: var(--text-hint);
+    font-style: italic;
+  }
+}
+
+// Editor cursor indicators
+.collaborator-cursors {
+  position: relative;
+  pointer-events: none;
+}
+
+.cursor-indicator {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: auto;
+  z-index: 1000;
+  transition: transform 0.1s ease-out;
+  
+  &:hover,
+  &:focus {
+    z-index: 1001;
+    outline: none;
+    
+    .cursor-label {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-rgb);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+}
+
+.cursor-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.cursor-label {
+  background-color: var(--background-foreground);
+  color: var(--text-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: translateX(-0.5rem);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  border: 1px solid var(--foreground-divider);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+// Tooltip styling
+::ng-deep .collaborator-tooltip {
+  font-size: 0.75rem !important;
+  max-width: 300px !important;
+  white-space: normal !important;
+}
+

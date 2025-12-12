@@ -32,6 +32,13 @@ const routes: VexRoutes = [
       },
       {
         path: '',
+        loadChildren: () => import('./pages/home/home.module').then(m => m.HomeModule),
+        data: {
+          toolbarShadowEnabled: false
+        }
+      },
+      {
+        path: 'dashboards/analytics',
         loadChildren: () => import('./pages/dashboards/dashboard-analytics/dashboard-analytics.module').then(m => m.DashboardAnalyticsModule),
       },
       {
@@ -84,6 +91,29 @@ const routes: VexRoutes = [
             loadChildren: () => import('./pages/apps/editor/editor.module').then(m => m.EditorModule),
           },
         ]
+      },
+      {
+        path: 'notes',
+        loadChildren: () => import('./pages/notes/notes-page.module').then(m => m.NotesPageModule),
+        data: {
+          toolbarShadowEnabled: false
+        }
+      },
+      {
+        path: 'tasks',
+        loadChildren: () => import('./pages/tasks/tasks.module').then(m => m.TasksModule),
+      },
+      {
+        path: 'files',
+        loadChildren: () => import('./pages/files/files.module').then(m => m.FilesModule),
+      },
+      {
+        path: 'notebooks',
+        loadChildren: () => import('./pages/notebooks/notebooks.module').then(m => m.NotebooksModule),
+      },
+      {
+        path: 'tags',
+        loadChildren: () => import('./pages/tags/tags.module').then(m => m.TagsModule),
       },
       {
         path: 'pages',
@@ -158,12 +188,12 @@ const routes: VexRoutes = [
 ];
 
 @NgModule({
-    imports: [RouterModule.forRoot(routes, {
-        preloadingStrategy: QuicklinkStrategy,
-        scrollPositionRestoration: 'enabled',
-        anchorScrolling: 'enabled'
-    })],
-    exports: [RouterModule, QuicklinkModule]
+  imports: [RouterModule.forRoot(routes, {
+    preloadingStrategy: QuicklinkStrategy,
+    scrollPositionRestoration: 'enabled',
+    anchorScrolling: 'enabled'
+  })],
+  exports: [RouterModule, QuicklinkModule]
 })
 export class AppRoutingModule {
 }

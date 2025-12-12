@@ -390,30 +390,48 @@ If you want collaborative cursors (showing other users’ caret positions inside
 
 # 14 — Dev tasks / Milestones
 
-Week 1 — Setup
+## ✅ Completed (Current Status)
 
-* Create Angular project; add Vex theme
-* Setup routing, auth skeleton
-* Setup IndexedDB storage service
+* ✅ Angular project setup with Vex theme integration
+* ✅ Data models consolidated in `core/models/` (User, Note, Notebook, Tag, Attachment, SyncQueue)
+* ✅ Core services implemented:
+  - `ApiService` - HTTP client wrapper
+  - `AuthService` - JWT authentication
+  - `StorageService` - In-memory cache (extensible to IndexedDB)
+  - `SyncService` - Offline sync queue management
+* ✅ Feature services implemented:
+  - `NotesService` - Notes, Notebooks, Tags CRUD
+  - `SearchService` - Search and filtering
+* ✅ Auth guard for route protection
+* ✅ Environment configuration for API URL
 
-Week 2 — Core notes CRUD
+## 🔄 In Progress / Next Steps
 
-* Notes list, create/edit, note service + local persistence
-* Basic search & tag filtering
+**Week 1-2 — UI Components (Current Focus)**
+* Create Notes module and routing
+* Build notes list component
+* Build note editor component (rich-text)
+* Build sidebar component (notebooks, tags, filters)
+* Build search bar component
 
-Week 3 — Offline & Sync
+**Week 3 — Integration & Sync**
+* Connect components to services
+* Implement offline sync UI indicators
+* Add PWA support (optional)
 
-* Implement sync queue & server stubs
-* Add PWA support
+**Week 4 — Rich Features**
+* Rich-text editor integration (ngx-quill)
+* Attachments upload/display
+* Tag management UI
+* Notebook organization UI
+* Keyboard shortcuts
+* Tests
 
-Week 4 — Rich features
-
-* Rich-text editor, attachments, tagging UI, notebooks
-* Polishing, keyboard shortcuts, tests
-
-Optional Week 5 — Realtime
-
-* Add WebSocket, presence, cursors, collaboration model
+**Week 5+ — Backend API (Node.js)**
+* REST API endpoints for notes, notebooks, tags
+* Authentication endpoints
+* Sync endpoint for offline queue
+* WebSocket server (optional for realtime)
 
 ---
 

@@ -1,7 +1,5 @@
-@use 'src/styles/tokens' as tokens;
-
 .block-editor-container {
-    padding: tokens.space(2) 0;
+    padding: 1rem 0;
     padding-bottom: 400px; // Space at bottom for smooth scrolling
     position: relative;
     min-height: 100%;
@@ -16,8 +14,8 @@
     position: relative;
     display: flex; // Keep flex for proper alignment
     align-items: flex-start;
-    margin-bottom: tokens.space(2); // Increased vertical spacing
-    padding-left: tokens.space(6); // Space for drag handle
+    margin-bottom: 1rem; // Increased vertical spacing
+    padding-left: 3rem; // Space for drag handle
     transition: background-color 0.15s ease;
     width: 100%; // Ensure full width
     max-width: 100%; // Prevent overflow
@@ -46,8 +44,8 @@
 
 .drag-handle {
     position: absolute;
-    left: tokens.space(1);
-    top: tokens.space(1);
+    left: 0.5rem;
+    top: 0.5rem;
     cursor: grab;
     opacity: 0;
     transition: opacity 0.2s ease, color 0.2s ease, background-color 0.2s ease;
@@ -93,7 +91,7 @@
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     opacity: 0.95;
-    padding: tokens.space(2);
+    padding: 1rem;
     transform: rotate(1deg);
 }
 
@@ -102,7 +100,7 @@
     background: var(--color-surface-hover);
     border: 2px dashed var(--color-border);
     border-radius: var(--radius-md);
-    margin: tokens.space(1) 0;
+    margin: 0.5rem 0;
 }
 
 .cdk-drag-animating {
