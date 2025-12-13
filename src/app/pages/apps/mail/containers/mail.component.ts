@@ -16,6 +16,7 @@ import { ConfigService } from '../../../../../@vex/config/config.service';
 @UntilDestroy()
 @Component({
   selector: 'vex-mail',
+  standalone: false,
   templateUrl: './mail.component.html',
   styleUrls: ['./mail.component.scss'],
   animations: [

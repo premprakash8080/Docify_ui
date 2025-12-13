@@ -5,6 +5,7 @@ import { fadeInRight400ms } from '../../../../../@vex/animations/fade-in-right.a
 import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animation';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-dialogs',
   templateUrl: './components-dialogs.component.html',
   styleUrls: ['./components-dialogs.component.scss'],

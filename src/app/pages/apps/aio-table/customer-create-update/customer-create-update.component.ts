@@ -5,6 +5,7 @@ import { Customer } from '../interfaces/customer.model';
 
 @Component({
   selector: 'vex-customer-create-update',
+  standalone: false,
   templateUrl: './customer-create-update.component.html',
   styleUrls: ['./customer-create-update.component.scss']
 })

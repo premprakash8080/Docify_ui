@@ -4,6 +4,7 @@ import { ShareBottomSheetComponent } from '../../share-bottom-sheet/share-bottom
 import { scaleInOutAnimation } from '../../../animations/scale-in-out.animation';
 
 @Component({
+  standalone: false,
   selector: 'vex-widget-quick-value-center',
   templateUrl: './widget-quick-value-center.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

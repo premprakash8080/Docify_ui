@@ -2,6 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { DateTime } from 'luxon';
 
 @Pipe({
+  standalone: false,
   name: 'dateTokens'
 })
 export class DateTokensPipe implements PipeTransform {

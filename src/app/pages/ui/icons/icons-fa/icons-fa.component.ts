@@ -8,6 +8,7 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { DOCUMENT } from '@angular/common';
 
 @Component({
+  standalone: false,
   selector: 'vex-icons-fa',
   templateUrl: './icons-fa.component.html',
   styleUrls: ['./icons-fa.component.scss'],

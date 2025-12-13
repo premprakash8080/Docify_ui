@@ -5,6 +5,7 @@ import { fadeInRight400ms } from '../../../../../@vex/animations/fade-in-right.a
 import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animation';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-grid-list',
   templateUrl: './components-grid-list.component.html',
   styleUrls: ['./components-grid-list.component.scss'],

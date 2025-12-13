@@ -5,6 +5,7 @@ import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animati
 
 @Component({
   selector: 'vex-forgot-password',
+  standalone: false,
   templateUrl: './forgot-password.component.html',
   styleUrls: ['./forgot-password.component.scss'],
   animations: [fadeInUp400ms]

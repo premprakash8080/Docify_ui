@@ -3,6 +3,7 @@ import { fadeInUp400ms } from '../../../../@vex/animations/fade-in-up.animation'
 
 @Component({
   selector: 'vex-invoice',
+  standalone: false,
   templateUrl: './invoice.component.html',
   styleUrls: ['./invoice.component.scss'],
   animations: [

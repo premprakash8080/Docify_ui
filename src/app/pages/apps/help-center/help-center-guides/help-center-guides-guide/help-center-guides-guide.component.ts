@@ -4,6 +4,7 @@ import { Guide } from '../help-center-guides.component';
 
 @Component({
   selector: 'vex-help-center-guides-guide',
+  standalone: false,
   templateUrl: './help-center-guides-guide.component.html',
   styleUrls: ['./help-center-guides-guide.component.scss']
 })

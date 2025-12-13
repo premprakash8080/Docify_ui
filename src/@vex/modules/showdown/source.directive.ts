@@ -51,7 +51,8 @@ import { ShowdownComponent } from './showdown.component';
  */
 @Directive({
   selector: 'showdown[src],[showdown][src]',
-  exportAs: 'source'
+  exportAs: 'source',
+  standalone: false
 })
 export class SourceDirective implements OnChanges {
 

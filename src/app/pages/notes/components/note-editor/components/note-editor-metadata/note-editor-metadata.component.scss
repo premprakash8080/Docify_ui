@@ -1,0 +1,86 @@
+// Metadata Section - Secondary, low-contrast style
+.note-metadata {
+  margin-bottom: 24px;
+}
+
+.metadata-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.metadata-item {
+  white-space: nowrap;
+  
+  &.edited-time {
+    color: var(--text-hint);
+  }
+  
+  &.word-count {
+    color: var(--text-hint);
+  }
+}
+
+// Tags as Pills/Chips
+.metadata-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 12px;
+  background-color: var(--background-hover);
+  color: var(--text-secondary);
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: default;
+  
+  &:hover {
+    background-color: var(--background-card);
+    color: var(--text-color);
+    
+    .tag-remove {
+      opacity: 1;
+    }
+  }
+  
+  .tag-remove {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    margin: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: var(--text-hint);
+    
+    &:hover {
+      color: var(--text-color);
+      background-color: transparent;
+    }
+    
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .metadata-row {
+    gap: 12px;
+    font-size: 12px;
+  }
+}

@@ -5,6 +5,7 @@ import { fadeInRight400ms } from '../../../../../@vex/animations/fade-in-right.a
 import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animation';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-autocomplete',
   templateUrl: './components-autocomplete.component.html',
   styleUrls: ['./components-autocomplete.component.scss'],

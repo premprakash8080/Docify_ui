@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-overview-dialogs',
   templateUrl: './components-overview-dialogs.component.html',
   styleUrls: ['./components-overview-dialogs.component.scss']
@@ -29,6 +30,7 @@ export class ComponentsOverviewDialogsComponent {
 }
 
 @Component({
+  standalone: false,
   selector: 'vex-components-overview-demo-dialog',
   template: `
     <div mat-dialog-title class="flex items-center justify-between">

@@ -262,7 +262,42 @@ export const notes: Note[] = [
     trashed: false,
     version: 5,
     createdAt: pastDate(40),
-    updatedAt: recentDate(1)
+    updatedAt: recentDate(1),
+    tasks: [
+      {
+        id: 'task_1',
+        noteId: 'note_2',
+        content: 'Finalize product requirements',
+        completed: true,
+        dueDate: pastDate(5),
+        priority: 'high',
+        order: 1,
+        createdAt: pastDate(30),
+        updatedAt: pastDate(5)
+      },
+      {
+        id: 'task_2',
+        noteId: 'note_2',
+        content: 'Prepare marketing materials',
+        completed: false,
+        dueDate: recentDate(0),
+        priority: 'medium',
+        order: 2,
+        createdAt: pastDate(25),
+        updatedAt: pastDate(25)
+      },
+      {
+        id: 'task_3',
+        noteId: 'note_2',
+        content: 'Schedule launch date',
+        completed: false,
+        dueDate: recentDate(-2),
+        priority: 'high',
+        order: 3,
+        createdAt: pastDate(20),
+        updatedAt: pastDate(20)
+      }
+    ]
   },
   // User 1 - Regular Notes
   {

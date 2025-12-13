@@ -8,6 +8,7 @@ import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animati
   selector: 'vex-components-slider',
   templateUrl: './components-slider.component.html',
   styleUrls: ['./components-slider.component.scss'],
+  standalone: false,
   animations: [
     stagger80ms,
     scaleIn400ms,

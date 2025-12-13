@@ -1,0 +1,61 @@
+<div class="notes-dashboard" [class.mobile]="isMobile">
+  <!-- Two Column Layout (Desktop) -->
+  @if (!isMobile) {
+  <div class="dashboard-layout">
+    <!-- Left Column: Notes List -->
+    <div class="dashboard-center">
+      <vex-notes-list
+        [selectedNoteId]="selectedNoteId"
+        [filterBy]="currentFilter"
+        [notebookId]="selectedNotebookId"
+        [tagId]="selectedTagId"
+        [searchQuery]="searchQuery"
+        [notes$]="filteredNotes$"
+        (noteSelected)="onNoteSelected($event)">
+      </vex-notes-list>
+    </div>
+
+    <!-- Right Column: Note Editor/Preview -->
+    <div class="dashboard-right">
+      @if ((selectedNote$ | async) === null) {
+      <div class="editor-empty">
+        <div class="empty-content">
+          <mat-icon class="empty-icon" svgIcon="mat:note"></mat-icon>
+          <h3 class="empty-title">Select a note to view</h3>
+          <p class="empty-description">Choose a note from the list to start editing</p>
+          <button mat-raised-button color="primary" (click)="onNewNote()">
+            <mat-icon svgIcon="mat:add"></mat-icon>
+            New Note
+          </button>
+        </div>
+      </div>
+      }
+      
+      @if (selectedNote$ | async; as selectedNote) {
+      <div class="editor-content">
+        <vex-note-editor
+          [note]="selectedNote"
+          (noteUpdated)="onNoteUpdated($event)"
+          (noteSaved)="onNoteSaved($event)">
+        </vex-note-editor>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- Mobile Layout -->
+  @if (isMobile) {
+  <div class="mobile-layout">
+    <vex-notes-list
+      [selectedNoteId]="selectedNoteId"
+      [filterBy]="currentFilter"
+      [notebookId]="selectedNotebookId"
+      [tagId]="selectedTagId"
+      [searchQuery]="searchQuery"
+      [notes$]="filteredNotes$"
+      (noteSelected)="onNoteSelected($event)">
+    </vex-notes-list>
+  </div>
+  }
+</div>

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-overview-cards',
   templateUrl: './components-overview-cards.component.html',
   styleUrls: ['./components-overview-cards.component.scss']

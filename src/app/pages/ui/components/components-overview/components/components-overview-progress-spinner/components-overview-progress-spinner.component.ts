@@ -4,7 +4,8 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'vex-components-overview-progress-spinner',
   templateUrl: './components-overview-progress-spinner.component.html',
-  styleUrls: ['./components-overview-progress-spinner.component.scss']
+  styleUrls: ['./components-overview-progress-spinner.component.scss'],
+  standalone: false
 })
 export class ComponentsOverviewProgressSpinnerComponent implements OnInit {
 

@@ -1,6 +1,44 @@
-.notebooks-container {
-  padding: 2rem;
-  text-align: center;
-  color: var(--text-secondary);
-}
+// Evernote Notebooks Page Styles
+::ng-deep {
+  .new-notebook-btn {
+    --mdc-protected-button-container-color: #10b981;
+    --mdc-protected-button-label-text-color: #ffffff;
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+    
+    &:hover {
+      background-color: #059669 !important;
+    }
+    
+    .mat-icon {
+      color: #ffffff !important;
+    }
+  }
 
+  // Ensure table has proper spacing
+  table.mat-mdc-table {
+    width: 100%;
+    
+    th, td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--foreground-divider);
+    }
+    
+    th {
+      font-weight: 500;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+    
+    td {
+      font-size: 0.875rem;
+    }
+  }
+
+  // Search field styling
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: var(--background-app-bar);
+    }
+  }
+}

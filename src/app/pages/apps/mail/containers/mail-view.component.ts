@@ -10,6 +10,7 @@ import { LayoutService } from '../../../../../@vex/services/layout.service';
 
 @Component({
   selector: 'vex-mail-view',
+  standalone: false,
   templateUrl: './mail-view.component.html',
   styleUrls: ['./mail-view.component.scss'],
   animations: [

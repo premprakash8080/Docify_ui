@@ -18,6 +18,7 @@ import { Observable } from 'rxjs';
 
 @Component({
   selector: 'vex-scrumboard',
+  standalone: false,
   templateUrl: './scrumboard.component.html',
   styleUrls: ['./scrumboard.component.scss'],
   animations: [

@@ -9,6 +9,7 @@ interface MenuItem {
 }
 
 @Component({
+  standalone: false,
     selector: 'app-slash-menu',
     templateUrl: './slash-menu.component.html',
     styleUrls: ['./slash-menu.component.scss']

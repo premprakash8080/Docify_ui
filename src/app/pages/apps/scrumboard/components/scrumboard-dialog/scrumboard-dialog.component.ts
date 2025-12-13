@@ -11,6 +11,7 @@ import { ScrumboardComment } from '../../interfaces/scrumboard-comment.interface
 
 @Component({
   selector: 'vex-scrumboard-dialog',
+  standalone: false,
   templateUrl: './scrumboard-dialog.component.html',
   styleUrls: ['./scrumboard-dialog.component.scss']
 })

@@ -16,6 +16,7 @@ import { ChatService } from '../chat.service';
 @UntilDestroy()
 @Component({
   selector: 'vex-chat-conversation',
+  standalone: false,
   templateUrl: './chat-conversation.component.html',
   styleUrls: ['./chat-conversation.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-overview-tooltip',
   templateUrl: './components-overview-tooltip.component.html',
   styleUrls: ['./components-overview-tooltip.component.scss']

@@ -1,0 +1,57 @@
+<div class="note-page-container" [class.mobile]="isMobile">
+  <!-- Desktop Layout: Two Columns (Sidebar + Note Editor) -->
+  @if (!isMobile) {
+    <div class="note-page-layout">
+      <!-- Left Column: Notes List Sidebar -->
+      <div class="note-page-sidebar">
+        <vex-notes-list
+          [selectedNoteId]="noteId"
+          [notes$]="filteredNotes$"
+          (noteSelected)="onNoteSelected($event)">
+        </vex-notes-list>
+      </div>
+
+      <!-- Right Column: Note Content Area (with unified header) -->
+      <div class="note-page-content-area">
+        <vex-note-page-content
+          [note]="note"
+          [isSaving]="isSaving"
+          [lastSaved]="lastSaved"
+          (previous)="onPreviousNote()"
+          (next)="onNextNote()"
+          (fullscreen)="toggleFullscreen()"
+          (share)="onShare()"
+          (link)="onCopyLink()"
+          (pin)="onPin()"
+          (archive)="onArchive()"
+          (export)="onExport()"
+          (manageTags)="onManageTags()"
+          (delete)="onDelete()"
+          (noteUpdated)="onNoteUpdated($event)">
+        </vex-note-page-content>
+      </div>
+    </div>
+  }
+
+  <!-- Mobile Layout: Full Screen Note Editor -->
+  @if (isMobile) {
+    <div class="note-page-mobile">
+      <vex-note-page-content
+        [note]="note"
+        [isSaving]="isSaving"
+        [lastSaved]="lastSaved"
+        (previous)="onPreviousNote()"
+        (next)="onNextNote()"
+        (fullscreen)="toggleFullscreen()"
+        (share)="onShare()"
+        (link)="onCopyLink()"
+        (pin)="onPin()"
+        (archive)="onArchive()"
+        (export)="onExport()"
+        (manageTags)="onManageTags()"
+        (delete)="onDelete()"
+        (noteUpdated)="onNoteUpdated($event)">
+      </vex-note-page-content>
+    </div>
+  }
+</div>

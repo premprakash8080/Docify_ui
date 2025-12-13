@@ -6,6 +6,7 @@ import { stagger80ms } from '../../../../../@vex/animations/stagger.animation';
 import { colors } from '../../../../../static-data/colors';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-buttons',
   templateUrl: './components-buttons.component.html',
   styleUrls: ['./components-buttons.component.scss'],

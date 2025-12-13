@@ -3,7 +3,8 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 @Component({
   selector: 'vex-config-panel-toggle',
   templateUrl: './config-panel-toggle.component.html',
-  styleUrls: ['./config-panel-toggle.component.scss']
+  styleUrls: ['./config-panel-toggle.component.scss'],
+  standalone: false
 })
 export class ConfigPanelToggleComponent implements OnInit {
 

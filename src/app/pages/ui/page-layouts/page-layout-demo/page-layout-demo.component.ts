@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'vex-page-layout-demo',
   templateUrl: './page-layout-demo.component.html',
   styleUrls: ['./page-layout-demo.component.scss']

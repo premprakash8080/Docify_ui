@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-overview-menu',
   templateUrl: './components-overview-menu.component.html',
   styleUrls: ['./components-overview-menu.component.scss']

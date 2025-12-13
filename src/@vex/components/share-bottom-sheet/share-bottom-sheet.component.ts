@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { MatBottomSheetRef } from '@angular/material/bottom-sheet';
 
 @Component({
+  standalone: false,
   selector: 'vex-share-bottom-sheet',
   templateUrl: './share-bottom-sheet.component.html',
   styleUrls: ['./share-bottom-sheet.component.scss']

@@ -7,6 +7,7 @@ import { SearchService } from '../../services/search.service';
 
 @UntilDestroy()
 @Component({
+  standalone: false,
   selector: 'vex-search',
   templateUrl: './search.component.html',
   styleUrls: ['./search.component.scss']

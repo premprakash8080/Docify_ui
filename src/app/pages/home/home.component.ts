@@ -1,19 +1,49 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
-import { Observable, Subject, combineLatest } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
-import { Note, Notebook, Tag } from '../../core/models';
-import { NotesService } from '../../features/notes/services/notes.service';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { Observable, Subject } from 'rxjs';
+import { map, takeUntil, shareReplay } from 'rxjs/operators';
+import { Note, Notebook, Tag, Task } from '../../core/models';
+import { NotesService } from '../notes/services/notes.service';
 import { LayoutService } from '../../../@vex/services/layout.service';
+import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
+import { StripHtmlModule } from '../../../@vex/pipes/strip-html/strip-html.module';
+import { RelativeDateTimeModule } from '../../../@vex/pipes/relative-date-time/relative-date-time.module';
 
 @Component({
-  selector: 'app-home',
+  selector: 'vex-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  styleUrls: ['./home.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    PageLayoutModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule,
+    StripHtmlModule,
+    RelativeDateTimeModule
+  ]
 })
 export class HomeComponent implements OnInit, OnDestroy {
   isMobile = false;
   private destroy$ = new Subject<void>();
+
+  // Inject services
+  router = inject(Router);
+  notesService = inject(NotesService);
+  layoutService = inject(LayoutService);
 
   // Observables for data
   recentNotes$: Observable<Note[]>;
@@ -26,16 +56,15 @@ export class HomeComponent implements OnInit, OnDestroy {
   capturedFilter = 'web-clips';
 
   // Maps for quick lookup
-  private notebooksMap: Map<string, Notebook> = new Map();
-  private tagsMap: Map<string, Tag> = new Map();
+  private notebooksMap = new Map<string, Notebook>();
+  private tagsMap = new Map<string, Tag>();
 
-  constructor(
-    private router: Router,
-    private notesService: NotesService,
-    private layoutService: LayoutService
-  ) {
+  constructor() {
+    // Share notes observable to avoid multiple subscriptions
+    const allNotes$ = this.notesService.getNotes().pipe(shareReplay(1));
+
     // Get recent notes (last 10 for display, excluding trashed/archived)
-    this.recentNotes$ = this.notesService.getNotes().pipe(
+    this.recentNotes$ = allNotes$.pipe(
       map(notes => notes
         .filter(n => !n.trashed && !n.archived)
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
@@ -43,18 +72,18 @@ export class HomeComponent implements OnInit, OnDestroy {
       )
     );
 
-    this.notebooks$ = this.notesService.getNotebooks();
-    this.tags$ = this.notesService.getTags();
+    this.notebooks$ = this.notesService.getNotebooks().pipe(shareReplay(1));
+    this.tags$ = this.notesService.getTags().pipe(shareReplay(1));
 
     // Web clips (for now, filter notes with specific tag or property)
-    this.webClips$ = this.notesService.getNotes().pipe(
+    this.webClips$ = allNotes$.pipe(
       map(notes => notes
         .filter(n => !n.trashed && !n.archived && n.tags?.some(t => t.toLowerCase().includes('web') || t.toLowerCase().includes('clip')))
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       )
     );
 
-    // Build notebook map for quick lookups
+    // Build notebook map for quick lookups - need subscription for map
     this.notebooks$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(notebooks => {
@@ -62,7 +91,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       notebooks.forEach(nb => this.notebooksMap.set(nb.id, nb));
     });
 
-    // Build tags map for quick lookups
+    // Build tags map for quick lookups - need subscription for map
     this.tags$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(tags => {
@@ -130,7 +159,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     return tag?.name || '';
   }
 
-  getCompletedTasksCount(tasks: any[]): number {
+  getCompletedTasksCount(tasks: Task[] | undefined): number {
     if (!tasks || !Array.isArray(tasks)) return 0;
     return tasks.filter(t => t.completed).length;
   }

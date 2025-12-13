@@ -32,8 +32,8 @@ export function hljsLanguages() {
     },
     HighlightService
   ],
-  declarations: [HighlightDirective],
-  imports: [],
+  declarations: [],
+  imports: [HighlightDirective],
   exports: [HighlightDirective],
 })
 export class HighlightModule {

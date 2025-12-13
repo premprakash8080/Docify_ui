@@ -6,6 +6,7 @@ import { ShareBottomSheetComponent } from '../../share-bottom-sheet/share-bottom
 import { scaleInOutAnimation } from '../../../animations/scale-in-out.animation';
 
 @Component({
+  standalone: false,
   selector: 'vex-widget-quick-line-chart',
   templateUrl: './widget-quick-line-chart.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

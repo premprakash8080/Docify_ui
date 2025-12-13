@@ -8,6 +8,7 @@ import { stagger40ms } from '../../../../../@vex/animations/stagger.animation';
 
 @Component({
   selector: 'vex-social-timeline',
+  standalone: false,
   templateUrl: './social-timeline.component.html',
   styleUrls: ['./social-timeline.component.scss'],
   animations: [

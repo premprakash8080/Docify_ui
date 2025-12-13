@@ -1,0 +1,31 @@
+<!-- Metadata Section: Secondary, low-contrast style -->
+<div class="note-metadata" *ngIf="note">
+  <div class="metadata-row">
+    <!-- Edited Time -->
+    <span class="metadata-item edited-time" *ngIf="lastEdited">
+      Edited {{ lastEdited }}
+    </span>
+    
+    <!-- Tags as Pills -->
+    <div class="metadata-tags" *ngIf="note.tags && note.tags.length > 0">
+      @for (tag of note.tags; track tag) {
+        <span class="tag-pill" [attr.aria-label]="'Tag: ' + tag">
+          {{ tag }}
+          <button 
+            mat-icon-button
+            (click)="onRemoveTag(tag, $event)"
+            [attr.aria-label]="'Remove tag ' + tag"
+            type="button"
+            class="tag-remove">
+            <mat-icon svgIcon="mat:close"></mat-icon>
+          </button>
+        </span>
+      }
+    </div>
+    
+    <!-- Word Count -->
+    <span class="metadata-item word-count" *ngIf="wordCount > 0">
+      {{ wordCount }} {{ wordCount === 1 ? 'word' : 'words' }}
+    </span>
+  </div>
+</div>

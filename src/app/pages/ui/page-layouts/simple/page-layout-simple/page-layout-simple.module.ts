@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 
 @NgModule({
-  declarations: [PageLayoutSimpleComponent],
+  declarations: [],
   imports: [
     CommonModule,
     PageLayoutSimpleRoutingModule,
@@ -21,8 +21,8 @@ import { MatIconModule } from '@angular/material/icon';
     SecondaryToolbarModule,
     MatButtonModule,
     BreadcrumbsModule,
-
     MatIconModule,
+    PageLayoutSimpleComponent
   ]
 })
 export class PageLayoutSimpleModule {

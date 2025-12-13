@@ -21,6 +21,7 @@ import { MatSelectChange } from '@angular/material/select';
 @UntilDestroy()
 @Component({
   selector: 'vex-aio-table',
+  standalone: false,
   templateUrl: './aio-table.component.html',
   styleUrls: ['./aio-table.component.scss'],
   animations: [

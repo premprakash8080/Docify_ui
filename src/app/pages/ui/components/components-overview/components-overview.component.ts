@@ -28,6 +28,7 @@ import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animati
 import { stagger80ms } from '../../../../../@vex/animations/stagger.animation';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-overview',
   templateUrl: './components-overview.component.html',
   styleUrls: ['./components-overview.component.scss'],

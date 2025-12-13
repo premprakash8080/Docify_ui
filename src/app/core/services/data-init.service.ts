@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { StorageService } from './storage.service';
-import { NotesService } from '../../features/notes/services/notes.service';
+import { NotesService } from '../../pages/notes/services/notes.service';
 import { AuthService } from './auth.service';
 import { SAMPLE_DATA } from '../data';
 

@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { HomeComponent } from './home.component';
 import { VexRoutes } from '../../../@vex/interfaces/vex-route.interface';
 import { QuicklinkModule } from 'ngx-quicklink';

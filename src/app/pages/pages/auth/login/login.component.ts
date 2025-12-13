@@ -6,6 +6,7 @@ import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animati
 
 @Component({
   selector: 'vex-login',
+  standalone: false,
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

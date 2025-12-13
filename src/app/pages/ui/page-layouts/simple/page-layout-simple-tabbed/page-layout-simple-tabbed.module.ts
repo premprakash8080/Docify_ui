@@ -13,7 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 
 @NgModule({
-  declarations: [PageLayoutSimpleTabbedComponent],
+  declarations: [],
   imports: [
     CommonModule,
     PageLayoutSimpleTabbedRoutingModule,
@@ -23,8 +23,8 @@ import { MatIconModule } from '@angular/material/icon';
     PageLayoutDemoModule,
     BreadcrumbsModule,
     MatButtonModule,
-
     MatIconModule,
+    PageLayoutSimpleTabbedComponent
   ]
 })
 export class PageLayoutSimpleTabbedModule {

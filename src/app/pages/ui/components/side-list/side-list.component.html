@@ -1,0 +1,152 @@
+<div class="side-list-container">
+  <!-- Sidebar Header -->
+  @if (showHeader) {
+    <div class="side-list-header">
+      <h2 class="side-list-title">
+        {{ title }} <span class="items-count">{{ itemsCount }}</span>
+      </h2>
+      @if (showHeaderActions) {
+        <div class="side-list-actions">
+          <button 
+            mat-icon-button 
+            aria-label="Filter" 
+            (click)="onHeaderActionClick('filter')"
+            type="button">
+            <mat-icon svgIcon="mat:filter_list"></mat-icon>
+          </button>
+          <button 
+            mat-icon-button 
+            aria-label="More options" 
+            (click)="onHeaderActionClick('menu')"
+            type="button">
+            <mat-icon svgIcon="mat:more_horiz"></mat-icon>
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- List Content -->
+  <div class="side-list-content" [class.with-virtual-scroll]="enableVirtualScroll">
+    @if (hasItems) {
+      @if (enableVirtualScroll) {
+        <cdk-virtual-scroll-viewport 
+          [itemSize]="itemHeight" 
+          class="virtual-scroll-viewport">
+          @for (item of items; track getTrackBy()($index, item)) {
+            <div 
+              [class]="getItemClass(item)"
+              (click)="onItemClick(item, $event)"
+              (keydown)="onItemKeydown($event, item)"
+              [attr.role]="'button'"
+              [attr.tabindex]="0"
+              [attr.aria-label]="getItemTitle(item)">
+              
+              <div class="item-content">
+                <!-- Item Icon (optional) -->
+                @if (getItemIcon(item)) {
+                  <mat-icon 
+                    class="item-icon"
+                    [svgIcon]="'mat:' + getItemIcon(item)"
+                    [style.color]="getItemIconColor(item)">
+                  </mat-icon>
+                }
+                
+                <div class="item-text">
+                  <!-- Title -->
+                  <div class="item-title">{{ getItemTitle(item) }}</div>
+                  
+                  <!-- Subtitle -->
+                  @if (getItemSubtitle(item)) {
+                    <div class="item-subtitle">{{ getItemSubtitle(item) }}</div>
+                  }
+                  
+                  <!-- Metadata Row -->
+                  <div class="item-meta">
+                    <!-- Date -->
+                    @if (getItemDate(item)) {
+                      <span class="item-date">{{ getItemDate(item) }}</span>
+                    }
+                    
+                    <!-- Badges -->
+                    @for (badge of getItemBadges(item); track badge.label) {
+                      <div 
+                        class="item-badge"
+                        [style.color]="getBadgeColor(badge, item)">
+                        @if (getBadgeIcon(badge, item)) {
+                          <mat-icon class="badge-icon" [svgIcon]="'mat:' + getBadgeIcon(badge, item)"></mat-icon>
+                        }
+                        <span class="badge-label">{{ getBadgeLabel(badge, item) }}</span>
+                        <span class="badge-value">{{ getBadgeValue(badge, item) }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </cdk-virtual-scroll-viewport>
+      } @else {
+        @for (item of items; track getTrackBy()($index, item)) {
+          <div 
+            [class]="getItemClass(item)"
+            (click)="onItemClick(item, $event)"
+            (keydown)="onItemKeydown($event, item)"
+            [attr.role]="'button'"
+            [attr.tabindex]="0"
+            [attr.aria-label]="getItemTitle(item)">
+            
+            <div class="item-content">
+              <!-- Item Icon (optional) -->
+              @if (getItemIcon(item)) {
+                <mat-icon 
+                  class="item-icon"
+                  [svgIcon]="'mat:' + getItemIcon(item)"
+                  [style.color]="getItemIconColor(item)">
+                </mat-icon>
+              }
+              
+              <div class="item-text">
+                <!-- Title -->
+                <div class="item-title">{{ getItemTitle(item) }}</div>
+                
+                <!-- Subtitle -->
+                @if (getItemSubtitle(item)) {
+                  <div class="item-subtitle">{{ getItemSubtitle(item) }}</div>
+                }
+                
+                <!-- Metadata Row -->
+                <div class="item-meta">
+                  <!-- Date -->
+                  @if (getItemDate(item)) {
+                    <span class="item-date">{{ getItemDate(item) }}</span>
+                  }
+                  
+                  <!-- Badges -->
+                  @for (badge of getItemBadges(item); track badge.label) {
+                    <div 
+                      class="item-badge"
+                      [style.color]="getBadgeColor(badge, item)">
+                      @if (getBadgeIcon(badge, item)) {
+                        <mat-icon class="badge-icon" [svgIcon]="'mat:' + getBadgeIcon(badge, item)"></mat-icon>
+                      }
+                      <span class="badge-label">{{ getBadgeLabel(badge, item) }}</span>
+                      <span class="badge-value">{{ getBadgeValue(badge, item) }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    } @else {
+      <!-- Empty State -->
+      <div class="empty-state">
+        <mat-icon class="empty-icon" [svgIcon]="'mat:' + emptyStateIcon"></mat-icon>
+        <p class="empty-text">{{ emptyStateText }}</p>
+      </div>
+    }
+  </div>
+</div>
+

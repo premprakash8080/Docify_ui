@@ -11,13 +11,12 @@ import {
   ViewChild
 } from '@angular/core';
 import { asapScheduler } from 'rxjs';
-// @ts-ignore
 import ApexCharts from 'apexcharts';
 
 export interface ApexOptions {
   annotations?: ApexAnnotations;
   chart?: ApexChart;
-  colors?: any[];
+  colors?: string[];
   dataLabels?: ApexDataLabels;
   fill?: ApexFill;
   grid?: ApexGrid;
@@ -43,19 +42,20 @@ export interface ApexOptions {
   template: `
     <div #chart></div>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class ChartComponent implements OnInit, OnChanges {
-
   @Input() options: ApexOptions;
   @Input() series: ApexAxisChartSeries | ApexNonAxisChartSeries;
   @Input() autoUpdateSeries = true;
   public chart: ApexCharts;
   @ViewChild('chart', { static: true }) private chartElement: ElementRef;
 
-  constructor(private cd: ChangeDetectorRef,
-              private ngZone: NgZone) {}
-
+  constructor(
+    private readonly cd: ChangeDetectorRef,
+    private readonly ngZone: NgZone
+  ) {}
 
   ngOnInit() {
     asapScheduler.schedule(() => {

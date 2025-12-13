@@ -2,6 +2,7 @@ import { Component, Inject, Input, OnDestroy } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 
 @Component({
+  standalone: false,
   selector: 'vex-sidebar',
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss'],

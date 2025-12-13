@@ -7,7 +7,8 @@ import { Component, HostBinding, Input, ViewEncapsulation } from '@angular/core'
     class: 'vex-page-layout'
   },
   encapsulation: ViewEncapsulation.None,
-  styleUrls: ['./page-layout.component.scss']
+  styleUrls: ['./page-layout.component.scss'],
+  standalone: false
 })
 export class PageLayoutComponent {
 

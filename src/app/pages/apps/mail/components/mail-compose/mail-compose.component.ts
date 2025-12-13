@@ -4,6 +4,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'vex-mail-compose',
+  standalone: false,
   templateUrl: './mail-compose.component.html',
   styleUrls: [
     '../../../../../../../node_modules/quill/dist/quill.snow.css',

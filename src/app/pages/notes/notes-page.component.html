@@ -6,10 +6,10 @@
 
   <!-- Page Layout Content -->
   <vex-page-layout-content>
-    <!-- Notes Dashboard Container from Features Module -->
+    <!-- Notes Page Container -->
     <div class="notes-page-container">
-      <!-- Embedded Notes Dashboard Component from Features Module -->
-      <vex-notes-dashboard></vex-notes-dashboard>
+      <!-- Router outlet for child routes (dashboard, :id, new, etc.) -->
+      <router-outlet></router-outlet>
 
       <!-- Cursor Layer for Collaborative Editing -->
       <!-- This layer will be used to render collaborator cursors above the editor -->

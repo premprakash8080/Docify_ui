@@ -5,6 +5,7 @@ import { CalendarEvent } from 'angular-calendar';
 
 @Component({
   selector: 'vex-calendar-edit',
+  standalone: false,
   templateUrl: './calendar-edit.component.html',
   styleUrls: ['./calendar-edit.component.scss']
 })

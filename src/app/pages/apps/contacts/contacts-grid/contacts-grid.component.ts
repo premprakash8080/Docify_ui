@@ -15,6 +15,7 @@ import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'vex-contacts-grid',
+  standalone: false,
   templateUrl: './contacts-grid.component.html',
   styleUrls: ['./contacts-grid.component.scss'],
   animations: [

@@ -5,6 +5,7 @@ import { MatSort } from '@angular/material/sort';
 import { TableColumn } from '../../../interfaces/table-column.interface';
 
 @Component({
+  standalone: false,
   selector: 'vex-widget-table',
   templateUrl: './widget-table.component.html'
 })

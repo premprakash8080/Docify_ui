@@ -10,14 +10,15 @@ import { trackByValue } from '../../utils/track-by';
           <mat-icon svgIcon="mat:home" class="icon-sm"></mat-icon>
         </a>
       </vex-breadcrumb>
-      <ng-container *ngFor="let crumb of crumbs; trackBy: trackByValue">
-        <div class="w-1 h-1 bg-gray rounded-full ltr:mr-2 rtl:ml-2"></div>
-        <vex-breadcrumb>
-          <a [routerLink]="[]">{{ crumb }}</a>
-        </vex-breadcrumb>
-      </ng-container>
+      @for (crumb of crumbs; track trackByValue($index, crumb)) {
+      <div class="w-1 h-1 bg-gray rounded-full ltr:mr-2 rtl:ml-2"></div>
+      <vex-breadcrumb>
+        <a [routerLink]="[]">{{ crumb }}</a>
+      </vex-breadcrumb>
+      }
     </div>
-  `
+  `,
+  standalone: false
 })
 export class BreadcrumbsComponent implements OnInit {
 

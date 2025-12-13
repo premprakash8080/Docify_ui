@@ -12,6 +12,7 @@ import { Contact } from '../interfaces/contact.interface';
 
 @Component({
   selector: 'vex-contacts-table',
+  standalone: false,
   templateUrl: './contacts-table.component.html',
   animations: [
     stagger40ms,

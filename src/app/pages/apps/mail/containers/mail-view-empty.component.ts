@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'vex-mail-view-empty',
+  standalone: false,
   templateUrl: './mail-view-empty.component.html',
   styleUrls: ['./mail-view-empty.component.scss']
 })

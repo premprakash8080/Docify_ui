@@ -14,7 +14,8 @@ import { SearchModalComponent } from '../../components/search-modal/search-modal
 @Component({
   selector: 'vex-sidenav',
   templateUrl: './sidenav.component.html',
-  styleUrls: ['./sidenav.component.scss']
+  styleUrls: ['./sidenav.component.scss'],
+  standalone: false
 })
 export class SidenavComponent implements OnInit {
 

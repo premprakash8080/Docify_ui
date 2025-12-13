@@ -1,0 +1,277 @@
+<vex-page-layout mode="simple">
+  <vex-page-layout-header>
+    <div class="settings-header">
+      <h1 class="settings-title">Settings</h1>
+      <p class="settings-subtitle">Customize your application experience</p>
+    </div>
+  </vex-page-layout-header>
+
+  <vex-page-layout-content>
+    @if (config$ | async; as setting) {
+    <div class="settings-container">
+       <!-- Theme Base Section -->
+       <div class="settings-section">
+         <h2 class="section-title">Theme Layout</h2>
+         <div class="section-content">
+           <div class="theme-layout-buttons">
+             <button
+               (click)="setConfig(ConfigName.apollo, ColorSchemeName.light)"
+               class="theme-button"
+               mat-raised-button
+               type="button"
+             >
+               Light
+             </button>
+             <button
+               (click)="setConfig(ConfigName.apollo, ColorSchemeName.dark)"
+               class="theme-button"
+               mat-raised-button
+               type="button"
+             >
+               Dark
+             </button>
+             <button
+               (click)="setConfig(ConfigName.apollo, ColorSchemeName.default)"
+               class="theme-button"
+               mat-raised-button
+               type="button"
+             >
+               Default
+             </button>
+           </div>
+         </div>
+       </div>
+
+      <!-- Theme Colors Section -->
+      <div class="settings-section">
+        <h2 class="section-title">Theme Colors</h2>
+        <div class="section-content">
+          <div class="color-picker-grid">
+            @for (color of colorVariables | keyvalue; track color.key) {
+            <div
+              (click)="selectColor(color.value)"
+              (keyup.enter)="selectColor(color.value)"
+              (keyup.space)="selectColor(color.value)"
+              [class.selected]="isSelectedColor(color.value)"
+              [style.backgroundColor]="color.value.light"
+              [style.color]="color.value.default"
+              class="color-picker-item rounded-full flex items-center cursor-pointer relative"
+              matRipple
+              role="button"
+              [tabindex]="0"
+            >
+              <div
+                [style.backgroundColor]="color.value.default"
+                class="color-indicator"
+              >
+                @if (isSelectedColor(color.value)) {
+                <mat-icon svgIcon="mat:check"></mat-icon>
+                }
+              </div>
+              <p class="color-label">{{ color.key | uppercase }}</p>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+
+       <!-- Pre-built Styles Section -->
+       <!-- <div class="settings-section">
+         <h2 class="section-title">Pre-built Styles</h2>
+         <div class="section-content">
+           <div class="layout-grid">
+             @for (config of configs; track config.id; let first = $first) {
+             <div [class.mt-6]="!first" class="layout-card">
+               <div
+                 class="layout-image-container rounded overflow-hidden relative hover:bg-hover shadow-md"
+               >
+                 <img
+                   [src]="config.imgSrc"
+                   class="layout-image"
+                   alt="{{ config.name }} layout"
+                 />
+                 <div
+                   class="layout-overlay flex items-center justify-center gap-1"
+                 >
+                   <button
+                     (click)="setConfig(config.id, ColorSchemeName.light)"
+                     class="bg-contrast-white text-contrast-black"
+                     mat-raised-button
+                     type="button"
+                   >
+                     LIGHT
+                   </button>
+                   <button
+                     (click)="setConfig(config.id, ColorSchemeName.default)"
+                     color="primary"
+                     mat-raised-button
+                     type="button"
+                   >
+                     DEFAULT
+                   </button>
+                   <button
+                     (click)="setConfig(config.id, ColorSchemeName.dark)"
+                     class="bg-contrast-black text-contrast-white"
+                     mat-raised-button
+                     type="button"
+                   >
+                     DARK
+                   </button>
+                 </div>
+               </div>
+               <div class="layout-name">{{ config.name }}</div>
+             </div>
+             }
+           </div>
+         </div>
+       </div> -->
+
+      <!-- Rounded Corners Section -->
+      <div class="settings-section">
+        <h2 class="section-title">Rounded Corners</h2>
+        <div class="section-content">
+          <div class="border-radius-grid">
+            @for (borderRadius of roundedCornerValues; track borderRadius.value
+            + borderRadius.unit) {
+             <div
+               (click)="selectBorderRadius(borderRadius)"
+               (keyup.enter)="selectBorderRadius(borderRadius)"
+               (keyup.space)="selectBorderRadius(borderRadius)"
+               [ngClass]="{
+                 'border-gray-300': isSelectedBorderRadius(
+                   borderRadius,
+                   setting
+                 ),
+                 'border-transparent': !isSelectedBorderRadius(
+                   borderRadius,
+                   setting
+                 )
+               }"
+               class="border-radius-item aspect-square bg-primary/10 flex justify-end items-end cursor-pointer border-2 hover:border-gray-200 group trans-ease-out rounded-tl"
+               role="button"
+               [tabindex]="0"
+             >
+              <div
+                [ngClass]="{
+                  'bg-primary border-primary': isSelectedBorderRadius(
+                    borderRadius,
+                    setting
+                  ),
+                  'bg-foreground border-gray-500 group-hover:bg-app-bar':
+                    !isSelectedBorderRadius(borderRadius, setting)
+                }"
+                [style.border-top-left-radius]="
+                  borderRadius.value + borderRadius.unit
+                "
+                class="border-radius-preview"
+              ></div>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Button Style Section -->
+      <div class="settings-section">
+        <h2 class="section-title">Button Style</h2>
+        <div class="section-content">
+          <div class="button-style-options">
+            <button
+              (click)="selectButtonStyle(undefined)"
+              [ngClass]="{
+                '!bg-transparent !border-solid !border-primary !text-primary':
+                  !isSelectedButtonStyle(undefined, setting),
+                '!border-transparent': isSelectedButtonStyle(undefined, setting)
+              }"
+              class="rounded flex-1 border-2 border-solid"
+              color="primary"
+              mat-flat-button
+              type="button"
+            >
+              INHERIT
+            </button>
+            <button
+              (click)="selectButtonStyle(roundedButtonValue)"
+              [ngClass]="{
+                '!bg-transparent !border-solid !border-primary !text-primary':
+                  !isSelectedButtonStyle(roundedButtonValue, setting),
+                '!border-transparent': isSelectedButtonStyle(
+                  roundedButtonValue,
+                  setting
+                )
+              }"
+              class="rounded-full flex-1 border-2 border-solid"
+              color="primary"
+              mat-flat-button
+              type="button"
+            >
+              ROUNDED
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout Section -->
+      <div class="settings-section">
+        <h2 class="section-title">Layout</h2>
+        <div class="section-content">
+          <div class="setting-item">
+            <mat-slide-toggle
+              (change)="layoutRTLChange($event)"
+              [checked]="isRTL$ | async"
+            >
+              Orientation: RTL
+            </mat-slide-toggle>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toolbar Section -->
+      <div class="settings-section">
+        <h2 class="section-title">Toolbar</h2>
+        <div class="section-content">
+          <div class="setting-item">
+            <span class="setting-label">Position</span>
+            <mat-radio-group
+              (change)="toolbarPositionChange($event)"
+              [value]="setting.toolbar.fixed ? 'fixed' : 'static'"
+              class="radio-group"
+            >
+              <mat-radio-button value="fixed">Fixed</mat-radio-button>
+              <mat-radio-button value="static">Static</mat-radio-button>
+            </mat-radio-group>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Section -->
+      <div class="settings-section">
+        <h2 class="section-title">Footer</h2>
+        <div class="section-content">
+          <div class="setting-item">
+            <mat-slide-toggle
+              (change)="footerVisibleChange($event)"
+              [checked]="setting.footer.visible"
+            >
+              Show Footer
+            </mat-slide-toggle>
+          </div>
+          @if (setting.footer.visible) {
+          <div class="setting-item">
+            <span class="setting-label">Position</span>
+            <mat-radio-group
+              (change)="footerPositionChange($event)"
+              [value]="setting.footer.fixed ? 'fixed' : 'static'"
+              class="radio-group"
+            >
+              <mat-radio-button value="fixed">Fixed</mat-radio-button>
+              <mat-radio-button value="static">Static</mat-radio-button>
+            </mat-radio-group>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+    }
+  </vex-page-layout-content>
+</vex-page-layout>

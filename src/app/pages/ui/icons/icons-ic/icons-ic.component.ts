@@ -8,6 +8,7 @@ import { iconsIC } from '../../../../../static-data/icons-ic';
 import { DOCUMENT } from '@angular/common';
 
 @Component({
+  standalone: false,
   selector: 'vex-icons-ic',
   templateUrl: './icons-ic.component.html',
   styleUrls: ['./icons-ic.component.scss'],

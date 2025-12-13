@@ -13,6 +13,7 @@ export interface OnlineStatus {
 @Component({
   selector: 'vex-toolbar-user-dropdown',
   templateUrl: './toolbar-user-dropdown.component.html',
+  standalone: false,
   styleUrls: ['./toolbar-user-dropdown.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

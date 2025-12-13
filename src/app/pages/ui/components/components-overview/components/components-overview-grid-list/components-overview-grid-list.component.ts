@@ -4,7 +4,8 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'vex-components-overview-grid-list',
   templateUrl: './components-overview-grid-list.component.html',
-  styleUrls: ['./components-overview-grid-list.component.scss']
+  styleUrls: ['./components-overview-grid-list.component.scss'],
+  standalone: false
 })
 export class ComponentsOverviewGridListComponent implements OnInit {
 

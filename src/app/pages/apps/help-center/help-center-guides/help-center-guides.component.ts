@@ -20,6 +20,7 @@ export interface Guide {
 
 @Component({
   selector: 'vex-help-center-guides',
+  standalone: false,
   templateUrl: './help-center-guides.component.html',
   styleUrls: ['./help-center-guides.component.scss']
 })

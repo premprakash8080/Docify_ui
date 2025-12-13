@@ -1,0 +1,110 @@
+<!-- Unified Top App Bar: Navigation LEFT, Actions RIGHT -->
+<header class="unified-top-app-bar">
+  <div class="app-bar-content">
+    <!-- LEFT: Navigation -->
+    <div class="app-bar-left">
+      <!-- Navigation Controls (Previous/Next/Fullscreen) -->
+      <button 
+        mat-icon-button
+        (click)="onPrevious()"
+        [attr.aria-label]="'Previous note'"
+        type="button"
+        class="nav-button">
+        <mat-icon svgIcon="mat:chevron_left"></mat-icon>
+      </button>
+      
+      <button 
+        mat-icon-button
+        (click)="onNext()"
+        [attr.aria-label]="'Next note'"
+        type="button"
+        class="nav-button">
+        <mat-icon svgIcon="mat:chevron_right"></mat-icon>
+      </button>
+      
+      <button 
+        mat-icon-button
+        (click)="onFullscreen()"
+        [attr.aria-label]="'Toggle fullscreen'"
+        type="button"
+        class="nav-button">
+        <mat-icon svgIcon="mat:fullscreen"></mat-icon>
+      </button>
+      
+      <!-- Breadcrumb (appears ONLY ONCE) -->
+      <nav class="breadcrumb" *ngIf="note?.notebookId && notebookName" aria-label="Breadcrumb">
+        <a class="breadcrumb-link" [routerLink]="['/notebooks', note.notebookId]">
+          {{ notebookName }}
+        </a>
+        <mat-icon class="breadcrumb-separator" svgIcon="mat:chevron_right" aria-hidden="true"></mat-icon>
+        <span class="breadcrumb-current">{{ note.title || 'Untitled' }}</span>
+      </nav>
+    </div>
+    
+    <!-- RIGHT: Actions -->
+    <div class="app-bar-right">
+      <!-- Save Status (subtle, low-contrast) -->
+      <span class="save-status" *ngIf="isSaving" aria-live="polite">
+        <mat-icon class="saving-icon spinning" svgIcon="mat:sync" aria-hidden="true"></mat-icon>
+        <span class="sr-only">Saving</span>
+      </span>
+      <span class="save-status saved" *ngIf="!isSaving && lastSaved" aria-live="polite">
+        Saved {{ getFormatLastSaved() }}
+      </span>
+      
+      <!-- Action Buttons -->
+      <button 
+        mat-raised-button
+        color="primary"
+        (click)="onShare()"
+        [attr.aria-label]="'Share note'"
+        type="button"
+        class="share-button">
+        <mat-icon svgIcon="mat:share"></mat-icon>
+        <span>Share</span>
+      </button>
+      
+      <button 
+        mat-icon-button
+        (click)="onLink()"
+        [attr.aria-label]="'Copy link'"
+        type="button"
+        class="action-button">
+        <mat-icon svgIcon="mat:link"></mat-icon>
+      </button>
+      
+      <button 
+        mat-icon-button
+        [matMenuTriggerFor]="moreMenu"
+        [attr.aria-label]="'More options'"
+        type="button"
+        class="action-button">
+        <mat-icon svgIcon="mat:more_vert"></mat-icon>
+      </button>
+      
+      <mat-menu #moreMenu="matMenu">
+        <button mat-menu-item (click)="onPin()">
+          <mat-icon [svgIcon]="note?.pinned ? 'mat:push_pin' : 'mat:push_pin_outlined'"></mat-icon>
+          <span>{{ note?.pinned ? 'Unpin' : 'Pin' }}</span>
+        </button>
+        <button mat-menu-item (click)="onArchive()">
+          <mat-icon [svgIcon]="note?.archived ? 'mat:unarchive' : 'mat:archive'"></mat-icon>
+          <span>{{ note?.archived ? 'Unarchive' : 'Archive' }}</span>
+        </button>
+        <button mat-menu-item (click)="onExport()">
+          <mat-icon svgIcon="mat:download"></mat-icon>
+          <span>Export</span>
+        </button>
+        <button mat-menu-item (click)="onManageTags()">
+          <mat-icon svgIcon="mat:label"></mat-icon>
+          <span>Tags</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="onDelete()" class="delete-action">
+          <mat-icon svgIcon="mat:delete"></mat-icon>
+          <span>Delete</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+</header>

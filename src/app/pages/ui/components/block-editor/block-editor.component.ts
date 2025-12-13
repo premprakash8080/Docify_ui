@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
 @Component({
+  standalone: false,
     selector: 'app-block-editor',
     templateUrl: './block-editor.component.html',
     styleUrls: ['./block-editor.component.scss'],

@@ -4,7 +4,8 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'vex-components-overview-progress',
   templateUrl: './components-overview-progress.component.html',
-  styleUrls: ['./components-overview-progress.component.scss']
+  styleUrls: ['./components-overview-progress.component.scss'],
+  standalone: false
 })
 export class ComponentsOverviewProgressComponent implements OnInit {
 

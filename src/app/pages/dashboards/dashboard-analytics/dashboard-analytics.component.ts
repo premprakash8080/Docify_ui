@@ -5,6 +5,7 @@ import { TableColumn } from '../../../../@vex/interfaces/table-column.interface'
 
 @Component({
   selector: 'vex-dashboard-analytics',
+  standalone: false,
   templateUrl: './dashboard-analytics.component.html',
   styleUrls: ['./dashboard-analytics.component.scss']
 })

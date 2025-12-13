@@ -1,0 +1,115 @@
+@if (note) {
+  <div class="note-page-content">
+    <!-- Unified Header (appears ONLY ONCE) -->
+    <vex-unified-note-header
+      [note]="note"
+      [isSaving]="isSaving"
+      [lastSaved]="lastSaved"
+      [notebookName]="notebookName"
+      (previous)="onPrevious()"
+      (next)="onNext()"
+      (fullscreen)="onFullscreen()"
+      (share)="onShare()"
+      (link)="onLink()"
+      (pin)="onPin()"
+      (archive)="onArchive()"
+      (export)="onExport()"
+      (manageTags)="onManageTags()"
+      (delete)="onDelete()">
+    </vex-unified-note-header>
+
+    <!-- Note Title Section (appears ONLY ONCE) -->
+    <div class="note-title-section">
+      <h1 class="note-title">{{ note.title || 'Untitled' }}</h1>
+    </div>
+
+    <!-- Metadata: Secondary, low-contrast -->
+    <vex-note-editor-metadata
+      [note]="note"
+      [lastEdited]="note?.updatedAt ? getLastEditedText(note.updatedAt) : null"
+      [wordCount]="wordCount"
+      (removeTag)="onRemoveTag($event)">
+    </vex-note-editor-metadata>
+
+    <!-- Tasks List (shown above editor if tasks exist) -->
+    @if (note.tasks && note.tasks.length > 0) {
+      <div class="tasks-section">
+        @for (task of note.tasks; track trackByTaskId($index, task)) {
+          <div 
+            class="task-item"
+            [class.completed]="task.completed">
+            
+            <div class="task-handle">
+              <mat-icon class="drag-handle" svgIcon="mat:drag_indicator"></mat-icon>
+            </div>
+            
+            <mat-checkbox 
+              class="task-checkbox"
+              [checked]="task.completed"
+              (change)="toggleTask(task.id, $event.checked)"
+              color="primary">
+            </mat-checkbox>
+            
+            <div class="task-content">
+              <div class="task-text-wrapper">
+                <span class="task-text" [class.completed]="task.completed">{{ task.content }}</span>
+                @if (task.dueDate) {
+                  <span class="task-due-badge" [class.overdue]="isOverdue(task.dueDate)">
+                    {{ getFormattedDate(task.dueDate) }}
+                  </span>
+                }
+              </div>
+            </div>
+            
+            <div class="task-actions">
+              <button mat-icon-button aria-label="History" (click)="showTaskHistory(task.id)" type="button">
+                <mat-icon svgIcon="mat:history"></mat-icon>
+              </button>
+              <button mat-icon-button aria-label="Sync" (click)="syncTask(task.id)" type="button">
+                <mat-icon svgIcon="mat:sync"></mat-icon>
+              </button>
+              <button mat-icon-button aria-label="Add reminder" (click)="addTaskReminder(task.id)" type="button">
+                <mat-icon svgIcon="mat:add_alert"></mat-icon>
+              </button>
+              <button mat-icon-button aria-label="Flag" (click)="flagTask(task.id)" type="button">
+                <mat-icon [class.flagged]="task.priority === 'high'" svgIcon="mat:flag"></mat-icon>
+              </button>
+              <button mat-icon-button aria-label="Assign" (click)="assignTask(task.id)" type="button">
+                <mat-icon svgIcon="mat:person"></mat-icon>
+              </button>
+              <button mat-icon-button aria-label="More options" (click)="showTaskMenu(task.id, $event)" type="button">
+                <mat-icon svgIcon="mat:more_vert"></mat-icon>
+              </button>
+              <button mat-icon-button aria-label="Delete task" (click)="deleteTask(task.id)" class="delete-button" type="button">
+                <mat-icon svgIcon="mat:delete"></mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Note Content Editor (focused on content only) -->
+    <div class="note-editor-wrapper">
+      <vex-note-editor
+        [note]="note"
+        (noteUpdated)="onNoteUpdated($event)"
+        (wordCountChange)="onWordCountChange($event)"
+        (savingStateChange)="onSavingStateChange($event)">
+      </vex-note-editor>
+    </div>
+
+    <!-- Single Footer (appears ONLY ONCE) -->
+    <footer class="note-footer">
+      <div class="footer-content">
+        <button mat-icon-button aria-label="Add reminder" (click)="addReminder()" type="button">
+          <mat-icon svgIcon="mat:notifications_none"></mat-icon>
+        </button>
+        <button mat-icon-button aria-label="Add tag" (click)="addTag()" class="add-tag-button" type="button">
+          <mat-icon svgIcon="mat:label"></mat-icon>
+          <span>Add tag</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+}

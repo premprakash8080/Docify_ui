@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 
 @UntilDestroy()
 @Component({
+  standalone: false,
   selector: 'vex-icons',
   templateUrl: './icons.component.html',
   styleUrls: ['./icons.component.scss'],

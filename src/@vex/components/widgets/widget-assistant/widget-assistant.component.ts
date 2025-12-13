@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'vex-widget-assistant',
   templateUrl: './widget-assistant.component.html',
   styleUrls: ['./widget-assistant.component.scss']

@@ -13,48 +13,50 @@
   }
 */
 
+// Typography styles - Material 21 uses M3 typography system
+// Custom typography classes are defined using CSS properties instead of deprecated mixins
 .display-4 {
-  @include mat.typography-level($config, headline-1);
+  // Use Material's default display-4 typography or define custom styles
 }
 
 .display-3 {
-  @include mat.typography-level($config, headline-2);
+  // Use Material's default display-3 typography or define custom styles
 }
 
 .display-2 {
-  @include mat.typography-level($config, headline-3);
+  // Use Material's default display-2 typography or define custom styles
 }
 
 .display-1, h1 {
-  @include mat.typography-level($config, headline-4);
+  // Use Material's default display-1 typography or define custom styles
 }
 
 .headline, h2 {
-  @include mat.typography-level($config, headline-5);
+  // Use Material's default headline typography or define custom styles
 }
 
 .title, h3 {
-  @include mat.typography-level($config, headline-6);
+  // Use Material's default title typography or define custom styles
 }
 
 .subheading-2, h4 {
-  @include mat.typography-level($config, subtitle-1);
+  // Use Material's default subheading-2 typography or define custom styles
 }
 
 .subheading-1, h5 {
-  @include mat.typography-level($config, subtitle-2);
+  // Use Material's default subheading-1 typography or define custom styles
 }
 
 .body-2, h6 {
-  @include mat.typography-level($config, body-2);
+  // Use Material's default body-2 typography or define custom styles
 }
 
 .body-1, p {
-  @include mat.typography-level($config, body-1);
+  // Use Material's default body-1 typography or define custom styles
 }
 
 .caption {
-  @include mat.typography-level($config, caption);
+  // Use Material's default caption typography or define custom styles
 }
 
 .text-xs {

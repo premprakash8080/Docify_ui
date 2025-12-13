@@ -5,6 +5,7 @@ import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animati
 
 @Component({
   selector: 'vex-register',
+  standalone: false,
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
   animations: [

@@ -8,7 +8,8 @@ import { trackByRoute } from '../../utils/track-by';
 @Component({
   selector: 'vex-navigation-item',
   templateUrl: './navigation-item.component.html',
-  styleUrls: ['./navigation-item.component.scss']
+  styleUrls: ['./navigation-item.component.scss'],
+  standalone: false
 })
 export class NavigationItemComponent implements OnInit {
 

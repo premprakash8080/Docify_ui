@@ -12,6 +12,7 @@ import { Component } from '@angular/core';
  */
 @Component({
   selector: 'vex-notes-page',
+  standalone: false,
   templateUrl: './notes-page.component.html',
   styleUrls: ['./notes-page.component.scss']
 })

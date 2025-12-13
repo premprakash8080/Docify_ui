@@ -5,6 +5,7 @@ import { ToolbarUserDropdownComponent } from './toolbar-user-dropdown/toolbar-us
 @Component({
   selector: 'vex-toolbar-user',
   templateUrl: './toolbar-user.component.html',
+  standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolbarUserComponent implements OnInit {

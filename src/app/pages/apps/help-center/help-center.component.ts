@@ -6,6 +6,7 @@ import { stagger40ms } from '../../../../@vex/animations/stagger.animation';
 
 @Component({
   selector: 'vex-help-center',
+  standalone: false,
   templateUrl: './help-center.component.html',
   styleUrls: ['./help-center.component.scss'],
   animations: [

@@ -1,0 +1,260 @@
+.note-page-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: var(--background-foreground);
+  overflow: hidden; // Prevent page-level scrolling
+  
+  // Ensure header stays fixed at top
+  ::ng-deep {
+    vex-unified-note-header {
+      flex-shrink: 0;
+      position: relative; // Override sticky if needed - header stays fixed
+      z-index: 100;
+    }
+  }
+}
+
+// Unified Header - Fixed at top
+::ng-deep {
+  vex-unified-note-header {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 100;
+  }
+}
+
+// Note Title Section (appears ONLY ONCE)
+.note-title-section {
+  padding: 24px 24px 16px 24px;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+  flex-shrink: 0; // Fixed - doesn't scroll
+}
+
+// Metadata section - positioned below title
+::ng-deep {
+  vex-note-editor-metadata {
+    max-width: 720px;
+    margin: 0 auto 24px auto;
+    width: 100%;
+    padding: 0 24px;
+    flex-shrink: 0;
+  }
+}
+
+// Tasks Section (shown above editor) - Evernote-style
+.tasks-section {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--foreground-divider);
+  background: var(--background-card);
+  flex-shrink: 0;
+}
+
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  transition: background-color 0.15s ease;
+  border-radius: 4px;
+  margin: 0 -8px;
+  padding-left: 8px;
+  padding-right: 8px;
+  
+  &:hover {
+    background: var(--background-hover);
+    
+    .task-handle {
+      opacity: 1;
+    }
+    
+    .task-actions {
+      opacity: 1;
+    }
+  }
+  
+  &.completed {
+    .task-text {
+      color: var(--text-hint);
+      text-decoration: line-through;
+    }
+  }
+  
+  .task-handle {
+    opacity: 0;
+    cursor: grab;
+    color: var(--text-hint);
+    transition: opacity 0.15s ease;
+    flex-shrink: 0;
+    margin-top: 2px;
+    
+    &:active {
+      cursor: grabbing;
+    }
+    
+    .drag-handle {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+  
+  .task-checkbox {
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  
+  .task-content {
+    flex: 1;
+    min-width: 0;
+    
+    .task-text-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .task-text {
+      font-size: 15px;
+      color: var(--text-color);
+      line-height: 1.5;
+      flex: 1;
+      min-width: 0;
+      
+      &.completed {
+        color: var(--text-hint);
+        text-decoration: line-through;
+      }
+    }
+    
+    // Due date as small badge (aligned with task text)
+    .task-due-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background-color: var(--background-hover);
+      border-radius: 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      
+      &.overdue {
+        color: #d32f2f;
+        background-color: rgba(211, 47, 47, 0.1);
+      }
+    }
+  }
+  
+  .task-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    flex-shrink: 0;
+    
+    button {
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      
+      &:hover {
+        color: var(--text-color);
+        background: var(--background-hover);
+      }
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        
+        &.flagged {
+          color: #d32f2f;
+        }
+      }
+      
+      &.delete-button:hover {
+        color: #d32f2f;
+      }
+    }
+  }
+}
+
+// Note Editor Wrapper - Scrollable content area
+.note-editor-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto; // Enable vertical scrolling for editor content
+  overflow-x: hidden; // Prevent horizontal scrolling
+  -webkit-overflow-scrolling: touch; // Smooth scrolling on iOS
+  
+  // Custom scrollbar styling (optional, for better UX)
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--foreground-divider);
+    border-radius: 4px;
+    
+    &:hover {
+      background: var(--text-hint);
+    }
+  }
+  
+  vex-note-editor {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%; // Ensure editor takes full height
+    width: 100%;
+  }
+}
+
+// Single Footer (appears ONLY ONCE)
+.note-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--foreground-divider);
+  background: var(--background-card);
+  
+  .footer-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    
+    button {
+      color: var(--text-secondary);
+      
+      &:hover {
+        color: var(--text-color);
+        background: var(--background-hover);
+      }
+    }
+    
+    .add-tag-button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      
+      mat-icon {
+        font-size: 1.125rem;
+        width: 1.125rem;
+        height: 1.125rem;
+      }
+    }
+  }
+}
+

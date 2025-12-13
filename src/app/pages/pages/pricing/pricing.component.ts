@@ -4,6 +4,7 @@ import { fadeInUp400ms } from '../../../../@vex/animations/fade-in-up.animation'
 
 @Component({
   selector: 'vex-pricing',
+  standalone: false,
   templateUrl: './pricing.component.html',
   styleUrls: ['./pricing.component.scss'],
   animations: [

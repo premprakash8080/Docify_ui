@@ -10,6 +10,7 @@ import { fadeInUp400ms } from '../../../../@vex/animations/fade-in-up.animation'
 
 @Component({
   selector: 'vex-guides',
+  standalone: false,
   templateUrl: './guides.component.html',
   styleUrls: ['./guides.component.scss'],
   animations: [

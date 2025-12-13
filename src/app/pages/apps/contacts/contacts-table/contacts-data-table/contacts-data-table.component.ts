@@ -11,6 +11,7 @@ import { scaleFadeIn400ms } from '../../../../../../@vex/animations/scale-fade-i
 
 @Component({
   selector: 'vex-contacts-data-table',
+  standalone: false,
   templateUrl: './contacts-data-table.component.html',
   styleUrls: ['./contacts-data-table.component.scss'],
   providers: [

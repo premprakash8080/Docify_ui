@@ -4,7 +4,8 @@ import { DateTime } from 'luxon';
 @Component({
   selector: 'vex-quickpanel',
   templateUrl: './quickpanel.component.html',
-  styleUrls: ['./quickpanel.component.scss']
+  styleUrls: ['./quickpanel.component.scss'],
+  standalone: false
 })
 export class QuickpanelComponent implements OnInit {
 

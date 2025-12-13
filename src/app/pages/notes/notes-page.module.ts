@@ -4,8 +4,8 @@ import { NotesPageComponent } from './notes-page.component';
 import { NotesPageRoutingModule } from './notes-page-routing.module';
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
 
-// Import Notes Module from features to get access to NotesDashboard
-import { NotesDashboardModule } from '../../features/notes/containers/notes-dashboard/notes-dashboard.module';
+// Import NotesDashboardModule from components
+import { NotesDashboardModule } from './components/notes-dashboard/notes-dashboard.module';
 
 /**
  * Notes Page Module
@@ -13,10 +13,10 @@ import { NotesDashboardModule } from '../../features/notes/containers/notes-dash
  * This module provides the top-level page entry point for the Notes Application.
  * It serves as a shell/container that:
  * - Uses Vex layout components for page structure
- * - Imports and renders components from the features/notes module
+ * - Imports and renders components from the pages/notes/components module
  * - Provides a cursor layer for collaborative editing support
  * 
- * All feature logic remains in: src/app/features/notes/
+ * Services remain in: src/app/features/notes/services/
  */
 @NgModule({
   declarations: [NotesPageComponent],

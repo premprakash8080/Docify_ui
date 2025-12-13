@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
   selector: 'vex-profile-timeline-entry',
+  standalone: false,
   templateUrl: './social-timeline-entry.component.html',
   styleUrls: ['./social-timeline-entry.component.scss']
 })

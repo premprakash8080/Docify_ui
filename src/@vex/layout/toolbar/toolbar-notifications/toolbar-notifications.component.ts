@@ -6,6 +6,7 @@ import { ToolbarNotificationsDropdownComponent } from './toolbar-notifications-d
   selector: 'vex-toolbar-notifications',
   templateUrl: './toolbar-notifications.component.html',
   styleUrls: ['./toolbar-notifications.component.scss'],
+  standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolbarNotificationsComponent implements OnInit {

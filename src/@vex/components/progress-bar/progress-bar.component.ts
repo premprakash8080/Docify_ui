@@ -5,7 +5,8 @@ import { delayWhen, interval, Observable, of } from 'rxjs';
 @Component({
   selector: 'vex-progress-bar',
   templateUrl: './progress-bar.component.html',
-  styleUrls: ['./progress-bar.component.scss']
+  styleUrls: ['./progress-bar.component.scss'],
+  standalone: false
 })
 export class ProgressBarComponent implements OnInit {
 

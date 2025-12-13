@@ -3,6 +3,7 @@ import { fadeInUp400ms } from '../../../../@vex/animations/fade-in-up.animation'
 
 @Component({
   selector: 'vex-coming-soon',
+  standalone: false,
   templateUrl: './coming-soon.component.html',
   styleUrls: ['./coming-soon.component.scss'],
   animations: [

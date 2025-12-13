@@ -6,7 +6,8 @@ import { popoverAnimation } from '../../animations/popover.animation';
   selector: 'vex-popover',
   templateUrl: './popover.component.html',
   styleUrls: ['./popover.component.scss'],
-  animations: [popoverAnimation]
+  animations: [popoverAnimation],
+  standalone: false
 })
 export class PopoverComponent implements OnInit {
   renderMethod: 'template' | 'component' | 'text' = 'component';

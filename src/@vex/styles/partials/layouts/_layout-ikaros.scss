@@ -1,3 +1,5 @@
+@use "../../var" as *;
+
 .vex-layout-ikaros {
   // Workaround: CSS calc() functions can't deal with values without a unit (e.g. 0 instead of 0px), when this is 0, SCSS or PostCSS make it a 0 instead of 0px, breaking the layout.
   --navigation-height: 0.00001px;

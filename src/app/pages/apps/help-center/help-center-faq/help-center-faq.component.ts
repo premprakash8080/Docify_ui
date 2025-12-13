@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'vex-help-center-faq',
+  standalone: false,
   templateUrl: './help-center-faq.component.html',
   styleUrls: ['./help-center-faq.component.scss']
 })

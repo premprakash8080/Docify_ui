@@ -4,7 +4,8 @@ import { Directive } from '@angular/core';
   selector: '[vexPageLayoutContent],vex-page-layout-content',
   host: {
     class: 'vex-page-layout-content'
-  }
+  },
+  standalone: false
 })
 export class PageLayoutContentDirective {
 

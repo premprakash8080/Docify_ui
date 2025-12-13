@@ -1,0 +1,133 @@
+<div 
+  class="formatting-toolbar"
+  [class.visible]="visible"
+  [style.left.px]="position.x"
+  [style.top.px]="position.y">
+  <div class="toolbar-content">
+    <button 
+      mat-icon-button
+      (click)="onFormatText('bold')"
+      [class.active]="isFormatActive('bold')"
+      [attr.aria-label]="'Bold'"
+      type="button">
+      <mat-icon svgIcon="mat:format_bold"></mat-icon>
+    </button>
+    <button 
+      mat-icon-button
+      (click)="onFormatText('italic')"
+      [class.active]="isFormatActive('italic')"
+      [attr.aria-label]="'Italic'"
+      type="button">
+      <mat-icon svgIcon="mat:format_italic"></mat-icon>
+    </button>
+    <button 
+      mat-icon-button
+      (click)="onFormatText('underline')"
+      [class.active]="isFormatActive('underline')"
+      [attr.aria-label]="'Underline'"
+      type="button">
+      <mat-icon svgIcon="mat:format_underlined"></mat-icon>
+    </button>
+    <button 
+      mat-icon-button
+      (click)="onFormatText('strikethrough')"
+      [class.active]="isFormatActive('strikethrough')"
+      [attr.aria-label]="'Strikethrough'"
+      type="button">
+      <mat-icon svgIcon="mat:strikethrough_s"></mat-icon>
+    </button>
+    
+    <div class="toolbar-divider"></div>
+    
+    <button 
+      mat-icon-button
+      [matMenuTriggerFor]="headingMenu"
+      [attr.aria-label]="'Headings'"
+      type="button">
+      <mat-icon svgIcon="mat:title"></mat-icon>
+    </button>
+    <mat-menu #headingMenu="matMenu">
+      <button mat-menu-item (click)="onFormatHeading('h1')">
+        <span class="heading-option h1">Heading 1</span>
+      </button>
+      <button mat-menu-item (click)="onFormatHeading('h2')">
+        <span class="heading-option h2">Heading 2</span>
+      </button>
+      <button mat-menu-item (click)="onFormatHeading('h3')">
+        <span class="heading-option h3">Heading 3</span>
+      </button>
+    </mat-menu>
+    
+    <button 
+      mat-icon-button
+      [matMenuTriggerFor]="listMenu"
+      [attr.aria-label]="'Lists'"
+      type="button">
+      <mat-icon svgIcon="mat:list"></mat-icon>
+    </button>
+    <mat-menu #listMenu="matMenu">
+      <button mat-menu-item (click)="onFormatList('bullet')">
+        <mat-icon svgIcon="mat:format_list_bulleted"></mat-icon>
+        <span>Bulleted List</span>
+      </button>
+      <button mat-menu-item (click)="onFormatList('ordered')">
+        <mat-icon svgIcon="mat:format_list_numbered"></mat-icon>
+        <span>Numbered List</span>
+      </button>
+    </mat-menu>
+    
+    <div class="toolbar-divider"></div>
+    
+    <button 
+      mat-icon-button
+      [matMenuTriggerFor]="alignMenu"
+      [attr.aria-label]="'Alignment'"
+      type="button">
+      <mat-icon svgIcon="mat:format_align_left"></mat-icon>
+    </button>
+    <mat-menu #alignMenu="matMenu">
+      <button mat-menu-item (click)="onFormatAlign('left')">
+        <mat-icon svgIcon="mat:format_align_left"></mat-icon>
+        <span>Left</span>
+      </button>
+      <button mat-menu-item (click)="onFormatAlign('center')">
+        <mat-icon svgIcon="mat:format_align_center"></mat-icon>
+        <span>Center</span>
+      </button>
+      <button mat-menu-item (click)="onFormatAlign('right')">
+        <mat-icon svgIcon="mat:format_align_right"></mat-icon>
+        <span>Right</span>
+      </button>
+    </mat-menu>
+    
+    <button 
+      mat-icon-button
+      [matMenuTriggerFor]="insertMenu"
+      [attr.aria-label]="'Insert'"
+      type="button">
+      <mat-icon svgIcon="mat:add"></mat-icon>
+    </button>
+    <mat-menu #insertMenu="matMenu">
+      <button mat-menu-item (click)="onInsertBlock('image')">
+        <mat-icon svgIcon="mat:image"></mat-icon>
+        <span>Image</span>
+      </button>
+      <button mat-menu-item (click)="onInsertBlock('file')">
+        <mat-icon svgIcon="mat:attach_file"></mat-icon>
+        <span>File</span>
+      </button>
+      <button mat-menu-item (click)="onInsertBlock('divider')">
+        <mat-icon svgIcon="mat:horizontal_rule"></mat-icon>
+        <span>Divider</span>
+      </button>
+      <button mat-menu-item (click)="onInsertBlock('code')">
+        <mat-icon svgIcon="mat:code"></mat-icon>
+        <span>Code Block</span>
+      </button>
+      <button mat-menu-item (click)="onInsertBlock('quote')">
+        <mat-icon svgIcon="mat:format_quote"></mat-icon>
+        <span>Quote</span>
+      </button>
+    </mat-menu>
+  </div>
+</div>

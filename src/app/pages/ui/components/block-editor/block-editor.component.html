@@ -1,5 +1,6 @@
 <div class="block-editor-container" cdkDropList (cdkDropListDropped)="drop($event)" (click)="onContainerClick($event)">
-    <div *ngFor="let block of blocks; let i = index; trackBy: trackByFn" class="block-wrapper" cdkDrag>
+    @for (block of blocks; track trackByFn($index, block)) {
+      <div class="block-wrapper" cdkDrag>
         <div class="custom-placeholder" *cdkDragPlaceholder></div>
 
         <!-- Drag Handle -->
@@ -7,7 +8,7 @@
              cdkDragHandle
              (click)="onDragHandleClick(block.id, $event)"
              (mousedown)="onDragHandleMouseDown(block.id, $event)">
-            <mat-icon>drag_indicator</mat-icon>
+            <mat-icon svgIcon="mat:drag_indicator"></mat-icon>
         </div>
 
         <app-block [block]="block" 
@@ -22,9 +23,12 @@
                    (blur)="onBlockBlur(block.id)"
                    (paste)="onBlockPaste(block.id, $event)">
         </app-block>
-    </div>
+      </div>
+    }
 
-    <app-slash-menu *ngIf="showSlashMenu" [position]="slashMenuPosition" (select)="onSlashMenuSelect($event)"
-        (close)="closeSlashMenu()">
-    </app-slash-menu>
+    @if (showSlashMenu) {
+      <app-slash-menu [position]="slashMenuPosition" (select)="onSlashMenuSelect($event)"
+          (close)="closeSlashMenu()">
+      </app-slash-menu>
+    }
 </div>

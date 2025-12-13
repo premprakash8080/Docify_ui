@@ -1,0 +1,45 @@
+// Note Editor - Evernote-style clean design
+.note-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: var(--background-foreground);
+  position: relative;
+}
+
+// Editor Container: Centered layout with max-width
+// Note: Scrolling is handled by parent .note-editor-wrapper
+.editor-container {
+  flex: 1;
+  overflow: visible; // No scroll here - parent handles it
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px;
+  min-height: 0;
+}
+
+.editor-wrapper {
+  width: 100%;
+  max-width: 720px; // Evernote-style reading width
+  margin: 0 auto;
+}
+
+// Main Editor Content Area
+.editor-content {
+  position: relative;
+  min-height: 400px;
+  // Content starts immediately below title/metadata
+  // No extra padding needed as editor handles its own spacing
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .editor-container {
+    padding: 16px 8px;
+  }
+  
+  .editor-wrapper {
+    max-width: 100%;
+  }
+}

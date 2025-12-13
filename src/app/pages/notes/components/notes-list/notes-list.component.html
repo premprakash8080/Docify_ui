@@ -1,0 +1,14 @@
+<vex-side-list
+  [items]="items"
+  [selectedItemId]="selectedNoteId"
+  [displayConfig]="displayConfig"
+  title="Notes"
+  emptyStateIcon="note"
+  emptyStateText="No notes found"
+  [showHeader]="true"
+  [showHeaderActions]="true"
+  [enableVirtualScroll]="false"
+  (itemSelected)="onItemSelected($event)"
+  (itemAction)="onItemAction($event)"
+  (headerAction)="onHeaderAction($event)">
+</vex-side-list>

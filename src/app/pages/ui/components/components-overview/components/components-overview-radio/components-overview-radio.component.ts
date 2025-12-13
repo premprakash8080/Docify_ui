@@ -4,7 +4,8 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'vex-components-overview-radio',
   templateUrl: './components-overview-radio.component.html',
-  styleUrls: ['./components-overview-radio.component.scss']
+  styleUrls: ['./components-overview-radio.component.scss'],
+  standalone: false
 })
 export class ComponentsOverviewRadioComponent implements OnInit {
 

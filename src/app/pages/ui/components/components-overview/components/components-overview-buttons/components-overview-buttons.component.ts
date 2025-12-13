@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-overview-buttons',
   templateUrl: './components-overview-buttons.component.html',
   styleUrls: ['./components-overview-buttons.component.scss']

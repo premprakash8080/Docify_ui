@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { CountryState } from '../../../../forms/form-elements/form-elements.component';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-overview-autocomplete',
   templateUrl: './components-overview-autocomplete.component.html',
   styleUrls: ['./components-overview-autocomplete.component.scss']

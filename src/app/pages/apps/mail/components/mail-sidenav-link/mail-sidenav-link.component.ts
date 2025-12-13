@@ -3,6 +3,7 @@ import { MailSidenavLink } from '../../interfaces/mail-sidenav-link.interface';
 
 @Component({
   selector: 'vex-mail-sidenav-link',
+  standalone: false,
   templateUrl: './mail-sidenav-link.component.html',
   styleUrls: ['./mail-sidenav-link.component.scss']
 })

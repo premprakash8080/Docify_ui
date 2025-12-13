@@ -1,0 +1,16 @@
+<div class="editor-content-wrapper">
+  <div class="tiptap-editor-container">
+    <!-- Editor element - mounted explicitly via ViewChild in ngAfterViewInit -->
+    <div #editorElement class="editor"></div>
+    
+    <!-- Slash command menu -->
+    <vex-slash-menu
+      #slashMenu
+      [visible]="slashMenuVisible"
+      [position]="slashMenuPosition"
+      [query]="slashMenuQuery"
+      (select)="onSlashMenuSelect($event)"
+      (close)="onSlashMenuClose()">
+    </vex-slash-menu>
+  </div>
+</div>

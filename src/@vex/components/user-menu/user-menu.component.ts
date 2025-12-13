@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { PopoverRef } from '../popover/popover-ref';
 
 @Component({
+  standalone: false,
   selector: 'vex-user-menu',
   templateUrl: './user-menu.component.html',
   styleUrls: ['./user-menu.component.scss']

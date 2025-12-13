@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'vex-changelog',
+  standalone: false,
   templateUrl: './changelog.component.html',
   styleUrls: ['./changelog.component.scss']
 })

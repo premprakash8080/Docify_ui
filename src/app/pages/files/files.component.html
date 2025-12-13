@@ -1,12 +1,53 @@
-<vex-page-layout>
+<vex-page-layout mode="simple">
   <vex-page-layout-header>
-    <h1>Files</h1>
+    <div class="files-header">
+      <h1 class="files-title">Files</h1>
+      <button mat-raised-button color="primary" (click)="uploadFile()">
+        <mat-icon svgIcon="mat:cloud_upload"></mat-icon>
+        Upload File
+      </button>
+    </div>
   </vex-page-layout-header>
 
   <vex-page-layout-content>
     <div class="files-container">
-      <p>Files page - Coming soon</p>
+      @if (files$ | async; as files) {
+        @if (files.length > 0) {
+          <div class="files-grid">
+            @for (file of files; track trackByFileId($index, file)) {
+              <div class="file-card">
+                <div class="file-icon-wrapper">
+                  <mat-icon class="file-icon" [svgIcon]="getFileIcon(file.mimeType || '')"></mat-icon>
+                  @if (getFileType(file.mimeType || '') === 'Images' && file.url) {
+                    <img [src]="file.url" class="file-thumbnail" [alt]="file.filename || 'File'">
+                  }
+                </div>
+                <div class="file-info">
+                  <h3 class="file-name">{{ file.filename || 'Unnamed file' }}</h3>
+                  <div class="file-meta">
+                    <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                    <span class="file-date">{{ getRelativeDate(file.createdAt || '') }}</span>
+                  </div>
+                  <div class="file-type">{{ getFileType(file.mimeType || '') }}</div>
+                </div>
+                <button mat-icon-button class="file-action" (click)="downloadFile(file)">
+                  <mat-icon svgIcon="mat:download"></mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <mat-icon class="empty-icon" svgIcon="mat:folder_open"></mat-icon>
+            <h3 class="empty-title">No files yet</h3>
+            <p class="empty-description">Files attached to your notes will appear here</p>
+            <button mat-raised-button color="primary" (click)="uploadFile()">
+              <mat-icon svgIcon="mat:cloud_upload"></mat-icon>
+              Upload File
+            </button>
+          </div>
+        }
+      }
     </div>
   </vex-page-layout-content>
 </vex-page-layout>
-

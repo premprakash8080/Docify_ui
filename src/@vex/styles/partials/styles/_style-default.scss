@@ -1,5 +1,7 @@
 @use '@angular/material' as mat;
-@import "../../var";
+@use 'sass:color';
+@use 'sass:map';
+@use "../../var" as *;
 
 // @formatter:off
 :root {
@@ -27,10 +29,6 @@
   --color-warn-contrast: 255, 255, 255;
   --color-warn-contrast-rgb: rgb(255, 255, 255);
 
-  @screen lg {
-    --padding-gutter: 1.5rem;
-  }
-
   // Typography
   --font: theme('fontFamily.sans');
   --font-weight-medium: 500;
@@ -57,14 +55,14 @@
   --text-hint-light: #{$light-disabled-text};
 
   // Foreground
-  --foreground-divider: #{map-get(map-get($vex-theme, foreground), divider)};
+  --foreground-divider: #{map.get(map.get($vex-theme, foreground), divider)};
 
   // Background
   --background-base: rgb(245, 245, 248);
-  --background-foreground: #{map-get(map-get($vex-theme, background), card)};
-  --background-foreground-rgb: #{red(map-get(map-get($vex-theme, background), card))}, #{green(map-get(map-get($vex-theme, background), card))}, #{blue(map-get(map-get($vex-theme, background), card))};
-  --background-app-bar: #{map-get(map-get($vex-theme, background), app-bar)};
-  --background-hover: #{map-get(map-get($vex-theme, background), hover)};
+  --background-foreground: #{map.get(map.get($vex-theme, background), card)};
+  --background-foreground-rgb: #{color.channel(map.get(map.get($vex-theme, background), card), "red")}, #{color.channel(map.get(map.get($vex-theme, background), card), "green")}, #{color.channel(map.get(map.get($vex-theme, background), card), "blue")};
+  --background-app-bar: #{map.get(map.get($vex-theme, background), app-bar)};
+  --background-hover: #{map.get(map.get($vex-theme, background), hover)};
 
   // Elevation
   --elevation-default: var(--elevation-z6);
@@ -96,16 +94,17 @@
   --sidenav-background: #{$sidenav-background};
   --sidenav-color: white;
 
-  --sidenav-toolbar-background: #{darken($sidenav-background, 1.5)};
-  --sidenav-toolbar-background-rgb: #{red(darken($sidenav-background, 1.5))}, #{green(darken($sidenav-background, 1.5))}, #{blue(darken($sidenav-background, 1.5))};
-  --sidenav-section-divider-color: #{map-get(map-get($vex-dark-theme, foreground), divider)};
+  --sidenav-toolbar-background: #{color.adjust($sidenav-background, $lightness: -1.5%)};
+  $sidenav-toolbar-bg: color.adjust($sidenav-background, $lightness: -1.5%);
+  --sidenav-toolbar-background-rgb: #{color.channel($sidenav-toolbar-bg, "red")}, #{color.channel($sidenav-toolbar-bg, "green")}, #{color.channel($sidenav-toolbar-bg, "blue")};
+  --sidenav-section-divider-color: #{map.get(map.get($vex-dark-theme, foreground), divider)};
 
   // Sidenav Item
   --sidenav-item-min-height: 48px;
   --sidenav-item-padding-vertical: var(--padding-8);
   --sidenav-item-padding-horizontal: var(--padding);
-  --sidenav-item-background-hover: #{darken($sidenav-background, 3)};
-  --sidenav-item-background-active: #{darken($sidenav-background, 3)};
+  --sidenav-item-background-hover: #{color.adjust($sidenav-background, $lightness: -3%)};
+  --sidenav-item-background-active: #{color.adjust($sidenav-background, $lightness: -3%)};
   --sidenav-item-font-weight: 500;
   --sidenav-item-color: #A1A2B6;
   --sidenav-item-color-hover: #{$light-primary-text};
@@ -115,12 +114,12 @@
   --sidenav-item-icon-color-active: rgb(var(--color-primary));
   --sidenav-item-icon-gap: 16px;
   --sidenav-item-icon-size: 24px;
-  --sidenav-item-dropdown-background: #{darken($sidenav-background, 3)};
-  --sidenav-item-dropdown-background-hover: #{darken($sidenav-background, 4)};
+  --sidenav-item-dropdown-background: #{color.adjust($sidenav-background, $lightness: -3%)};
+  --sidenav-item-dropdown-background-hover: #{color.adjust($sidenav-background, $lightness: -4%)};
   --sidenav-item-dropdown-color-hover: var(--sidenav-item-color-hover);
   --sidenav-item-dropdown-background-active: var(--sidenav-item-dropdown-background-hover);
   --sidenav-item-dropdown-color-active: var(--sidenav-item-color-active);
-  --sidenav-item-ripple-color: #{rgb(map-get(map-get($vex-theme, foreground), base), 0.1)};
+  --sidenav-item-ripple-color: #{rgb(map.get(map.get($vex-theme, foreground), base), 0.1)};
 
   --sidenav-item-dropdown-gap: 12px;
   --sidenav-subheading-color: #6b6e7f;
@@ -155,5 +154,9 @@
   --blink-scrollbar-width: 12px;
   --default-icon-size: 24px;
   --border-radius: 0.25rem;
+
+  @screen lg {
+    --padding-gutter: 1.5rem;
+  }
 }
 // @formatter:on

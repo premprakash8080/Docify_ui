@@ -5,7 +5,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 @Component({
   selector: 'vex-components-overview-snack-bar',
   templateUrl: './components-overview-snack-bar.component.html',
-  styleUrls: ['./components-overview-snack-bar.component.scss']
+  styleUrls: ['./components-overview-snack-bar.component.scss'],
+  standalone: false
 })
 export class ComponentsOverviewSnackBarComponent implements OnInit {
 

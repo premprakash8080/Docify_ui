@@ -13,6 +13,7 @@ import { getAllParams } from '../../../../../@vex/utils/check-router-childs-data
 
 @Component({
   selector: 'vex-mail-list',
+  standalone: false,
   templateUrl: './mail-list.component.html',
   styleUrls: ['./mail-list.component.scss'],
   animations: [

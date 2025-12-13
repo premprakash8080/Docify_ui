@@ -1,0 +1,239 @@
+<!-- Modal Overlay -->
+<div 
+  (click)="onOverlayClick()"
+  class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+  <div 
+    (click)="onModalClick($event)"
+    class="bg-[#2a2a2a] rounded-lg shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+    
+    <!-- Modal Header -->
+    <div class="border-b border-[#3a3a3a] px-6 py-4">
+      <h2 class="text-xl font-semibold text-white">New Task</h2>
+    </div>
+
+    <!-- Modal Content -->
+    <form [formGroup]="taskForm" class="px-6 py-6 space-y-6">
+      <!-- Notebook Dropdown -->
+      <div>
+        <label class="block text-sm font-medium text-[#9ca3af] mb-2">Notebook</label>
+        <div class="relative">
+          <select 
+            formControlName="notebook"
+            class="w-full bg-[#1e1e1e] border border-[#3a3a3a] rounded-md px-4 py-2 text-white text-sm focus:outline-none focus:border-[#6366f1] appearance-none">
+            <option value="Things to do">Things to do</option>
+          </select>
+          <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+            <svg class="w-4 h-4 text-[#9ca3af]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <svg class="w-4 h-4 text-[#9ca3af] absolute right-10 top-1/2 transform -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Title Input -->
+      <div>
+        <input 
+          type="text"
+          formControlName="title"
+          placeholder="Enter task"
+          class="w-full bg-[#1e1e1e] border border-[#3a3a3a] rounded-md px-4 py-2 text-white placeholder-[#6b7280] focus:outline-none focus:border-[#6366f1]">
+      </div>
+
+      <!-- Description Textarea -->
+      <div>
+        <textarea 
+          formControlName="description"
+          placeholder="What is this task about?"
+          rows="4"
+          class="w-full bg-[#1e1e1e] border border-[#3a3a3a] rounded-md px-4 py-2 text-white placeholder-[#6b7280] focus:outline-none focus:border-[#6366f1] resize-none"></textarea>
+      </div>
+
+      <!-- Due Date Row -->
+      <div>
+        <label class="block text-sm font-medium text-[#9ca3af] mb-2">Due date</label>
+        <div class="flex gap-2 flex-wrap">
+          <button 
+            type="button"
+            (click)="setDueDate('today')"
+            [class.bg-[#6366f1]]="selectedDueDate === 'today'"
+            [class.text-white]="selectedDueDate === 'today'"
+            [class.bg-[#1e1e1e]]="selectedDueDate !== 'today'"
+            [class.text-[#9ca3af]]="selectedDueDate !== 'today'"
+            [class.border-[#6366f1]]="selectedDueDate === 'today'"
+            [class.border-[#3a3a3a]]="selectedDueDate !== 'today'"
+            class="px-4 py-2 rounded-md border text-sm font-medium hover:border-[#6366f1] transition-colors">
+            Today
+          </button>
+          <button 
+            type="button"
+            (click)="setDueDate('tomorrow')"
+            [class.bg-[#6366f1]]="selectedDueDate === 'tomorrow'"
+            [class.text-white]="selectedDueDate === 'tomorrow'"
+            [class.bg-[#1e1e1e]]="selectedDueDate !== 'tomorrow'"
+            [class.text-[#9ca3af]]="selectedDueDate !== 'tomorrow'"
+            [class.border-[#6366f1]]="selectedDueDate === 'tomorrow'"
+            [class.border-[#3a3a3a]]="selectedDueDate !== 'tomorrow'"
+            class="px-4 py-2 rounded-md border text-sm font-medium hover:border-[#6366f1] transition-colors">
+            Tomorrow
+          </button>
+          <button 
+            type="button"
+            (click)="setDueDate('custom')"
+            [class.bg-[#6366f1]]="selectedDueDate === 'custom'"
+            [class.text-white]="selectedDueDate === 'custom'"
+            [class.bg-[#1e1e1e]]="selectedDueDate !== 'custom'"
+            [class.text-[#9ca3af]]="selectedDueDate !== 'custom'"
+            [class.border-[#6366f1]]="selectedDueDate === 'custom'"
+            [class.border-[#3a3a3a]]="selectedDueDate !== 'custom'"
+            class="px-4 py-2 rounded-md border text-sm font-medium hover:border-[#6366f1] transition-colors">
+            Custom
+          </button>
+          <button 
+            type="button"
+            (click)="setDueDate('repeat')"
+            [class.bg-[#6366f1]]="selectedDueDate === 'repeat'"
+            [class.text-white]="selectedDueDate === 'repeat'"
+            [class.bg-[#1e1e1e]]="selectedDueDate !== 'repeat'"
+            [class.text-[#9ca3af]]="selectedDueDate !== 'repeat'"
+            [class.border-[#6366f1]]="selectedDueDate === 'repeat'"
+            [class.border-[#3a3a3a]]="selectedDueDate !== 'repeat'"
+            class="px-4 py-2 rounded-md border text-sm font-medium hover:border-[#6366f1] transition-colors">
+            Repeat
+          </button>
+        </div>
+      </div>
+
+      <!-- Reminder Row -->
+      <div>
+        <label class="block text-sm font-medium text-[#9ca3af] mb-2">Reminder</label>
+        <div class="flex gap-2 flex-wrap">
+          <button 
+            type="button"
+            (click)="setReminder('1hour')"
+            [class.bg-[#6366f1]]="selectedReminder === '1hour'"
+            [class.text-white]="selectedReminder === '1hour'"
+            [class.bg-[#1e1e1e]]="selectedReminder !== '1hour'"
+            [class.text-[#9ca3af]]="selectedReminder !== '1hour'"
+            [class.border-[#6366f1]]="selectedReminder === '1hour'"
+            [class.border-[#3a3a3a]]="selectedReminder !== '1hour'"
+            class="px-4 py-2 rounded-md border text-sm font-medium hover:border-[#6366f1] transition-colors">
+            In 1 hour
+          </button>
+          <button 
+            type="button"
+            (click)="setReminder('4hours')"
+            [class.bg-[#6366f1]]="selectedReminder === '4hours'"
+            [class.text-white]="selectedReminder === '4hours'"
+            [class.bg-[#1e1e1e]]="selectedReminder !== '4hours'"
+            [class.text-[#9ca3af]]="selectedReminder !== '4hours'"
+            [class.border-[#6366f1]]="selectedReminder === '4hours'"
+            [class.border-[#3a3a3a]]="selectedReminder !== '4hours'"
+            class="px-4 py-2 rounded-md border text-sm font-medium hover:border-[#6366f1] transition-colors">
+            In 4 hours
+          </button>
+          <button 
+            type="button"
+            (click)="setReminder('custom')"
+            [class.bg-[#6366f1]]="selectedReminder === 'custom'"
+            [class.text-white]="selectedReminder === 'custom'"
+            [class.bg-[#1e1e1e]]="selectedReminder !== 'custom'"
+            [class.text-[#9ca3af]]="selectedReminder !== 'custom'"
+            [class.border-[#6366f1]]="selectedReminder === 'custom'"
+            [class.border-[#3a3a3a]]="selectedReminder !== 'custom'"
+            class="px-4 py-2 rounded-md border text-sm font-medium hover:border-[#6366f1] transition-colors">
+            Custom
+          </button>
+        </div>
+      </div>
+
+      <!-- Assigned to Row -->
+      <div>
+        <label class="block text-sm font-medium text-[#9ca3af] mb-2">Assigned to</label>
+        <button 
+          type="button"
+          class="text-[#6366f1] hover:text-[#5856d6] text-sm font-medium">
+          Assign
+        </button>
+      </div>
+
+      <!-- Priority Row -->
+      <div>
+        <label class="block text-sm font-medium text-[#9ca3af] mb-2">Priority</label>
+        <div class="flex gap-2 flex-wrap">
+          <button 
+            type="button"
+            (click)="setPriority('low')"
+            [class.bg-[#6366f1]]="selectedPriority === 'low'"
+            [class.text-white]="selectedPriority === 'low'"
+            [class.bg-[#1e1e1e]]="selectedPriority !== 'low'"
+            [class.text-[#9ca3af]]="selectedPriority !== 'low'"
+            [class.border-[#6366f1]]="selectedPriority === 'low'"
+            [class.border-[#3a3a3a]]="selectedPriority !== 'low'"
+            class="px-4 py-2 rounded-md border text-sm font-medium hover:border-[#6366f1] transition-colors">
+            Low
+          </button>
+          <button 
+            type="button"
+            (click)="setPriority('medium')"
+            [class.bg-[#6366f1]]="selectedPriority === 'medium'"
+            [class.text-white]="selectedPriority === 'medium'"
+            [class.bg-[#1e1e1e]]="selectedPriority !== 'medium'"
+            [class.text-[#9ca3af]]="selectedPriority !== 'medium'"
+            [class.border-[#6366f1]]="selectedPriority === 'medium'"
+            [class.border-[#3a3a3a]]="selectedPriority !== 'medium'"
+            class="px-4 py-2 rounded-md border text-sm font-medium hover:border-[#6366f1] transition-colors">
+            Medium
+          </button>
+          <button 
+            type="button"
+            (click)="setPriority('high')"
+            [class.bg-[#6366f1]]="selectedPriority === 'high'"
+            [class.text-white]="selectedPriority === 'high'"
+            [class.bg-[#1e1e1e]]="selectedPriority !== 'high'"
+            [class.text-[#9ca3af]]="selectedPriority !== 'high'"
+            [class.border-[#6366f1]]="selectedPriority === 'high'"
+            [class.border-[#3a3a3a]]="selectedPriority !== 'high'"
+            class="px-4 py-2 rounded-md border text-sm font-medium hover:border-[#6366f1] transition-colors">
+            High
+          </button>
+        </div>
+      </div>
+
+      <!-- Flag Row -->
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-[#9ca3af]">Flag</label>
+        <button 
+          type="button"
+          (click)="toggleFlag()"
+          [class.bg-[#6366f1]]="isFlagged"
+          [class.bg-[#3a3a3a]]="!isFlagged"
+          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#6366f1] focus:ring-offset-2 focus:ring-offset-[#2a2a2a]">
+          <span 
+            [class.translate-x-6]="isFlagged"
+            [class.translate-x-1]="!isFlagged"
+            class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"></span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Modal Footer -->
+    <div class="border-t border-[#3a3a3a] px-6 py-4 flex justify-end gap-3">
+      <button 
+        type="button"
+        (click)="closeModal()"
+        class="px-4 py-2 border border-[#3a3a3a] rounded-md text-white text-sm font-medium hover:border-[#6366f1] transition-colors">
+        Cancel
+      </button>
+      <button 
+        type="button"
+        (click)="createTask()"
+        class="px-4 py-2 bg-[#6366f1] hover:bg-[#5856d6] text-white rounded-md text-sm font-medium transition-colors">
+        Create task
+      </button>
+    </div>
+  </div>
+</div>
+

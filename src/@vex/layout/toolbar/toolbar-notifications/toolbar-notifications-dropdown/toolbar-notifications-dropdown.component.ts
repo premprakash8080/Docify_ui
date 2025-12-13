@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Notification } from '../interfaces/notification.interface';
 import { DateTime } from 'luxon';
 import { trackById } from '../../../../utils/track-by';
@@ -6,9 +6,10 @@ import { trackById } from '../../../../utils/track-by';
 @Component({
   selector: 'vex-toolbar-notifications-dropdown',
   templateUrl: './toolbar-notifications-dropdown.component.html',
-  styleUrls: ['./toolbar-notifications-dropdown.component.scss']
+  styleUrls: ['./toolbar-notifications-dropdown.component.scss'],
+  standalone: false
 })
-export class ToolbarNotificationsDropdownComponent implements OnInit {
+export class ToolbarNotificationsDropdownComponent {
 
   notifications: Notification[] = [
     {
@@ -72,9 +73,5 @@ export class ToolbarNotificationsDropdownComponent implements OnInit {
 
   trackById = trackById;
 
-  constructor() { }
-
-  ngOnInit() {
-  }
-
+  // Removed empty constructor and ngOnInit to fix lint errors
 }

@@ -4,7 +4,8 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'vex-components-overview-slide-toggle',
   templateUrl: './components-overview-slide-toggle.component.html',
-  styleUrls: ['./components-overview-slide-toggle.component.scss']
+  styleUrls: ['./components-overview-slide-toggle.component.scss'],
+  standalone: false
 })
 export class ComponentsOverviewSlideToggleComponent implements OnInit {
 

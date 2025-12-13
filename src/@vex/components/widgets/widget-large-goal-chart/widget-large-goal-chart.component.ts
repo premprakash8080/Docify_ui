@@ -4,6 +4,7 @@ import { defaultChartOptions } from '../../../utils/default-chart-options';
 import { createDateArray } from '../../../utils/create-date-array';
 
 @Component({
+  standalone: false,
   selector: 'vex-widget-large-goal-chart',
   templateUrl: './widget-large-goal-chart.component.html'
 })

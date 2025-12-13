@@ -1,4 +1,6 @@
-@import "../../var";
+@use 'sass:color';
+@use 'sass:map';
+@use "../../var" as *;
 
 .vex-style-light {
   $sidenav-background: white;
@@ -11,20 +13,20 @@
   --sidenav-color: var(--text-color);
 
   // Sidenav Item
-  --sidenav-item-background-hover: #{darken($sidenav-background, 5)};
-  --sidenav-item-background-active: #{darken($sidenav-background, 3)};
+  --sidenav-item-background-hover: #{color.adjust($sidenav-background, $lightness: -5%)};
+  --sidenav-item-background-active: #{color.adjust($sidenav-background, $lightness: -3%)};
   --sidenav-item-color: var(--text-color);
   --sidenav-item-color-hover: var(--text-color);
   --sidenav-item-color-active: var(--text-color);
-  --sidenav-item-dropdown-background: #{darken($sidenav-background, 3)};
-  --sidenav-item-dropdown-background-hover: #{darken($sidenav-background, 8)};
+  --sidenav-item-dropdown-background: #{color.adjust($sidenav-background, $lightness: -3%)};
+  --sidenav-item-dropdown-background-hover: #{color.adjust($sidenav-background, $lightness: -8%)};
   --sidenav-item-dropdown-color-hover: var(--text-color);
-  --sidenav-item-dropdown-background-active: #{darken($sidenav-background, 10)};
+  --sidenav-item-dropdown-background-active: #{color.adjust($sidenav-background, $lightness: -10%)};
   --sidenav-item-dropdown-color-active: var(--text-color);
   --sidenav-item-icon-color-active: rgb(var(--color-primary));
   --sidenav-toolbar-background: #{$sidenav-background};
-  --sidenav-toolbar-background-rgb: #{red($sidenav-background)}, #{green($sidenav-background)}, #{blue($sidenav-background)};
-  --sidenav-section-divider-color: #{map-get($vex-theme-foreground, divider)};
+  --sidenav-toolbar-background-rgb: #{color.channel($sidenav-background, "red")}, #{color.channel($sidenav-background, "green")}, #{color.channel($sidenav-background, "blue")};
+  --sidenav-section-divider-color: #{map.get($vex-theme-foreground, divider)};
 
   .sidenav {
     @apply border-r border-r-gray-200;

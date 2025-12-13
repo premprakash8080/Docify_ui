@@ -8,6 +8,7 @@ export let contactIdCounter = 50;
 
 @Component({
   selector: 'vex-contacts-edit',
+  standalone: false,
   templateUrl: './contacts-edit.component.html',
   styleUrls: ['./contacts-edit.component.scss']
 })

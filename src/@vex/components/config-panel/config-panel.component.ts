@@ -17,7 +17,8 @@ import { defaultRoundedButtonBorderRadius } from '../../config/constants';
 @Component({
   selector: 'vex-config-panel',
   templateUrl: './config-panel.component.html',
-  styleUrls: ['./config-panel.component.scss']
+  styleUrls: ['./config-panel.component.scss'],
+  standalone: false
 })
 export class ConfigPanelComponent {
 

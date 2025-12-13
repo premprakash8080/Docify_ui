@@ -4,6 +4,7 @@ import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { ShareBottomSheetComponent } from '../../share-bottom-sheet/share-bottom-sheet.component';
 
 @Component({
+  standalone: false,
   selector: 'vex-widget-quick-value-start',
   templateUrl: './widget-quick-value-start.component.html',
   animations: [scaleInOutAnimation]

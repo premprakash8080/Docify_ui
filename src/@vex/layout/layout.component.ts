@@ -13,7 +13,8 @@ import { ConfigService } from '../config/config.service';
 @Component({
   selector: 'vex-layout',
   templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.scss']
+  styleUrls: ['./layout.component.scss'],
+  standalone: false
 })
 export class LayoutComponent implements OnInit, AfterViewInit {
 
@@ -34,6 +35,12 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     filter(event => event instanceof NavigationEnd),
     startWith(null),
     map(() => checkRouterChildsData(this.router.routerState.root.snapshot, data => data.scrollDisabled))
+  );
+
+  sidenavHidden$ = this.router.events.pipe(
+    filter(event => event instanceof NavigationEnd),
+    startWith(null),
+    map(() => checkRouterChildsData(this.router.routerState.root.snapshot, data => data.hideSidenav))
   );
 
   containerEnabled$ = this.router.events.pipe(

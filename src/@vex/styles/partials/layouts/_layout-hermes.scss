@@ -1,3 +1,6 @@
+@use 'sass:color';
+@use "../../var" as *;
+
 .vex-layout-hermes {
   --toolbar-height: 100px;
   --secondary-toolbar-background: var(--background-base);
@@ -9,7 +12,7 @@
 
   &.vex-style-default {
     --navigation-background: #{$sidenav-background};
-    --toolbar-background: #{lighten($sidenav-background, 5)};
+    --toolbar-background: #{color.adjust($sidenav-background, $lightness: 5%)};
     --navigation-color: white;
     --toolbar-color: white;
   }

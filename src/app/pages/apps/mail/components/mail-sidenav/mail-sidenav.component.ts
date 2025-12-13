@@ -7,6 +7,7 @@ import { fadeInUp400ms } from '../../../../../../@vex/animations/fade-in-up.anim
 
 @Component({
   selector: 'vex-mail-sidenav',
+  standalone: false,
   templateUrl: './mail-sidenav.component.html',
   styleUrls: ['./mail-sidenav.component.scss'],
   animations: [

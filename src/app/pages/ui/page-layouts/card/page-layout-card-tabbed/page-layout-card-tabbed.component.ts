@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'vex-page-layout-card-tabbed',
   templateUrl: './page-layout-card-tabbed.component.html',
   styleUrls: ['./page-layout-card-tabbed.component.scss']

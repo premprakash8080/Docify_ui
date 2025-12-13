@@ -4,6 +4,7 @@ import { ChatService } from '../chat.service';
 
 @Component({
   selector: 'vex-chat-empty',
+  standalone: false,
   templateUrl: './chat-empty.component.html',
   animations: [scaleFadeIn400ms]
 })

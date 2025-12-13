@@ -15,12 +15,12 @@
 
   <vex-search></vex-search>
 
-  <mat-sidenav-container class="sidenav-container">
+  <mat-sidenav-container class="sidenav-container" [class.sidenav-hidden]="sidenavHidden$ | async">
     <mat-sidenav #sidenav
                  [disableClose]="isDesktop$ | async"
                  [fixedInViewport]="!(isDesktop$ | async)"
                  [mode]="!(isDesktop$ | async) || (isLayoutVertical$ | async) ? 'over' : 'side'"
-                 [opened]="(isDesktop$ | async) && !(isLayoutVertical$ | async)"
+                 [opened]="(isDesktop$ | async) && !(isLayoutVertical$ | async) && !(sidenavHidden$ | async)"
                  class="sidenav">
       <ng-container *ngTemplateOutlet="sidenavRef"></ng-container>
     </mat-sidenav>

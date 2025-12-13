@@ -1,0 +1,79 @@
+.formatting-toolbar {
+  position: fixed;
+  z-index: 1000;
+  background-color: var(--background-card);
+  border: 1px solid var(--foreground-divider);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  pointer-events: none;
+  
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+}
+
+.toolbar-content {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--foreground-divider);
+  margin: 0 0.25rem;
+}
+
+.formatting-toolbar button {
+  width: 32px;
+  height: 32px;
+  color: var(--text-secondary);
+  
+  &:hover {
+    background-color: var(--background-hover);
+    color: var(--text-color);
+  }
+  
+  &.active {
+    background-color: var(--color-primary);
+    color: white;
+  }
+}
+
+.heading-option {
+  display: block;
+  
+  &.h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  
+  &.h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  
+  &.h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+}
+
+// Hide formatting toolbar on mobile
+@media (max-width: 768px) {
+  .formatting-toolbar {
+    display: none;
+  }
+}

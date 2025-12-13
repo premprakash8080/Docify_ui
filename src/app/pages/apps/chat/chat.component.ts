@@ -31,6 +31,7 @@ export interface ChatMessage {
 @UntilDestroy()
 @Component({
   selector: 'vex-chat',
+  standalone: false,
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

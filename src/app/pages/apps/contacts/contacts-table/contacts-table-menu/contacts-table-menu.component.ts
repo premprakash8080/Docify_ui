@@ -16,6 +16,7 @@ export interface ContactsTableMenu {
 
 @Component({
   selector: 'vex-contacts-table-menu',
+  standalone: false,
   templateUrl: './contacts-table-menu.component.html',
   animations: [fadeInRight400ms, stagger40ms]
 })

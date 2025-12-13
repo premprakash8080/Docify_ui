@@ -135,6 +135,7 @@ export interface ShowdownComponent extends Showdown.ShowdownOptions {
   selector: 'showdown,[showdown]',
   template: '<ng-content></ng-content>',
   exportAs: 'showdown',
+  standalone: false,
   inputs: OPTIONS_PROPERTIES_KEYS
 })
 export class ShowdownComponent extends ShowdownConverter implements OnInit, OnChanges, Showdown.ShowdownOptions {

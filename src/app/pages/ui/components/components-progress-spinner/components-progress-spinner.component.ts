@@ -5,6 +5,7 @@ import { fadeInRight400ms } from '../../../../../@vex/animations/fade-in-right.a
 import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animation';
 
 @Component({
+  standalone: false,
   selector: 'vex-components-progress-spinner',
   templateUrl: './components-progress-spinner.component.html',
   styleUrls: ['./components-progress-spinner.component.scss'],

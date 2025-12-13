@@ -11,6 +11,7 @@ export interface CountryState {
 }
 
 @Component({
+  standalone: false,
   selector: 'vex-form-elements',
   templateUrl: './form-elements.component.html',
   styleUrls: ['./form-elements.component.scss'],

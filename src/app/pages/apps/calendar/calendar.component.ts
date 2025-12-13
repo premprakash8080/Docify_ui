@@ -23,6 +23,7 @@ const colors: any = {
 
 @Component({
   selector: 'vex-calendar',
+  standalone: false,
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.scss'],
   encapsulation: ViewEncapsulation.None

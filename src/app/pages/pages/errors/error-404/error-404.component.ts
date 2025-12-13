@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'vex-error404',
+  standalone: false,
   templateUrl: './error-404.component.html',
   styleUrls: ['./error-404.component.scss']
 })

@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, ElementRef, ViewChild, AfterVie
 import { Block, BlockType } from '../models/block.model';
 
 @Component({
+  standalone: false,
     selector: 'app-block',
     templateUrl: './block.component.html',
     styleUrls: ['./block.component.scss']

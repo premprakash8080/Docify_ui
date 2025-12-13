@@ -14,51 +14,58 @@
       <!-- Notes Section (Left) -->
       <div class="notes-section">
         <h2 class="section-title">Notes</h2>
-        <div class="notes-grid" *ngIf="recentNotes$ | async as recentNotes">
-          <!-- Note Cards -->
-          <div 
-            *ngFor="let note of recentNotes.slice(0, 3); trackBy: trackByNoteId" 
-            class="note-card"
-            (click)="onNoteClick(note)"
-            [attr.role]="'button'"
-            [attr.tabindex]="0">
-            <div class="note-card-notebook">{{ getNotebookName(note.notebookId) || 'Untitled' }}</div>
-            <h3 class="note-card-title">{{ note.title || 'Untitled' }}</h3>
-            <div class="note-card-footer">
-              <span class="note-card-date">{{ getRelativeDate(note.updatedAt) }}</span>
-              <div class="note-card-badges">
-                <span 
-                  *ngIf="hasTasks(note)" 
-                  class="task-badge"
-                  [attr.aria-label]="getCompletedTasksCount(note.tasks || []) + '/' + (note.tasks?.length || 0) + ' tasks completed'">
-                  <mat-icon>checklist</mat-icon>
-                  {{ getCompletedTasksCount(note.tasks || []) }}/{{ note.tasks?.length || 0 }}
-                </span>
-                <mat-icon 
-                  *ngIf="note.tags && note.tags.length > 0" 
-                  class="note-card-icon"
-                  [style.color]="getTagColor(note.tags[0])">description</mat-icon>
+        @if (recentNotes$ | async; as recentNotes) {
+          @if (recentNotes.length > 0) {
+            <div class="notes-grid">
+              <!-- Note Cards -->
+              @for (note of recentNotes.slice(0, 3); track trackByNoteId($index, note)) {
+                <div 
+                  class="note-card"
+                  (click)="onNoteClick(note)"
+                  [attr.role]="'button'"
+                  [attr.tabindex]="0">
+                  <div class="note-card-notebook">{{ getNotebookName(note.notebookId) || 'Untitled' }}</div>
+                  <h3 class="note-card-title">{{ note.title || 'Untitled' }}</h3>
+                  <div class="note-card-footer">
+                    <span class="note-card-date">{{ getRelativeDate(note.updatedAt) }}</span>
+                    <div class="note-card-badges">
+                      @if (hasTasks(note)) {
+                        <span 
+                          class="task-badge"
+                          [attr.aria-label]="getCompletedTasksCount(note.tasks || []) + '/' + (note.tasks?.length || 0) + ' tasks completed'">
+                          <mat-icon>checklist</mat-icon>
+                          {{ getCompletedTasksCount(note.tasks || []) }}/{{ note.tasks?.length || 0 }}
+                        </span>
+                      }
+                      @if (note.tags && note.tags.length > 0) {
+                        <mat-icon 
+                          class="note-card-icon"
+                          [style.color]="getTagColor(note.tags[0])">description</mat-icon>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+              
+              <!-- Create New Note Card -->
+              <div class="note-card create-note-card" (click)="onCreateNote()" [attr.role]="'button'" [attr.tabindex]="0">
+                <div class="create-note-icon">
+                  <mat-icon>add</mat-icon>
+                </div>
+                <p class="create-note-text">Create new note</p>
               </div>
             </div>
-          </div>
-          
-          <!-- Create New Note Card -->
-          <div class="note-card create-note-card" (click)="onCreateNote()" [attr.role]="'button'" [attr.tabindex]="0">
-            <div class="create-note-icon">
-              <mat-icon>add</mat-icon>
+          } @else {
+            <div class="empty-notes">
+              <div class="note-card create-note-card" (click)="onCreateNote()" [attr.role]="'button'" [attr.tabindex]="0">
+                <div class="create-note-icon">
+                  <mat-icon>add</mat-icon>
+                </div>
+                <p class="create-note-text">Create new note</p>
+              </div>
             </div>
-            <p class="create-note-text">Create new note</p>
-          </div>
-        </div>
-        
-        <div *ngIf="(recentNotes$ | async)?.length === 0" class="empty-notes">
-          <div class="note-card create-note-card" (click)="onCreateNote()" [attr.role]="'button'" [attr.tabindex]="0">
-            <div class="create-note-icon">
-              <mat-icon>add</mat-icon>
-            </div>
-            <p class="create-note-text">Create new note</p>
-          </div>
-        </div>
+          }
+        }
       </div>
 
       <!-- Scratchpad Section (Right) -->
@@ -98,32 +105,37 @@
       </div>
       
       <div class="recently-captured-content">
-        <div *ngIf="(webClips$ | async)?.length === 0" class="empty-captured">
-          <div class="empty-captured-icon">
-            <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
-              <path d="M60 20L40 40H30C25.5817 40 22 43.5817 22 48V90C22 94.4183 25.5817 98 30 98H90C94.4183 98 98 94.4183 98 90V48C98 43.5817 94.4183 40 90 40H80L60 20Z" fill="#FF6B35" opacity="0.2"/>
-              <path d="M60 20L40 40H30C25.5817 40 22 43.5817 22 48V90C22 94.4183 25.5817 98 30 98H90C94.4183 98 98 94.4183 98 90V48C98 43.5817 94.4183 40 90 40H80L60 20Z" stroke="#FF6B35" stroke-width="2"/>
-              <path d="M35 60L50 75L85 45" stroke="#FF6B35" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <p class="empty-captured-text">Save useful information from the web.</p>
-          <button mat-stroked-button class="clip-button" (click)="onClipWebContent()">
-            Clip web content
-          </button>
-        </div>
-        
-        <div *ngIf="(webClips$ | async)?.length > 0" class="web-clips-grid">
-          <!-- Web clips will be displayed here -->
-          <div 
-            *ngFor="let clip of webClips$ | async; trackBy: trackByNoteId"
-            class="web-clip-card"
-            (click)="onNoteClick(clip)"
-            [attr.role]="'button'"
-            [attr.tabindex]="0">
-            <h3 class="web-clip-title">{{ clip.title || 'Untitled' }}</h3>
-            <p class="web-clip-date">{{ getRelativeDate(clip.updatedAt) }}</p>
-          </div>
-        </div>
+        @if (webClips$ | async; as webClips) {
+          @if (webClips.length === 0) {
+            <div class="empty-captured">
+              <div class="empty-captured-icon">
+                <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+                  <path d="M60 20L40 40H30C25.5817 40 22 43.5817 22 48V90C22 94.4183 25.5817 98 30 98H90C94.4183 98 98 94.4183 98 90V48C98 43.5817 94.4183 40 90 40H80L60 20Z" fill="#FF6B35" opacity="0.2"/>
+                  <path d="M60 20L40 40H30C25.5817 40 22 43.5817 22 48V90C22 94.4183 25.5817 98 30 98H90C94.4183 98 98 94.4183 98 90V48C98 43.5817 94.4183 40 90 40H80L60 20Z" stroke="#FF6B35" stroke-width="2"/>
+                  <path d="M35 60L50 75L85 45" stroke="#FF6B35" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <p class="empty-captured-text">Save useful information from the web.</p>
+              <button mat-stroked-button class="clip-button" (click)="onClipWebContent()">
+                Clip web content
+              </button>
+            </div>
+          } @else {
+            <div class="web-clips-grid">
+              <!-- Web clips will be displayed here -->
+              @for (clip of webClips; track trackByNoteId($index, clip)) {
+                <div
+                  class="web-clip-card"
+                  (click)="onNoteClick(clip)"
+                  [attr.role]="'button'"
+                  [attr.tabindex]="0">
+                  <h3 class="web-clip-title">{{ clip.title || 'Untitled' }}</h3>
+                  <p class="web-clip-date">{{ getRelativeDate(clip.updatedAt) }}</p>
+                </div>
+              }
+            </div>
+          }
+        }
       </div>
     </div>
   </vex-page-layout-content>

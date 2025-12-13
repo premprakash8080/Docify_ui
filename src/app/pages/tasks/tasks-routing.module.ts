@@ -1,11 +1,15 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { TasksComponent } from './tasks.component';
+import { VexRoutes } from '../../../@vex/interfaces/vex-route.interface';
 
-const routes: Routes = [
+const routes: VexRoutes = [
   {
     path: '',
-    component: TasksComponent
+    component: TasksComponent,
+    data: {
+      toolbarShadowEnabled: false
+    }
   }
 ];
 

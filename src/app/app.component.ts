@@ -18,7 +18,8 @@ import { SIDEBAR_CONFIG } from './core/config/sidebar.config';
 @Component({
   selector: 'vex-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  standalone: false
 })
 export class AppComponent {
   constructor(private configService: ConfigService,

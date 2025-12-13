@@ -58,6 +58,16 @@
   background: var(--background-base);
   height: 100%;
   transition: transform .5s cubic-bezier(.2, 1, .3, 1);
+  
+  &.sidenav-hidden {
+    ::ng-deep .mat-drawer-side {
+      display: none;
+    }
+    
+    ::ng-deep .mat-drawer-backdrop {
+      display: none;
+    }
+  }
 }
 
 .sidenav-content {

@@ -6,6 +6,7 @@ import SimpleBar from 'simplebar';
   template: `
     <ng-content></ng-content>`,
   styleUrls: ['./scrollbar.component.scss'],
+  standalone: false,
   host: {
     class: 'vex-scrollbar'
   },

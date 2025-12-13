@@ -7,6 +7,7 @@ import { scaleIn400ms } from '../../../../../@vex/animations/scale-in.animation'
 import { fadeInRight400ms } from '../../../../../@vex/animations/fade-in-right.animation';
 
 @Component({
+  standalone: false,
   selector: 'vex-form-wizard',
   templateUrl: './form-wizard.component.html',
   styleUrls: ['./form-wizard.component.scss'],

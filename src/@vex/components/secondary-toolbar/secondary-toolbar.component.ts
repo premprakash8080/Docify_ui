@@ -4,6 +4,7 @@ import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
 @Component({
+  standalone: false,
   selector: 'vex-secondary-toolbar',
   template: `
     <div class="secondary-toolbar-placeholder">&nbsp;</div>

@@ -4,7 +4,8 @@ import { NavigationService } from '../../services/navigation.service';
 @Component({
   selector: 'vex-navigation',
   templateUrl: './navigation.component.html',
-  styleUrls: ['./navigation.component.scss']
+  styleUrls: ['./navigation.component.scss'],
+  standalone: false
 })
 export class NavigationComponent implements OnInit {
 

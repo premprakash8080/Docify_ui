@@ -4,7 +4,8 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'vex-components-overview-slider',
   templateUrl: './components-overview-slider.component.html',
-  styleUrls: ['./components-overview-slider.component.scss']
+  styleUrls: ['./components-overview-slider.component.scss'],
+  standalone: false
 })
 export class ComponentsOverviewSliderComponent implements OnInit {
 

@@ -3,6 +3,7 @@ import { Contact } from '../../interfaces/contact.interface';
 
 @Component({
   selector: 'vex-contacts-card',
+  standalone: false,
   templateUrl: './contacts-card.component.html',
   styleUrls: ['./contacts-card.component.scss']
 })

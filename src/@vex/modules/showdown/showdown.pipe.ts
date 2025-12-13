@@ -41,7 +41,8 @@ import { ShowdownConverter } from './showdown-converter.provider';
  */
 @Pipe({
   name: 'showdown',
-  pure: false
+  pure: false,
+  standalone: false
 })
 export class ShowdownPipe extends ShowdownConverter implements PipeTransform {
 

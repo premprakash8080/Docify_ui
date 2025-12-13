@@ -3,6 +3,7 @@ import { MailAttachment } from '../../interfaces/mail-attachment.interface';
 
 @Component({
   selector: 'vex-mail-attachment',
+  standalone: false,
   templateUrl: './mail-attachment.component.html',
   styleUrls: ['./mail-attachment.component.scss']
 })

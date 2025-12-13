@@ -1,21 +1,37 @@
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
 @use '@angular/material' as mat;
-@import "@angular/material/theming";
 
 // SCSS Variables
-@import "var";
+@use "var" as *;
 
 // Mixins
-@import "partials/mixins";
+@use "partials/mixins" as *;
 
 // Fonts
-@import "partials/fonts/inter";
+@use "partials/fonts/inter" as *;
 
 // Styles / CSS Variables
-@import "partials/styles/style-dark";
-@import "partials/styles/style-light";
-@import "partials/styles/style-default";
+@use "partials/styles/style-dark";
+@use "partials/styles/style-light";
+@use "partials/styles/style-default";
+
+// Partials
+@use "partials/horizontal";
+@use "partials/misc";
+@use "partials/vertical";
+@use "partials/print";
+@use "partials/typography";
+@use "partials/plugins/@angular/material/index";
+@use "partials/plugins/apexcharts/apexcharts";
+
+// Layouts
+@use "partials/layouts/layout-apollo";
+@use "partials/layouts/layout-ares";
+@use "partials/layouts/layout-hermes";
+@use "partials/layouts/layout-ikaros";
+@use "partials/layouts/layout-poseidon";
+@use "partials/layouts/layout-zeus";
 
 // Include the common styles for Angular Material. We include this here so that you only
 // have to load a single css file for Angular Material in your app.
@@ -26,20 +42,3 @@
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
 @include mat.all-component-themes($vex-theme);
-
-// Partials
-@import "partials/horizontal";
-@import "partials/misc";
-@import "partials/vertical";
-@import "partials/print";
-@import "partials/typography";
-@import "partials/plugins/@angular/material/index";
-@import "partials/plugins/apexcharts/apexcharts";
-
-// Layouts
-@import "partials/layouts/layout-apollo";
-@import "partials/layouts/layout-ares";
-@import "partials/layouts/layout-hermes";
-@import "partials/layouts/layout-ikaros";
-@import "partials/layouts/layout-poseidon";
-@import "partials/layouts/layout-zeus";

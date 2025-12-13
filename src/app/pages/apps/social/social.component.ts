@@ -12,6 +12,7 @@ export interface FriendSuggestion {
 
 @Component({
   selector: 'vex-social',
+  standalone: false,
   templateUrl: './social.component.html',
   styleUrls: ['./social.component.scss'],
   animations: [

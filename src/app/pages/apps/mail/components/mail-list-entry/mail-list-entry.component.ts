@@ -5,6 +5,7 @@ import { MailService } from '../../services/mail.service';
 
 @Component({
   selector: 'vex-mail-list-entry',
+  standalone: false,
   templateUrl: './mail-list-entry.component.html',
   styleUrls: ['./mail-list-entry.component.scss']
 })

@@ -12,6 +12,7 @@ import { NavigationService } from '../../../services/navigation.service';
   selector: 'vex-sidenav-item',
   templateUrl: './sidenav-item.component.html',
   styleUrls: ['./sidenav-item.component.scss'],
+  standalone: false,
   animations: [dropdownAnimation],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
