@@ -1,0 +1,107 @@
+<div class="notebooks-grid-container">
+  <!-- Breadcrumb Navigation -->
+  @if (hasBackButton) {
+    <div class="breadcrumb-nav">
+      <button 
+        mat-button 
+        (click)="onBackClick()"
+        class="back-button">
+        <mat-icon svgIcon="mat:arrow_back"></mat-icon>
+        Back
+      </button>
+      <span class="breadcrumb-path">{{ currentPath }}</span>
+    </div>
+  }
+
+  <!-- Grid View -->
+  <div class="notebooks-grid">
+    @for (item of currentViewItems; track item.stackId || item.notebookId || item.noteId) {
+      <mat-card 
+        class="grid-card" 
+        [class.stack-card]="isStackRow(item)" 
+        [class.notebook-card-item]="isNotebookRow(item)"
+        [class.note-card-item]="isNoteRow(item)"
+        (click)="onCardClick(item)">
+        <mat-card-header>
+          <div class="card-header-content">
+            @if (isStackRow(item)) {
+              <mat-icon class="stack-icon" svgIcon="mat:folder"></mat-icon>
+            } @else if (isNotebookRow(item)) {
+              <mat-icon class="notebook-icon" svgIcon="mat:book"></mat-icon>
+            } @else {
+              <mat-icon class="note-icon" svgIcon="mat:description"></mat-icon>
+            }
+            <mat-card-title class="card-title">
+              {{ item.title }}
+            </mat-card-title>
+            <button 
+              mat-icon-button 
+              [matMenuTriggerFor]="menu"
+              (click)="onMenuClick($event, item)"
+              class="menu-button"
+              type="button">
+              <mat-icon svgIcon="mat:more_vert"></mat-icon>
+            </button>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="card-content">
+            @if (item.noteCount !== undefined && (isStackRow(item) || isNotebookRow(item))) {
+              <div class="note-count">
+                <mat-icon class="count-icon" svgIcon="mat:description"></mat-icon>
+                <span>{{ item.noteCount }} {{ item.noteCount === 1 ? 'item' : 'items' }}</span>
+              </div>
+            }
+            <div class="meta-info">
+              <div class="meta-item">
+                <span class="meta-label">Updated:</span>
+                <span class="meta-value">{{ item.updated }}</span>
+              </div>
+              @if (!isNoteRow(item)) {
+                <div class="meta-item">
+                  <span class="meta-label">Created by:</span>
+                  <span class="meta-value">{{ item.createdBy }}</span>
+                </div>
+              }
+            </div>
+            @if (isStackRow(item) && item.notebooks && item.notebooks.length > 0) {
+              <div class="has-children-hint">
+                <mat-icon class="hint-icon" svgIcon="mat:chevron_right"></mat-icon>
+                <span>Click to view notebooks</span>
+              </div>
+            }
+            @if (isNotebookRow(item) && item.notes && item.notes.length > 0) {
+              <div class="has-children-hint">
+                <mat-icon class="hint-icon" svgIcon="mat:chevron_right"></mat-icon>
+                <span>Click to view notes</span>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+
+        <mat-menu #menu="matMenu" xPosition="before">
+          <button mat-menu-item>
+            <mat-icon svgIcon="mat:share"></mat-icon>
+            <span>Share</span>
+          </button>
+          @if (!isNoteRow(item)) {
+            <button mat-menu-item>
+              <mat-icon svgIcon="mat:edit"></mat-icon>
+              <span>Rename</span>
+            </button>
+          }
+          <button mat-menu-item>
+            <mat-icon svgIcon="mat:delete"></mat-icon>
+            <span>Delete</span>
+          </button>
+        </mat-menu>
+      </mat-card>
+    } @empty {
+      <div class="empty-state">
+        <mat-icon class="empty-icon" svgIcon="mat:folder_open"></mat-icon>
+        <p class="empty-text">No items found</p>
+      </div>
+    }
+  </div>
+</div>

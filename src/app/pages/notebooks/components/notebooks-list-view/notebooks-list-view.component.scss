@@ -1,0 +1,184 @@
+// Notebooks List View Styles
+::ng-deep {
+  // Ensure table has proper spacing
+  table.mat-mdc-table {
+    width: 100%;
+    
+    th, td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--foreground-divider);
+    }
+    
+    th {
+      font-weight: 500;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+    
+    td {
+      font-size: 0.875rem;
+    }
+  }
+
+  // Stack, Notebook, and Note Row Styling
+  .notebooks-table {
+    // Row content indentation levels
+    .row-content {
+      &.level-0 {
+        padding-left: 1rem;
+      }
+      
+      &.level-1 {
+        padding-left: 2rem;
+        border-left: 1px solid var(--foreground-divider);
+        margin-left: 0.5rem;
+        padding-left: 1.5rem;
+      }
+      
+      &.level-2 {
+        padding-left: 3rem;
+        border-left: 1px solid var(--foreground-divider);
+        margin-left: 1.5rem;
+        padding-left: 1.5rem;
+      }
+    }
+
+    // Chevron button styling (used by both stacks and notebooks)
+    .chevron-button {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      padding: 0;
+      margin: 0;
+      margin-right: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+      color: var(--text-secondary);
+      
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+      
+      &:focus {
+        outline: 2px solid var(--color-primary, #1976d2);
+        outline-offset: 2px;
+      }
+      
+      .expand-icon {
+        transition: transform 0.2s ease;
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        
+        &.expanded {
+          transform: rotate(90deg);
+        }
+      }
+    }
+
+    // Count text (plain text, no badge styling)
+    .count-text {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-left: 6px;
+      font-weight: 400;
+    }
+
+    // Stack row styling
+    tr.stack-row {
+      background-color: var(--background-card);
+      font-weight: 600;
+      
+      &:hover {
+        background-color: var(--background-hover, rgba(0, 0, 0, 0.02));
+      }
+      
+      td {
+        border-bottom: 1px solid var(--foreground-divider);
+        
+        .stack-name {
+          color: var(--text-color);
+          font-size: 0.9375rem;
+          font-weight: 600;
+        }
+        
+        .folder-icon {
+          color: var(--text-secondary);
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+        
+        .stack-content {
+          min-width: 0;
+          flex: 1;
+          
+          &:hover {
+            opacity: 0.8;
+          }
+        }
+      }
+    }
+
+    // Notebook row styling (nested under stack)
+    tr.notebook-row {
+      background-color: var(--background-card);
+      
+      &:hover {
+        background-color: var(--background-hover, rgba(0, 0, 0, 0.02));
+      }
+      
+      td {
+        .notebook-icon {
+          color: var(--text-secondary);
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+        
+        .notebook-name {
+          font-weight: 500;
+          font-size: 0.9375rem;
+        }
+        
+        .notebook-chevron {
+          // Additional styling if needed for notebook chevron
+        }
+      }
+    }
+
+    // Note row styling (nested under notebook)
+    tr.note-row {
+      background-color: var(--background-card);
+      
+      &:hover {
+        background-color: var(--background-hover, rgba(0, 0, 0, 0.02));
+      }
+      
+      td {
+        .note-icon {
+          color: var(--text-secondary);
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+        
+        .note-name {
+          font-weight: 400;
+          font-size: 0.9375rem;
+        }
+      }
+    }
+
+    // Expanded stack/notebook styling
+    tr.stack-row.expanded,
+    tr.notebook-row.expanded {
+      border-bottom: 1px solid var(--foreground-divider);
+    }
+  }
+}

@@ -256,35 +256,72 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Create a new note immediately when user clicks "New Note"
+   * 
+   * This method:
+   * 1. Creates a new note with temporary data
+   * 2. Adds it to the notes list immediately (optimistic update)
+   * 3. Automatically selects and opens it in the editor
+   * 4. Supports notebook context from the current route
+   * 
+   * The note is created through the service which handles:
+   * - ID generation
+   * - State management
+   * - Future API integration
+   */
   onNewNote(): void {
-    this.selectedNote$.next(null);
-    
-    // Navigate to new note route, preserving notebook context from route
+    // Get current notebook context from route
     const currentNotebookId = this.selectedNotebookId$.value;
-    if (currentNotebookId) {
-      // Check if we're in a stack context
-      const route = this.route;
-      let stackId: string | null = null;
-      let parent = route.parent;
-      while (parent) {
-        if (parent.snapshot.params['stackId']) {
-          stackId = parent.snapshot.params['stackId'];
-          break;
+    
+    // Create note with default data
+    // The service will generate ID, set timestamps, and handle all defaults
+    const newNoteData: Partial<Note> = {
+      title: 'Untitled',
+      content: '',
+      notebookId: currentNotebookId || undefined
+    };
+
+    // Create note through service (returns Observable)
+    this.notesService.createNote(newNoteData).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (createdNote) => {
+        // Note has been optimistically added to the list via BehaviorSubject update
+        // Now select it and navigate to it
+        this.selectedNote$.next(createdNote);
+        
+        // Navigate to the new note route
+        if (currentNotebookId) {
+          // Check if we're in a stack context
+          const route = this.route;
+          let stackId: string | null = null;
+          let parent = route.parent;
+          while (parent) {
+            if (parent.snapshot.params['stackId']) {
+              stackId = parent.snapshot.params['stackId'];
+              break;
+            }
+            parent = parent.parent;
+          }
+          
+          if (stackId) {
+            // Navigate to stack notebook note route
+            this.router.navigate(['/notes/stack', stackId, 'notebook', currentNotebookId, 'note', createdNote.id]);
+          } else {
+            // Navigate to notebook note route
+            this.router.navigate(['/notes/notebook', currentNotebookId, 'note', createdNote.id]);
+          }
+        } else {
+          // Navigate to general note route
+          this.router.navigate(['/notes', createdNote.id]);
         }
-        parent = parent.parent;
+      },
+      error: (error) => {
+        console.error('Failed to create note:', error);
+        // TODO: Show user-friendly error message (toast/snackbar)
       }
-      
-      if (stackId) {
-        // Navigate to stack notebook new note route
-        this.router.navigate(['/notes/stack', stackId, 'notebook', currentNotebookId, 'note', 'new']);
-      } else {
-        // Navigate to notebook new note route
-        this.router.navigate(['/notes/notebook', currentNotebookId, 'note', 'new']);
-      }
-    } else {
-      // Navigate to general new note route
-      this.router.navigate(['/notes/new']);
-    }
+    });
   }
 
   onNoteUpdated(note: Note): void {
@@ -454,16 +491,19 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     };
 
     this.isSaving = true;
-    this.notesService.createNote(duplicatedNote)
-      .then(duplicate => {
+    this.notesService.createNote(duplicatedNote).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (duplicate) => {
         this.onNoteSelected(duplicate);
         this.isSaving = false;
         this.lastSaved = new Date();
-      })
-      .catch(err => {
-        console.error('Failed to duplicate note:', err);
+      },
+      error: (error) => {
+        console.error('Failed to duplicate note:', error);
         this.isSaving = false;
-      });
+      }
+    });
   }
 
   onFind(): void {

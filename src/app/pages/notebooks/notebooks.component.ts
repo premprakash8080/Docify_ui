@@ -10,35 +10,16 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
-import { Subject } from 'rxjs';
-import { takeUntil, map, filter } from 'rxjs/operators';
+import { Subject, combineLatest, BehaviorSubject } from 'rxjs';
+import { takeUntil, map, filter, switchMap } from 'rxjs/operators';
 import { NOTEBOOK_1_UUID, NOTEBOOK_2_UUID, NOTEBOOK_3_UUID, NOTEBOOK_4_UUID, NOTEBOOK_5_UUID } from '../../core/data/sample-data';
 import { NotesService } from '../notes/services/notes.service';
-import { Note } from '../../core/models';
+import { NotebooksService } from './services/notebooks.service';
+import { Note, Notebook } from '../../core/models';
 import { AddNotebookComponent, AddNotebookDialogResult } from './components/add-notebook/add-notebook.component';
-
-type RowType = 'stack' | 'notebook' | 'note';
-
-interface NotebookRow {
-  title: string;
-  space: string;
-  createdBy: string;
-  updated: string;
-  sharedWith: string;
-  noteCount?: number; // For stacks (notebook count) and notebooks (note count)
-  rowType: RowType;
-  isStack?: boolean;
-  isNotebook?: boolean;
-  isNote?: boolean;
-  stackName?: string;
-  stackId?: string; // ID for routing (slug-based)
-  notebookId?: string; // ID from sample data for routing
-  noteId?: string; // ID for note
-  notebooks?: NotebookRow[]; // For stacks: child notebooks
-  notes?: NotebookRow[]; // For notebooks: child notes
-  expanded?: boolean; // For stacks and notebooks
-  level?: number; // Indentation level (0=stack, 1=notebook, 2=note)
-}
+import { NotebooksListViewComponent } from './components/notebooks-list-view/notebooks-list-view.component';
+import { NotebooksGridViewComponent } from './components/notebooks-grid-view/notebooks-grid-view.component';
+import { NotebookRow } from '../../core/models/notebook.model';
 
 @Component({
   selector: 'vex-notebooks',
@@ -53,7 +34,9 @@ interface NotebookRow {
     MatInputModule,
     MatTooltipModule,
     MatDialogModule,
-    PageLayoutModule
+    PageLayoutModule,
+    NotebooksListViewComponent,
+    NotebooksGridViewComponent
   ],
   templateUrl: './notebooks.component.html',
   styleUrls: ['./notebooks.component.scss'],
@@ -63,6 +46,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private notesService = inject(NotesService);
+  private notebooksService = inject(NotebooksService);
   private dialog = inject(MatDialog);
   private destroy$ = new Subject<void>();
 
@@ -94,7 +78,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
       isStack: true,
       stackName: 'stack',
       stackId: 'personal', // Slug for routing
-      expanded: true,
+      expanded: false, // Default: collapsed
       level: 0,
       notebooks: [
         {
@@ -108,38 +92,103 @@ export class NotebooksComponent implements OnInit, OnDestroy {
           isNotebook: true,
           notebookId: NOTEBOOK_1_UUID,
           level: 1,
-          expanded: true,
+          expanded: false, // Default: collapsed
           notes: [] // Will be populated from service
         }
       ]
-    },
-    // Unstacked notebook
-    {
-      title: 'Recipes',
-      space: '—',
-      createdBy: 'premprakashy',
-      updated: 'Last week',
-      sharedWith: '—',
-      noteCount: 20,
-      rowType: 'notebook',
-      isNotebook: true,
-      notebookId: NOTEBOOK_5_UUID,
-      level: 0,
-      expanded: false,
-      notes: [] // Will be populated from service
     }
+    // Unstacked notebooks will be added dynamically from service
   ];
 
   ngOnInit(): void {
-    // Load notes and populate notebook.notes arrays
-    this.notesService.getNotes().pipe(
-      takeUntil(this.destroy$),
-      map(notes => {
+    // Load notebooks and notes, then build the UI structure
+    combineLatest([
+      this.notebooksService.getAllNotebooks(),
+      this.notesService.getNotes()
+    ]).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: ([allNotebooks, notes]) => {
         this.allNotes = notes;
+        this.buildNotebooksStructure(allNotebooks);
         this.populateNotesInNotebooks();
         this.cdr.markForCheck();
-      })
-    ).subscribe();
+      }
+    });
+  }
+
+  /**
+   * Build notebooks structure from service data
+   * Merges hardcoded stacks with dynamically loaded notebooks
+   */
+  private buildNotebooksStructure(allNotebooks: Notebook[]): void {
+    // Separate stacks from unstacked notebooks
+    const stacks: NotebookRow[] = [];
+    const unstacked: NotebookRow[] = [];
+
+    // Map of notebook IDs that are already in stacks (from hardcoded structure)
+    const stackedNotebookIds = new Set<string>();
+    
+    // First, preserve existing stacks
+    this.notebooks.forEach(item => {
+      if (item.isStack) {
+        stacks.push(item);
+        // Collect notebook IDs from stacks
+        if (item.notebooks) {
+          item.notebooks.forEach(nb => {
+            if (nb.notebookId) {
+              stackedNotebookIds.add(nb.notebookId);
+            }
+          });
+        }
+      }
+    });
+
+    // Update existing stacked notebooks with latest data from service
+    this.updateStackedNotebooks(allNotebooks);
+
+    // Convert Notebook models to NotebookRow format for unstacked notebooks
+    const unstackedNotebookIds = new Set(allNotebooks
+      .filter(notebook => !stackedNotebookIds.has(notebook.id))
+      .map(nb => nb.id));
+
+    // Add or update unstacked notebooks
+    allNotebooks
+      .filter(notebook => unstackedNotebookIds.has(notebook.id))
+      .forEach(notebook => {
+        const existingIndex = unstacked.findIndex(nb => nb.notebookId === notebook.id);
+        if (existingIndex >= 0) {
+          // Update existing
+          unstacked[existingIndex] = this.notebookToRow(notebook);
+        } else {
+          // Add new
+          unstacked.push(this.notebookToRow(notebook));
+        }
+      });
+
+    // Rebuild notebooks array: stacks first, then unstacked notebooks
+    this.notebooks = [...stacks, ...unstacked];
+  }
+
+  /**
+   * Update stacked notebooks with latest data from service
+   */
+  private updateStackedNotebooks(allNotebooks: Notebook[]): void {
+    const notebookMap = new Map(allNotebooks.map(nb => [nb.id, nb]));
+    
+    this.notebooks.forEach(stack => {
+      if (stack.notebooks) {
+        stack.notebooks = stack.notebooks.map(nbRow => {
+          if (nbRow.notebookId) {
+            const updatedNotebook = notebookMap.get(nbRow.notebookId);
+            if (updatedNotebook) {
+              return this.notebookToRow(updatedNotebook, 1);
+            }
+          }
+          return nbRow;
+        });
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -173,6 +222,43 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     };
 
     populateNotes(this.notebooks);
+  }
+
+  /**
+   * Converts a Notebook to a NotebookRow format
+   */
+  private notebookToRow(notebook: Notebook, level: number = 0): NotebookRow {
+    const updatedDate = notebook.updatedAt ? new Date(notebook.updatedAt) : new Date(notebook.createdAt);
+    const now = new Date();
+    const diffHours = (now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60);
+    const diffDays = diffHours / 24;
+
+    let updatedStr = '';
+    if (diffHours < 24) {
+      updatedStr = `${Math.floor(diffHours)} hours ago`;
+    } else if (diffDays < 7) {
+      updatedStr = `${Math.floor(diffDays)} days ago`;
+    } else {
+      updatedStr = updatedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    }
+
+    // Get note count for this notebook
+    const noteCount = this.allNotes.filter(note => note.notebookId === notebook.id && !note.trashed).length;
+
+    return {
+      title: notebook.name,
+      space: '—',
+      createdBy: 'thunder7805', // TODO: Get from user service
+      updated: updatedStr,
+      sharedWith: 'Only you',
+      noteCount: noteCount,
+      rowType: 'notebook',
+      isNotebook: true,
+      notebookId: notebook.id,
+      level: level,
+      expanded: false, // Default: collapsed
+      notes: [] // Will be populated by populateNotesInNotebooks
+    };
   }
 
   /**
@@ -235,6 +321,11 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   sortColumn = '';
   viewMode: 'list' | 'grid' = 'list';
 
+  // Filter state
+  activeFilter: 'tag' | 'notebook' | 'created' | 'updated' | null = null;
+  filterValue: string | null = null;
+  private filterSubject = new BehaviorSubject<{ type: string | null; value: string | null }>({ type: null, value: null });
+
   onCreateNotebook(): void {
     const dialogRef = this.dialog.open(AddNotebookComponent, {
       width: '500px',
@@ -250,13 +341,17 @@ export class NotebooksComponent implements OnInit, OnDestroy {
       )
       .subscribe(result => {
         if (result?.notebook) {
-          // Notebook was created successfully
-          // In a real app, you might want to refresh the notebook list or navigate to the new notebook
-          console.log('Notebook created:', result.notebook);
-          
-          // TODO: Refresh the notebook list or add the new notebook to the current view
-          // For now, the notebook is stored in the service and will appear on next page refresh
-          // You might want to reload the notebooks data here
+          // Notebook was created successfully - refresh the notebooks list
+          // The service already has the new notebook in createdNotebooks array
+          // Just reload from service to update the UI
+          this.notebooksService.getAllNotebooks().pipe(
+            takeUntil(this.destroy$)
+          ).subscribe(allNotebooks => {
+            // Rebuild structure with new notebook
+            this.buildNotebooksStructure(allNotebooks);
+            this.populateNotesInNotebooks();
+            this.cdr.markForCheck();
+          });
         }
       });
   }
@@ -272,6 +367,90 @@ export class NotebooksComponent implements OnInit, OnDestroy {
 
   toggleView(): void {
     this.viewMode = this.viewMode === 'list' ? 'grid' : 'list';
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Handle filter option click from the filter menu
+   */
+  onFilterOptionClick(filterType: 'tag' | 'notebook' | 'created' | 'updated'): void {
+    this.activeFilter = filterType;
+    // TODO: Open filter dialog/modal for selecting filter value
+    // For now, we'll apply a default filter to demonstrate the functionality
+    console.log('Filter selected:', filterType);
+    
+    // In a real implementation, you would open a dialog to select:
+    // - Tag: show list of available tags
+    // - Notebook: show list of parent notebooks (for nested notebooks)
+    // - Created Date: show date picker
+    // - Updated Date: show date picker
+    
+    // Example: Apply a mock filter
+    this.applyFilter(filterType, 'default-value');
+  }
+
+  /**
+   * Apply filter using the notebooks service
+   */
+  private applyFilter(filterType: string, filterValue: string): void {
+    this.filterSubject.next({ type: filterType, value: filterValue });
+    this.filterValue = filterValue;
+
+    // Load filtered notebooks based on filter type
+    let filteredNotebooks$ = this.notebooksService.getAllNotebooks();
+
+    switch (filterType) {
+      case 'tag':
+        if (filterValue) {
+          filteredNotebooks$ = this.notebooksService.filterNotebooksByTag(filterValue);
+        }
+        break;
+      case 'notebook':
+        if (filterValue) {
+          filteredNotebooks$ = this.notebooksService.filterNotebooksByParentNotebook(filterValue);
+        }
+        break;
+      case 'created':
+        if (filterValue) {
+          // filterValue should be a date range string, e.g., "2024-01-01,2024-12-31"
+          const [startDate, endDate] = filterValue.split(',');
+          filteredNotebooks$ = this.notebooksService.filterNotebooksByCreatedDate(startDate, endDate);
+        }
+        break;
+      case 'updated':
+        if (filterValue) {
+          const [startDate, endDate] = filterValue.split(',');
+          filteredNotebooks$ = this.notebooksService.filterNotebooksByUpdatedDate(startDate, endDate);
+        }
+        break;
+    }
+
+    // Update notebooks structure with filtered data
+    filteredNotebooks$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(allNotebooks => {
+      this.buildNotebooksStructure(allNotebooks);
+      this.populateNotesInNotebooks();
+      this.cdr.markForCheck();
+    });
+  }
+
+  /**
+   * Clear active filter and reload all notebooks
+   */
+  clearFilter(): void {
+    this.activeFilter = null;
+    this.filterValue = null;
+    this.filterSubject.next({ type: null, value: null });
+    
+    // Reload all notebooks
+    this.notebooksService.getAllNotebooks().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(allNotebooks => {
+      this.buildNotebooksStructure(allNotebooks);
+      this.populateNotesInNotebooks();
+      this.cdr.markForCheck();
+    });
   }
 
   onNotebookClick(notebook: NotebookRow): void {
@@ -286,6 +465,37 @@ export class NotebooksComponent implements OnInit, OnDestroy {
 
   onMenuClick(event: Event): void {
     event.stopPropagation();
+  }
+
+  /**
+   * Handle stack click from grid view
+   * Only called when stack has no children (shouldn't happen with new nested view)
+   */
+  onGridStackClick(stack: NotebookRow): void {
+    if (stack.isStack && stack.stackId) {
+      this.router.navigate(['/notes/stack', stack.stackId, 'notebooks']);
+    }
+  }
+
+  /**
+   * Handle notebook or note click from grid view
+   * Notes will navigate to note detail, notebooks will be handled by grid view internally
+   */
+  onGridNotebookOrNoteClick(row: NotebookRow): void {
+    if (row.isNote && row.noteId) {
+      // Navigate to note detail
+      this.router.navigate(['/notes', row.noteId]);
+    } else if (row.isNotebook && row.notebookId) {
+      // Navigate to notebook notes list (only if grid view didn't handle it)
+      this.router.navigate(['/notes/notebook', row.notebookId, 'notes']);
+    }
+  }
+
+  /**
+   * Handle menu click from grid view
+   */
+  onGridMenuClick(event: { event: Event; row: NotebookRow }): void {
+    event.event.stopPropagation();
   }
 
   toggleStack(stack: NotebookRow): void {

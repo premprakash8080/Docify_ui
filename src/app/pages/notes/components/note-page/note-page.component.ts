@@ -208,15 +208,16 @@ export class NotePageComponent implements OnInit, OnDestroy {
     };
 
     // Create the duplicate note
-    this.notesService.createNote(duplicatedNote)
-      .then(duplicate => {
+    this.notesService.createNote(duplicatedNote).subscribe({
+      next: (duplicate) => {
         // Navigate to the duplicated note
         this.router.navigate(['/notes', duplicate.id]);
-      })
-      .catch(error => {
+      },
+      error: (error) => {
         console.error('Failed to duplicate note:', error);
         alert('Failed to duplicate note. Please try again.');
-      });
+      }
+    });
   }
 
   /**

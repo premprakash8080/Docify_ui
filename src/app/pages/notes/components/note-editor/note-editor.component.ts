@@ -269,31 +269,34 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
         return;
       }
 
-      try {
-        if (showIndicator) {
-          this.isSaving = true;
-          this.savingStateChange.emit({ isSaving: true, lastSaved: this.lastSaved });
-        }
-        const newNote = await this.notesService.createNote({
-          title: title,
-          content: content,
-          userId,
-          notebookId: this.notebookId || undefined // Use notebookId from input (route) if available
-        });
-        this.note = newNote;
-        this.lastSaved = new Date();
-        this.noteSaved.emit(newNote);
-        if (showIndicator) {
-          this.isSaving = false;
-          this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
-        }
-      } catch (error) {
-        console.error('Failed to create note:', error);
-        if (showIndicator) {
-          this.isSaving = false;
-          this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
-        }
+      if (showIndicator) {
+        this.isSaving = true;
+        this.savingStateChange.emit({ isSaving: true, lastSaved: this.lastSaved });
       }
+      
+      this.notesService.createNote({
+        title: title,
+        content: content,
+        userId,
+        notebookId: this.notebookId || undefined // Use notebookId from input (route) if available
+      }).subscribe({
+        next: (newNote) => {
+          this.note = newNote;
+          this.lastSaved = new Date();
+          this.noteSaved.emit(newNote);
+          if (showIndicator) {
+            this.isSaving = false;
+            this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
+          }
+        },
+        error: (error) => {
+          console.error('Failed to create note:', error);
+          if (showIndicator) {
+            this.isSaving = false;
+            this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
+          }
+        }
+      });
     } else {
       // Update existing note
       try {

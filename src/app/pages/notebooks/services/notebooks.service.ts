@@ -216,4 +216,103 @@ export class NotebooksService {
       delay(200) // Simulate network delay
     );
   }
+
+  /**
+   * Filter notebooks by tag
+   * In a real app, this would be: return this.http.get<Notebook[]>('/api/notebooks/filter', { params: { tagId } });
+   * @param tagId - The tag ID to filter by
+   * @returns Observable of filtered notebooks
+   */
+  filterNotebooksByTag(tagId: string): Observable<Notebook[]> {
+    const allNotebooks = [...notebooks, ...this.createdNotebooks];
+    
+    // Filter notebooks that have notes with the specified tag
+    const filtered = allNotebooks.filter(notebook => {
+      const notebookNotes = notes.filter(note => note.notebookId === notebook.id);
+      return notebookNotes.some(note => note.tags.includes(tagId));
+    });
+    
+    // Simulate API delay
+    return of(filtered).pipe(delay(100));
+  }
+
+  /**
+   * Filter notebooks by parent notebook (for nested notebooks)
+   * In a real app, this would be: return this.http.get<Notebook[]>('/api/notebooks/filter', { params: { parentNotebookId } });
+   * @param parentNotebookId - The parent notebook ID
+   * @returns Observable of filtered notebooks
+   */
+  filterNotebooksByParentNotebook(parentNotebookId: string): Observable<Notebook[]> {
+    // For now, return all notebooks (nested notebooks not implemented in data model yet)
+    const allNotebooks = [...notebooks, ...this.createdNotebooks];
+    // TODO: Implement nested notebook filtering when data model supports it
+    return of(allNotebooks).pipe(delay(100));
+  }
+
+  /**
+   * Filter notebooks by created date range
+   * In a real app, this would be: return this.http.get<Notebook[]>('/api/notebooks/filter', { params: { startDate, endDate } });
+   * @param startDate - Start date (ISO string)
+   * @param endDate - End date (ISO string, optional)
+   * @returns Observable of filtered notebooks
+   */
+  filterNotebooksByCreatedDate(startDate: string, endDate?: string): Observable<Notebook[]> {
+    const allNotebooks = [...notebooks, ...this.createdNotebooks];
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : new Date();
+    
+    const filtered = allNotebooks.filter(notebook => {
+      const created = new Date(notebook.createdAt);
+      return created >= start && created <= end;
+    });
+    
+    return of(filtered).pipe(delay(100));
+  }
+
+  /**
+   * Filter notebooks by updated date range
+   * In a real app, this would be: return this.http.get<Notebook[]>('/api/notebooks/filter', { params: { startDate, endDate } });
+   * @param startDate - Start date (ISO string)
+   * @param endDate - End date (ISO string, optional)
+   * @returns Observable of filtered notebooks
+   */
+  filterNotebooksByUpdatedDate(startDate: string, endDate?: string): Observable<Notebook[]> {
+    const allNotebooks = [...notebooks, ...this.createdNotebooks];
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : new Date();
+    
+    const filtered = allNotebooks.filter(notebook => {
+      const updated = notebook.updatedAt ? new Date(notebook.updatedAt) : new Date(notebook.createdAt);
+      return updated >= start && updated <= end;
+    });
+    
+    return of(filtered).pipe(delay(100));
+  }
+
+  /**
+   * Get available filter options (tags, date ranges, etc.)
+   * In a real app, this would be: return this.http.get<FilterOptions>('/api/notebooks/filter-options');
+   * @returns Observable of filter options
+   */
+  getFilterOptions(): Observable<{
+    tags: Array<{ id: string; name: string }>;
+    dateRanges: Array<{ label: string; startDate: string; endDate?: string }>;
+  }> {
+    // Mock filter options
+    const dateRanges = [
+      { label: 'Last 7 days', startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() },
+      { label: 'Last 30 days', startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() },
+      { label: 'Last 90 days', startDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString() },
+      { label: 'This year', startDate: new Date(new Date().getFullYear(), 0, 1).toISOString() }
+    ];
+
+    // Mock tags (in real app, fetch from tags service)
+    const tags = [
+      { id: '1', name: 'Important' },
+      { id: '2', name: 'Work' },
+      { id: '3', name: 'Personal' }
+    ];
+
+    return of({ tags, dateRanges }).pipe(delay(100));
+  }
 }

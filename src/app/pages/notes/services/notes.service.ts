@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map, delay } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map, delay, tap } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 import { Note, Notebook, Tag } from '../../../core/models';
 import {
@@ -257,9 +257,32 @@ export class NotesService {
     );
   }
 
-  async createNote(note: Partial<Note>): Promise<Note> {
+  /**
+   * Create a new note with API-ready architecture
+   * 
+   * This method supports optimistic UI updates and can be easily replaced
+   * with an HTTP POST request when the backend API is ready.
+   * 
+   * Current implementation:
+   * - Optimistically updates the UI immediately
+   * - Stores locally for persistence
+   * - Queues for sync
+   * 
+   * Future API implementation:
+   * - Replace the Observable.of() with this.apiService.post('/notes', noteData)
+   * - Handle API response and update BehaviorSubject
+   * - Rollback on error if needed
+   * 
+   * @param note - Partial note data (id will be generated if not provided)
+   * @returns Observable<Note> - The created note
+   */
+  createNote(note: Partial<Note>): Observable<Note> {
     const userId = this.authService.currentUserValue?.id;
-    if (!userId) throw new Error('User not authenticated');
+    if (!userId) {
+      return new Observable(observer => {
+        observer.error(new Error('User not authenticated'));
+      });
+    }
 
     const id = note.id || this.generateId();
     const now = new Date().toISOString();
@@ -282,15 +305,27 @@ export class NotesService {
       lastModified: now
     };
 
-    // Store locally
-    await this.storage.put('notes', newNote);
+    // Optimistic UI update: immediately update the BehaviorSubject
+    // This ensures the UI updates instantly without waiting for API/Storage
     const currentNotes = this.notesSubject.value;
     this.notesSubject.next([newNote, ...currentNotes]);
 
-    // Queue for sync
-    await this.syncService.addToSyncQueue('create', 'note', id, newNote);
-
-    return newNote;
+    // Simulate API call with local storage
+    // TODO: Replace with actual API call: return this.apiService.post<Note>('/notes', newNote)
+    return of(newNote).pipe(
+      delay(0), // Simulate API delay (remove when using real API)
+      tap(async (createdNote) => {
+        try {
+          // Store locally for persistence (remove when using API-only approach)
+          await this.storage.put('notes', createdNote);
+          // Queue for sync (remove when using API-only approach)
+          await this.syncService.addToSyncQueue('create', 'note', id, createdNote);
+        } catch (error) {
+          console.warn('Failed to store note locally:', error);
+          // Note: In API-only mode, you might want to rollback the optimistic update here
+        }
+      })
+    );
   }
 
   async updateNote(id: string, patch: Partial<Note>): Promise<Note> {
