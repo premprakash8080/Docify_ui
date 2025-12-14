@@ -3,7 +3,7 @@
     <div class="home-header">
       <h1 class="home-title">Your Home</h1>
       <button mat-icon-button class="edit-button" aria-label="Edit">
-        <mat-icon>edit</mat-icon>
+        <mat-icon svgIcon="mat:edit"></mat-icon>
       </button>
     </div>
   </vex-page-layout-header>
@@ -54,7 +54,7 @@
               <!-- Create New Note Card -->
               <div class="note-card create-note-card" (click)="onCreateNote()" [attr.role]="'button'" [attr.tabindex]="0">
                 <div class="create-note-icon">
-                  <mat-icon>add</mat-icon>
+                  <mat-icon svgIcon="mat:add"></mat-icon>
                 </div>
                 <p class="create-note-text">Create new note</p>
               </div>
@@ -63,7 +63,7 @@
             <div class="empty-notes">
               <div class="note-card create-note-card" (click)="onCreateNote()" [attr.role]="'button'" [attr.tabindex]="0">
                 <div class="create-note-icon">
-                  <mat-icon>add</mat-icon>
+                  <mat-icon svgIcon="mat:add"></mat-icon>
                 </div>
                 <p class="create-note-text">Create new note</p>
               </div>
@@ -78,10 +78,10 @@
           <h2 class="section-title">Scratch pad</h2>
           <div class="scratchpad-actions">
             <button mat-icon-button aria-label="New scratchpad">
-              <mat-icon>description</mat-icon>
+              <mat-icon svgIcon="mat:description"></mat-icon>
             </button>
             <button mat-icon-button aria-label="More options">
-              <mat-icon>more_vert</mat-icon>
+              <mat-icon svgIcon="mat:more_vert"></mat-icon>
             </button>
           </div>
         </div>

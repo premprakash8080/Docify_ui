@@ -4,6 +4,7 @@ import { SearchComponent } from './search.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ReactiveFormsModule } from '@angular/forms';
+import { SearchModalComponent } from '../search-modal/search-modal.component';
 
 
 @NgModule({
@@ -12,8 +13,8 @@ import { ReactiveFormsModule } from '@angular/forms';
     CommonModule,
     MatButtonModule,
     MatIconModule,
-
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    SearchModalComponent // Import the standalone search modal component
   ],
   exports: [SearchComponent]
 })

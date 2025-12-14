@@ -148,8 +148,10 @@ export class NotesListComponent implements OnInit, OnDestroy {
 
   onNoteSelect(noteId: string): void {
     this.selectNote(noteId);
-    // Also emit the note object if needed
-    this.notesService.getNoteById(noteId).subscribe(note => {
+    // Fetch and emit the note object from service
+    this.notesService.getNoteById(noteId).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(note => {
       if (note) {
         this.noteSelected.emit(note);
       }
@@ -158,11 +160,24 @@ export class NotesListComponent implements OnInit, OnDestroy {
 
   /**
    * Handle item selection from side list component
+   * Fetches the latest note data from service before emitting
    */
   onItemSelected(item: SideListItem): void {
     const note = item as Note;
     this.selectNote(note.id);
-    this.noteSelected.emit(note);
+    
+    // Fetch the latest note data from service to ensure we have complete, up-to-date data
+    this.notesService.getNoteById(note.id).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(updatedNote => {
+      if (updatedNote) {
+        // Emit the note fetched from service (most up-to-date)
+        this.noteSelected.emit(updatedNote);
+      } else {
+        // Fallback to the note from the item if service doesn't return it
+        this.noteSelected.emit(note);
+      }
+    });
   }
 
   /**

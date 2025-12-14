@@ -5,7 +5,7 @@
       <div class="flex items-center gap-3">
         <h1 class="title m-0 text-3xl font-semibold">Notebooks</h1>
         <span class="bg-base text-hint rounded-full px-2 py-0.5 text-sm font-medium">
-          {{ notebooks.length }}
+          {{ totalNotebookCount }}
         </span>
       </div>
 
@@ -46,7 +46,7 @@
 
   <vex-page-layout-content>
     <div class="card overflow-hidden">
-      <table mat-table [dataSource]="notebooks" class="w-full">
+      <table mat-table [dataSource]="flattenedRows" class="w-full notebooks-table">
         
         <!-- Title Column -->
         <ng-container matColumnDef="title">
@@ -58,13 +58,75 @@
               }
             </div>
           </th>
-          <td mat-cell *matCellDef="let notebook" class="cursor-pointer hover:bg-hover">
-            <div class="flex items-center gap-3 py-2" (click)="onNotebookClick(notebook)">
-              <mat-icon class="text-secondary" svgIcon="mat:book"></mat-icon>
-              <span class="font-medium">{{ notebook.title }}</span>
-              <span class="bg-base text-hint rounded-full px-2 py-0.5 text-xs">
-                {{ notebook.noteCount }}
-              </span>
+          <td mat-cell *matCellDef="let row" 
+              [class.stack-row]="isStackRow(row)"
+              [class.notebook-row]="isNotebookRow(row)"
+              [class.note-row]="isNoteRow(row)"
+              [attr.role]="'button'"
+              [attr.aria-expanded]="(isStackRow(row) || isNotebookRow(row)) ? (row.expanded ? 'true' : 'false') : null"
+              [attr.tabindex]="0"
+              class="cursor-pointer hover:bg-hover"
+              (click)="isNoteRow(row) ? onNoteClick(row) : (isNotebookRow(row) ? onNotebookClick(row) : null)"
+              (keydown)="onRowKeydown($event, row)">
+            <div class="flex items-center gap-3 py-2 row-content" 
+                 [class.level-0]="row.level === 0"
+                 [class.level-1]="row.level === 1"
+                 [class.level-2]="row.level === 2">
+              @if (isStackRow(row)) {
+                <!-- Stack Row -->
+                <!-- Chevron at the start -->
+                <button 
+                  mat-icon-button
+                  type="button"
+                  class="chevron-button"
+                  [attr.aria-label]="(row.expanded ? 'Collapse' : 'Expand') + ' ' + row.title + ' stack'"
+                  [attr.aria-expanded]="row.expanded ? 'true' : 'false'"
+                  (click)="onChevronClick($event, row)"
+                  (keydown.enter)="onChevronClick($event, row)"
+                  (keydown.space)="onChevronClick($event, row)">
+                  <mat-icon 
+                    class="text-secondary expand-icon"
+                    [class.expanded]="row.expanded"
+                    svgIcon="mat:chevron_right">
+                  </mat-icon>
+                </button>
+                <!-- Stack content (clickable for navigation) -->
+                <div class="flex items-center gap-2 flex-1 cursor-pointer stack-content"
+                     (click)="onStackNameClick($event, row)">
+                  <mat-icon class="text-secondary folder-icon" svgIcon="mat:folder"></mat-icon>
+                  <span class="font-semibold stack-name">{{ row.title }}</span>
+                  <span class="count-text">{{ row.noteCount }}</span>
+                </div>
+              } @else if (isNotebookRow(row)) {
+                <!-- Notebook Row -->
+                <!-- Chevron at the start (indented) -->
+                <button 
+                  mat-icon-button
+                  type="button"
+                  class="chevron-button notebook-chevron"
+                  [attr.aria-label]="(row.expanded ? 'Collapse' : 'Expand') + ' ' + row.title + ' notebook'"
+                  [attr.aria-expanded]="row.expanded ? 'true' : 'false'"
+                  (click)="onNotebookChevronClick($event, row)"
+                  (keydown.enter)="onNotebookChevronClick($event, row)"
+                  (keydown.space)="onNotebookChevronClick($event, row)">
+                  <mat-icon 
+                    class="text-secondary expand-icon"
+                    [class.expanded]="row.expanded"
+                    svgIcon="mat:chevron_right">
+                  </mat-icon>
+                </button>
+                <!-- Notebook content -->
+                <div class="flex items-center gap-2 flex-1 cursor-pointer"
+                     (click)="onNotebookClick(row)">
+                  <mat-icon class="text-secondary notebook-icon" svgIcon="mat:book"></mat-icon>
+                  <span class="font-medium notebook-name">{{ row.title }}</span>
+                  <span class="count-text">{{ row.noteCount }}</span>
+                </div>
+              } @else if (isNoteRow(row)) {
+                <!-- Note Row -->
+                <mat-icon class="text-secondary note-icon" svgIcon="mat:description"></mat-icon>
+                <span class="font-normal note-name">{{ row.title }}</span>
+              }
             </div>
           </td>
         </ng-container>
@@ -72,19 +134,21 @@
         <!-- Space Column -->
         <ng-container matColumnDef="space">
           <th mat-header-cell *matHeaderCellDef class="uppercase text-secondary font-medium">Space</th>
-          <td mat-cell *matCellDef="let notebook" class="text-secondary">{{ notebook.space }}</td>
+          <td mat-cell *matCellDef="let row" class="text-secondary">
+            {{ row.isStack ? 'Stack' : row.space }}
+          </td>
         </ng-container>
 
         <!-- Created By Column -->
         <ng-container matColumnDef="createdBy">
           <th mat-header-cell *matHeaderCellDef class="uppercase text-secondary font-medium">Created by</th>
-          <td mat-cell *matCellDef="let notebook" class="text-secondary">{{ notebook.createdBy }}</td>
+          <td mat-cell *matCellDef="let row" class="text-secondary">{{ row.createdBy }}</td>
         </ng-container>
 
         <!-- Updated Column -->
         <ng-container matColumnDef="updated">
           <th mat-header-cell *matHeaderCellDef class="uppercase text-secondary font-medium">Updated</th>
-          <td mat-cell *matCellDef="let notebook" class="text-secondary">{{ notebook.updated }}</td>
+          <td mat-cell *matCellDef="let row" class="text-secondary">{{ row.updated }}</td>
         </ng-container>
 
         <!-- Shared With Column -->
@@ -94,9 +158,10 @@
               <span>Shared with</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let notebook" class="text-secondary">
+          <td mat-cell *matCellDef="let row" class="text-secondary">
             <div class="flex items-center justify-between">
-              <span>{{ notebook.sharedWith }}</span>
+              <span>{{ row.sharedWith }}</span>
+              <!-- More options menu for all row types -->
               <button 
                 mat-icon-button 
                 [matMenuTriggerFor]="menu"
@@ -109,10 +174,12 @@
                   <mat-icon svgIcon="mat:share"></mat-icon>
                   <span>Share</span>
                 </button>
-                <button mat-menu-item>
-                  <mat-icon svgIcon="mat:edit"></mat-icon>
-                  <span>Rename</span>
-                </button>
+                @if (!isNoteRow(row)) {
+                  <button mat-menu-item>
+                    <mat-icon svgIcon="mat:edit"></mat-icon>
+                    <span>Rename</span>
+                  </button>
+                }
                 <button mat-menu-item>
                   <mat-icon svgIcon="mat:delete"></mat-icon>
                   <span>Delete</span>
@@ -123,7 +190,12 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-hover transition-colors"></tr>
+        <tr mat-row 
+            *matRowDef="let row; columns: displayedColumns;" 
+            [class.stack-row]="isStackRow(row)"
+            [class.notebook-row]="isNotebookRow(row)"
+            [class.note-row]="isNoteRow(row)"
+            class="hover:bg-hover transition-colors"></tr>
       </table>
     </div>
   </vex-page-layout-content>

@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { NotesDashboardComponent } from './notes-dashboard.component';
 import { NotesDashboardRoutingModule } from './notes-dashboard-routing.module';
 import { NotesListModule } from '../notes-list/notes-list.module';
-import { NoteEditorModule } from '../note-editor/note-editor.module';
+import { NotePageContentModule } from '../note-page-content/note-page-content.module';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -15,7 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
     RouterModule,
     NotesDashboardRoutingModule,
     NotesListModule,
-    NoteEditorModule,
+    NotePageContentModule,
     MatIconModule,
     MatButtonModule
   ],

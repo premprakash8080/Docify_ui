@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, Input, Output, EventEmitter, ViewChild, inject, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, OnChanges, SimpleChanges, Input, Output, EventEmitter, ViewChild, inject, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
@@ -6,7 +6,7 @@ import { Note, Notebook } from '../../../../core/models';
 import { NotesService } from '../../services/notes.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Editor } from '@tiptap/core';
-import { NoteEditorContentComponent } from './components/note-editor-content/note-editor-content.component';
+import { NoteEditorContentComponent } from '../note-editor-content/note-editor-content.component';
 
 /**
  * Main note editor component that orchestrates the editing experience.
@@ -18,8 +18,9 @@ import { NoteEditorContentComponent } from './components/note-editor-content/not
   styleUrls: ['./note-editor.component.scss'],
   standalone: false
 })
-export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy {
+export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @Input() note: Note | null = null;
+  @Input() notebookId: string | null = null; // Notebook ID from route for new notes
   @Input() autoSave = true;
   @Output() noteUpdated = new EventEmitter<Note>();
   @Output() noteSaved = new EventEmitter<Note>();
@@ -88,6 +89,26 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.updateWordCount());
   }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Handle note input changes - reload note when it changes
+    if (changes['note'] && !changes['note'].firstChange) {
+      const newNote = changes['note'].currentValue;
+      const previousNote = changes['note'].previousValue;
+      
+      // Only reload if the note ID actually changed (avoid unnecessary reloads)
+      if (newNote && newNote.id !== previousNote?.id) {
+        this.loadNote(newNote);
+      } else if (!newNote && previousNote) {
+        // Note was cleared
+        this.note = null;
+        this.form.reset();
+        if (this.editorContentComponent) {
+          this.editorContentComponent.updateContent('');
+        }
+      }
+    }
+  }
   
   ngAfterViewInit(): void {
     // Get editor instance after view is initialized
@@ -95,6 +116,13 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => {
       if (this.editorContentComponent) {
         this.editor = this.editorContentComponent.getEditor();
+        
+        // If we have a note loaded but editor wasn't ready, update it now
+        if (this.note && this.note.content) {
+          const content = this.note.content || '';
+          this.editorContentComponent.updateContent(content);
+        }
+        
         if (this.editor) {
           this.editorReady.emit(this.editor);
         }
@@ -185,12 +213,6 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  @Input()
-  set noteInput(note: Note | null) {
-    if (note && note.id !== this.note?.id) {
-      this.loadNote(note);
-    }
-  }
 
   /**
    * Loads a note into the editor
@@ -205,9 +227,12 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy {
     }, { emitEvent: false });
     
     // Update editor content if available
-    if (this.editorContentComponent) {
-      this.editorContentComponent.updateContent(content);
-    }
+    // Use setTimeout to ensure editor is ready, especially if called from ngOnChanges
+    setTimeout(() => {
+      if (this.editorContentComponent) {
+        this.editorContentComponent.updateContent(content);
+      }
+    }, 0);
     
     this.updateWordCount();
   }
@@ -252,7 +277,8 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy {
         const newNote = await this.notesService.createNote({
           title: title,
           content: content,
-          userId
+          userId,
+          notebookId: this.notebookId || undefined // Use notebookId from input (route) if available
         });
         this.note = newNote;
         this.lastSaved = new Date();

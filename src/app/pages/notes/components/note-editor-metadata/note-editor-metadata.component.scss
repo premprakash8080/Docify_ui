@@ -1,4 +1,5 @@
 // Metadata Section - Secondary, low-contrast style
+// Supports both light and dark themes
 .note-metadata {
   margin-bottom: 24px;
 }
@@ -43,11 +44,11 @@
   border-radius: 16px;
   font-size: 12px;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
   cursor: default;
   
   &:hover {
-    background-color: var(--background-card);
+    background-color: var(--background-foreground);
     color: var(--text-color);
     
     .tag-remove {
@@ -61,18 +62,31 @@
     padding: 0;
     margin: 0;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, color 0.2s ease;
     color: var(--text-hint);
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     
     &:hover {
       color: var(--text-color);
       background-color: transparent;
     }
     
+    &:focus-visible {
+      outline: 1px solid var(--color-primary-rgb);
+      outline-offset: 1px;
+      border-radius: 2px;
+    }
+    
     mat-icon {
       font-size: 14px;
       width: 14px;
       height: 14px;
+      color: inherit;
     }
   }
 }

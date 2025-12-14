@@ -1,6 +1,7 @@
 /**
  * Evernote/Notion-style formatting toolbar styles
  * Clean, horizontal, compact design
+ * Supports both light and dark themes
  */
 
 .formatting-toolbar {
@@ -9,8 +10,8 @@
   justify-content: center;
   width: 100%;
   padding: 8px 16px;
-  background: var(--background-card, #ffffff);
-  border-top: 1px solid var(--foreground-divider, #e0e0e0);
+  background: var(--background-foreground);
+  border-top: 1px solid var(--foreground-divider);
   min-height: 48px;
   visibility: visible !important;
   opacity: 1 !important;
@@ -54,7 +55,7 @@
 .toolbar-divider {
   width: 1px;
   height: 24px;
-  background-color: var(--foreground-divider, #e0e0e0);
+  background-color: var(--foreground-divider);
   margin: 0 4px;
   flex-shrink: 0;
 }
@@ -66,7 +67,7 @@
   min-width: 32px;
   padding: 0;
   border-radius: 4px;
-  color: var(--text-secondary, #666666);
+  color: var(--text-secondary);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -79,21 +80,26 @@
     font-size: 20px;
     width: 20px;
     height: 20px;
+    color: inherit;
   }
   
   // Hover state
   &:hover:not(:disabled) {
-    background-color: var(--background-hover, #f5f5f5);
-    color: var(--text-color, #333333);
+    background-color: var(--background-hover);
+    color: var(--text-color);
   }
   
   // Active state - when format is applied
   &.active {
-    background-color: var(--color-primary, #1976d2);
-    color: white;
+    background-color: var(--color-primary-rgb);
+    color: var(--color-primary-contrast-rgb);
+    
+    mat-icon {
+      color: var(--color-primary-contrast-rgb);
+    }
     
     &:hover {
-      background-color: var(--color-primary, #1976d2);
+      background-color: var(--color-primary-rgb);
       opacity: 0.9;
     }
   }
@@ -102,11 +108,12 @@
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+    color: var(--text-hint);
   }
   
   // Focus state for keyboard navigation
   &:focus-visible {
-    outline: 2px solid var(--color-primary, #1976d2);
+    outline: 2px solid var(--color-primary-rgb);
     outline-offset: 2px;
   }
 }
@@ -134,7 +141,7 @@
 
 // Menu item active state
 .mat-mdc-menu-item.active {
-  background-color: var(--background-hover, #f5f5f5);
+  background-color: var(--background-hover);
 }
 
 // Responsive design
@@ -185,10 +192,10 @@
 .formatting-toolbar:not(.always-visible) {
   position: fixed;
   z-index: 1000;
-  background-color: var(--background-card, #ffffff);
-  border: 1px solid var(--foreground-divider, #e0e0e0);
+  background-color: var(--background-foreground);
+  border: 1px solid var(--foreground-divider);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--elevation-z8);
   padding: 8px;
   width: auto;
   min-height: auto;

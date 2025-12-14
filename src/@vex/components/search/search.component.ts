@@ -15,39 +15,18 @@ import { SearchService } from '../../services/search.service';
 export class SearchComponent implements OnInit, OnDestroy {
 
   show$ = this.layoutService.searchOpen$;
-  searchCtrl = new UntypedFormControl();
-
-  @ViewChild('searchInput', { static: true }) input: ElementRef;
 
   constructor(private layoutService: LayoutService,
               private searchService: SearchService) { }
 
   ngOnInit() {
+    // Initialize search service when component loads
     this.searchService.isOpenSubject.next(true);
-    this.searchCtrl.valueChanges.pipe(
-      untilDestroyed(this)
-    ).subscribe(value => this.searchService.valueChangesSubject.next(value));
-
-    this.show$.pipe(
-      filter(show => show),
-      untilDestroyed(this)
-    ).subscribe(() => this.input.nativeElement.focus());
-  }
-
-  close() {
-    this.layoutService.closeSearch();
-    this.searchCtrl.setValue(undefined);
-    this.searchService.isOpenSubject.next(false);
-  }
-
-  search() {
-    this.searchService.submitSubject.next(this.searchCtrl.value);
-    this.close();
   }
 
   ngOnDestroy(): void {
+    // Cleanup when component is destroyed
     this.layoutService.closeSearch();
-    this.searchCtrl.setValue(undefined);
     this.searchService.isOpenSubject.next(false);
   }
 }

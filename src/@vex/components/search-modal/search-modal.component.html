@@ -1,0 +1,124 @@
+<div class="search-modal-container" (click)="close()">
+  <div class="search-modal-content" (click)="$event.stopPropagation()">
+    
+    <!-- Close Button -->
+    <button 
+      class="close-button"
+      (click)="close()"
+      type="button"
+      mat-icon-button
+      aria-label="Close search">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+    
+
+
+    <!-- Search Input -->
+    <div class="search-input-section">
+      <mat-icon class="search-icon" svgIcon="mat:search"></mat-icon>
+      <input 
+        #searchInput
+        type="text" 
+        class="search-input"
+        placeholder="Search or ask a question..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+        autocomplete="off">
+    </div>
+
+    <!-- Search Filters -->
+    <div class="search-filters" *ngIf="searchQuery">
+      <span class="filter-label">Search in</span>
+      <div class="filter-pills">
+        <button 
+          *ngFor="let filter of selectedFilters"
+          class="filter-pill"
+          [class.everywhere]="filter === 'everywhere'"
+          [class.notebook]="filter.startsWith('notebook:')"
+          (click)="filter === 'everywhere' && getAvailableNotebooksForFilter().length > 0 ? (showNotebookSelector = !showNotebookSelector) : removeFilter(filter)"
+          type="button">
+          <mat-icon *ngIf="filter !== 'everywhere'" 
+                    class="pill-icon" 
+                    [svgIcon]="'mat:' + getFilterIcon(filter)">
+          </mat-icon>
+          <span>{{ getFilterLabel(filter) }}</span>
+          <mat-icon *ngIf="filter === 'everywhere' && getAvailableNotebooksForFilter().length > 0" 
+                    class="pill-icon" 
+                    svgIcon="mat:add">
+          </mat-icon>
+        </button>
+      </div>
+
+      <!-- Notebook Selector Dropdown -->
+      <div class="notebook-selector" *ngIf="showNotebookSelector">
+        <div 
+          *ngFor="let notebook of getAvailableNotebooksForFilter()"
+          class="notebook-option"
+          (click)="addNotebookFilter(notebook)">
+          <mat-icon class="notebook-option-icon" svgIcon="mat:book"></mat-icon>
+          <span>{{ notebook.name }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Results -->
+    <div class="search-results" #searchResultsContainer *ngIf="searchQuery && searchResults.length > 0">
+      <div *ngFor="let group of searchResults; let groupIndex = index" class="result-group">
+        <div class="group-header">{{ group.group }}</div>
+        <div class="result-items">
+          <div 
+            *ngFor="let result of group.results; let resultIndex = index"
+            class="result-item"
+            [class.selected]="isResultSelected(groupIndex, resultIndex)"
+            [attr.aria-selected]="isResultSelected(groupIndex, resultIndex)"
+            [attr.tabindex]="isResultSelected(groupIndex, resultIndex) ? 0 : -1"
+            (click)="onResultClick(result)"
+            matRipple>
+            <mat-icon 
+              class="result-icon"
+              [svgIcon]="'mat:' + getResultIcon(result)">
+            </mat-icon>
+            <div class="result-content">
+              <div class="result-title">{{ result.title }}</div>
+              <div class="result-breadcrumb" *ngIf="getBreadcrumb(result)">
+                <mat-icon class="breadcrumb-icon" svgIcon="mat:folder"></mat-icon>
+                <span>{{ getBreadcrumb(result) }}</span>
+              </div>
+            </div>
+            <mat-icon class="chevron-icon" svgIcon="mat:chevron_right"></mat-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="searchQuery && searchResults.length === 0">
+      <mat-icon class="empty-icon" svgIcon="mat:search_off"></mat-icon>
+      <p class="empty-text">No results found</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="search-footer">
+      <div class="footer-shortcuts">
+        <span class="shortcut-item">
+          <kbd>↓↑</kbd> Select
+        </span>
+        <span class="shortcut-item">
+          <kbd>↩</kbd> Open
+        </span>
+        <span class="shortcut-item">
+          <kbd>⌘L</kbd> Copy Link
+        </span>
+        <span class="shortcut-item">
+          <kbd>⌘↵</kbd> Open in New Window
+        </span>
+      </div>
+      <button 
+        class="feedback-button"
+        (click)="onFeedbackClick()"
+        type="button">
+        Give search feedback
+      </button>
+    </div>
+  </div>
+</div>

@@ -33,11 +33,25 @@
       
       @if (selectedNote$ | async; as selectedNote) {
       <div class="editor-content">
-        <vex-note-editor
+        <vex-note-page-content
           [note]="selectedNote"
-          (noteUpdated)="onNoteUpdated($event)"
-          (noteSaved)="onNoteSaved($event)">
-        </vex-note-editor>
+          (previous)="onPreviousNote()"
+          (next)="onNextNote()"
+          (fullscreen)="toggleFullscreen()"
+          (share)="onShare()"
+          (link)="onCopyLink()"
+          (pin)="onPin()"
+          (archive)="onArchive()"
+          (export)="onExport()"
+          (manageTags)="onManageTags()"
+          (duplicate)="onDuplicate()"
+          (find)="onFind()"
+          (info)="onInfo()"
+          (history)="onHistory()"
+          (print)="onPrint()"
+          (delete)="onDelete()"
+          (noteUpdated)="onNoteUpdated($event)">
+        </vex-note-page-content>
       </div>
       }
     </div>

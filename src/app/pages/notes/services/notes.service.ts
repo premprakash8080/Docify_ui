@@ -1,16 +1,32 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Note, Notebook, Tag, Attachment } from '../../../core/models';
+import { map, delay } from 'rxjs/operators';
+import { v4 as uuidv4 } from 'uuid';
+import { Note, Notebook, Tag } from '../../../core/models';
+import {
+  notes,
+  notebooks,
+  tags
+} from '../../../core/data/sample-data';
 import { StorageService } from '../../../core/services/storage.service';
 import { ApiService } from '../../../core/services/api.service';
 import { SyncService } from '../../../core/services/sync.service';
 import { AuthService } from '../../../core/services/auth.service';
 
+/**
+ * Service for managing notes, notebooks, and tags data.
+ * 
+ * Read operations use sample-data.ts directly and return Observables.
+ * Write operations update both in-memory state and storage (for persistence).
+ * 
+ * Can be easily switched to HTTP calls by replacing Observable implementations
+ * with HttpClient calls in read methods.
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class NotesService {
+  // In-memory state for write operations and real-time updates
   private notesSubject = new BehaviorSubject<Note[]>([]);
   public notes$ = this.notesSubject.asObservable();
 
@@ -20,65 +36,224 @@ export class NotesService {
   private tagsSubject = new BehaviorSubject<Tag[]>([]);
   public tags$ = this.tagsSubject.asObservable();
 
-  constructor(
-    private storage: StorageService,
-    private apiService: ApiService,
-    private syncService: SyncService,
-    private authService: AuthService
-  ) {
-    this.loadLocalData();
+  private storage = inject(StorageService);
+  private apiService = inject(ApiService);
+  private syncService = inject(SyncService);
+  private authService = inject(AuthService);
+
+  constructor() {
+    // Initialize with sample data merged with any stored data
+    this.initializeData();
   }
 
-  private async loadLocalData(): Promise<void> {
-    const userId = this.authService.currentUserValue?.id;
-    if (!userId) {
-      // If no user, set empty arrays
-      this.notesSubject.next([]);
-      this.notebooksSubject.next([]);
-      this.tagsSubject.next([]);
-      return;
-    }
-
+  private async initializeData(): Promise<void> {
+    // Merge sample data with any stored data (from previous sessions)
+    // This allows for persistence of user-created notes while using sample data as base
     try {
-      // Load from local storage (in-memory cache)
-      const notes = await this.storage.getAllByIndex<Note>('notes', 'userId', userId);
-      const notebooks = await this.storage.getAllByIndex<Notebook>('notebooks', 'userId', userId);
-      const tags = await this.storage.getAllByIndex<Tag>('tags', 'userId', userId);
+      const userId = this.authService.currentUserValue?.id;
+      if (userId) {
+        const storedNotes = await this.storage.getAllByIndex<Note>('notes', 'userId', userId);
+        const storedNotebooks = await this.storage.getAllByIndex<Notebook>('notebooks', 'userId', userId);
+        const storedTags = await this.storage.getAllByIndex<Tag>('tags', 'userId', userId);
 
-      this.notesSubject.next(notes || []);
-      this.notebooksSubject.next(notebooks || []);
-      this.tagsSubject.next(tags || []);
+        // Merge: sample data + stored data (stored data takes precedence for matching IDs)
+        const mergedNotes = this.mergeData(notes, storedNotes || []);
+        const mergedNotebooks = this.mergeData(notebooks, storedNotebooks || []);
+        const mergedTags = this.mergeData(tags, storedTags || []);
+
+        this.notesSubject.next(mergedNotes);
+        this.notebooksSubject.next(mergedNotebooks);
+        this.tagsSubject.next(mergedTags);
+      } else {
+        // No user, use sample data only
+        this.notesSubject.next([...notes]);
+        this.notebooksSubject.next([...notebooks]);
+        this.tagsSubject.next([...tags]);
+      }
     } catch (error) {
-      console.warn('Failed to load local data:', error);
-      // Continue with empty arrays if storage fails
-      this.notesSubject.next([]);
-      this.notebooksSubject.next([]);
-      this.tagsSubject.next([]);
+      console.warn('Failed to merge stored data, using sample data only:', error);
+      this.notesSubject.next([...notes]);
+      this.notebooksSubject.next([...notebooks]);
+      this.tagsSubject.next([...tags]);
     }
+  }
+
+  /**
+   * Merge sample data with stored data (stored data takes precedence)
+   */
+  private mergeData<T extends { id: string }>(sample: T[], stored: T[]): T[] {
+    const storedMap = new Map(stored.map(item => [item.id, item]));
+    const merged = [...sample];
+    
+    // Replace sample items with stored versions if they exist
+    for (let i = 0; i < merged.length; i++) {
+      if (storedMap.has(merged[i].id)) {
+        merged[i] = storedMap.get(merged[i].id)!;
+        storedMap.delete(merged[i].id);
+      }
+    }
+    
+    // Add any stored items that aren't in sample data
+    storedMap.forEach(item => merged.push(item));
+    
+    return merged;
   }
 
   /**
    * Reload data from storage (useful after data initialization)
    */
   reloadData(): void {
-    this.loadLocalData();
+    this.initializeData();
   }
 
+  // ============================================================================
+  // Write Operations (update both in-memory state and storage)
+  // ============================================================================
+
+  // ============================================================================
+  // Read Operations (using sample-data.ts)
+  // ============================================================================
+
+  /**
+   * Get all notes
+   * @returns Observable of all notes (sample data + stored data)
+   */
   getNotes(): Observable<Note[]> {
+    // Return from BehaviorSubject (merged sample + stored data)
     return this.notes$;
   }
 
+  /**
+   * Get note by ID
+   * @param id - The UUID of the note
+   * @returns Observable of the note, or undefined if not found
+   */
+  getNoteById(id: string): Observable<Note | undefined> {
+    return this.notes$.pipe(
+      map(notes => notes.find(n => n.id === id))
+    );
+  }
+
+  /**
+   * Get notes by user ID
+   * @param userId - The UUID of the user
+   * @returns Observable of notes belonging to the user
+   */
+  getNotesByUserId(userId: string): Observable<Note[]> {
+    return this.notes$.pipe(
+      map(allNotes => allNotes.filter(note => note.userId === userId)),
+      delay(0) // Simulate API delay when switching to HTTP
+    );
+  }
+
+  /**
+   * Get notes by notebook ID
+   * @param notebookId - The UUID of the notebook
+   * @param options - Optional filters
+   * @returns Observable of notes in the notebook
+   */
+  getNotesByNotebook(
+    notebookId: string,
+    options?: {
+      includeArchived?: boolean;
+      includeTrashed?: boolean;
+    }
+  ): Observable<Note[]> {
+    const { includeArchived = false, includeTrashed = false } = options || {};
+    
+    return this.notes$.pipe(
+      map(allNotes => {
+        let filtered = allNotes.filter(note => note.notebookId === notebookId);
+        
+        if (!includeArchived) {
+          filtered = filtered.filter(note => !note.archived);
+        }
+        if (!includeTrashed) {
+          filtered = filtered.filter(note => !note.trashed);
+        }
+        
+        // Sort by updatedAt descending
+        return filtered.sort((a, b) => 
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+      }),
+      delay(0) // Simulate API delay when switching to HTTP
+    );
+  }
+
+  /**
+   * Get notes by tag ID
+   * @param tagId - The UUID of the tag
+   * @returns Observable of notes with the tag
+   */
+  getNotesByTag(tagId: string): Observable<Note[]> {
+    return this.notes$.pipe(
+      map(allNotes => 
+        allNotes.filter(note => note.tags.includes(tagId))
+      ),
+      delay(0) // Simulate API delay when switching to HTTP
+    );
+  }
+
+  /**
+   * Get notebooks
+   * @returns Observable of all notebooks (sample data + stored data)
+   */
   getNotebooks(): Observable<Notebook[]> {
     return this.notebooks$;
   }
 
+  /**
+   * Get notebook by ID
+   * @param id - The UUID of the notebook
+   * @returns Observable of the notebook, or undefined if not found
+   */
+  getNotebookById(id: string): Observable<Notebook | undefined> {
+    return this.notebooks$.pipe(
+      map(notebooks => notebooks.find(n => n.id === id))
+    );
+  }
+
+  /**
+   * Get notebooks by user ID
+   * @param userId - The UUID of the user
+   * @returns Observable of notebooks belonging to the user
+   */
+  getNotebooksByUserId(userId: string): Observable<Notebook[]> {
+    return this.notebooks$.pipe(
+      map(allNotebooks => allNotebooks.filter(nb => nb.userId === userId)),
+      delay(0) // Simulate API delay when switching to HTTP
+    );
+  }
+
+  /**
+   * Get tags
+   * @returns Observable of all tags (sample data + stored data)
+   */
   getTags(): Observable<Tag[]> {
     return this.tags$;
   }
 
-  getNoteById(id: string): Observable<Note | undefined> {
-    return this.notes$.pipe(
-      map(notes => notes.find(n => n.id === id))
+  /**
+   * Get tag by ID
+   * @param id - The UUID of the tag
+   * @returns Observable of the tag, or undefined if not found
+   */
+  getTagById(id: string): Observable<Tag | undefined> {
+    return this.tags$.pipe(
+      map(tags => tags.find(t => t.id === id))
+    );
+  }
+
+  /**
+   * Get tags by user ID
+   * @param userId - The UUID of the user
+   * @returns Observable of tags belonging to the user
+   */
+  getTagsByUserId(userId: string): Observable<Tag[]> {
+    return this.tags$.pipe(
+      map(allTags => allTags.filter(tag => tag.userId === userId)),
+      delay(0) // Simulate API delay when switching to HTTP
     );
   }
 
@@ -265,7 +440,8 @@ export class NotesService {
   }
 
   private generateId(): string {
-    return `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Use UUID for new note IDs to match sample data format
+    return uuidv4();
   }
 }
 

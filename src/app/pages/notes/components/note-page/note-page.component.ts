@@ -86,15 +86,24 @@ export class NotePageComponent implements OnInit, OnDestroy {
     });
 
     // Load note based on route param
+    // Handle both 'id' and 'noteId' for compatibility
     this.route.params.pipe(
       takeUntil(this.destroy$),
       switchMap(params => {
-        this.noteId = params['id'];
-        return this.notesService.getNoteById(params['id']);
+        // Try 'noteId' first (matches route), fallback to 'id' for compatibility
+        const id = params['noteId'] || params['id'];
+        this.noteId = id;
+        if (!id) {
+          // No ID in route, redirect to dashboard
+          this.router.navigate(['/notes/dashboard']);
+          return this.notesService.getNoteById('');
+        }
+        return this.notesService.getNoteById(id);
       })
     ).subscribe(note => {
-      this.note = note || null;
-      if (!note && this.noteId) {
+      if (note) {
+        this.note = note;
+      } else if (this.noteId) {
         // Note not found, redirect to dashboard
         this.router.navigate(['/notes/dashboard']);
       }

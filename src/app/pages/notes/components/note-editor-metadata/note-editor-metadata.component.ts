@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { Note } from '../../../../../../core/models';
+import { Note } from '../../../../core/models';
 
 /**
  * Metadata component for note editor.

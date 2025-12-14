@@ -10,19 +10,77 @@
  */
 
 import { User, Note, Tag, Notebook, Attachment } from '../models';
+import { v4 as uuidv4 } from 'uuid';
 
 // ============================================================================
 // Helper Functions for Data Generation
 // ============================================================================
 
 /**
+ * Generates a UUID v4
+ */
+export function generateUUID(): string {
+  return uuidv4();
+}
+
+/**
  * Generates a random ID in the format: prefix_timestamp_randomstring
+ * @deprecated Use generateUUID() instead for UUID-based IDs
  */
 export function randomId(prefix = 'item'): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 11);
   return `${prefix}_${timestamp}_${random}`;
 }
+
+// ============================================================================
+// Fixed UUIDs for Sample Data (for consistency and reference integrity)
+// ============================================================================
+
+// User IDs
+const USER_1_UUID = '550e8400-e29b-41d4-a716-446655440001';
+const USER_2_UUID = '550e8400-e29b-41d4-a716-446655440002';
+
+// Notebook IDs (exported for use in components)
+export const NOTEBOOK_1_UUID = '660e8400-e29b-41d4-a716-446655440001'; // Work Notes
+export const NOTEBOOK_2_UUID = '660e8400-e29b-41d4-a716-446655440002'; // Personal Journal
+export const NOTEBOOK_3_UUID = '660e8400-e29b-41d4-a716-446655440003'; // Project Ideas
+export const NOTEBOOK_4_UUID = '660e8400-e29b-41d4-a716-446655440004'; // Meetings
+export const NOTEBOOK_5_UUID = '660e8400-e29b-41d4-a716-446655440005'; // Recipes
+
+// Tag IDs
+const TAG_1_UUID = '770e8400-e29b-41d4-a716-446655440001'; // Important
+const TAG_2_UUID = '770e8400-e29b-41d4-a716-446655440002'; // Work
+const TAG_3_UUID = '770e8400-e29b-41d4-a716-446655440003'; // Personal
+const TAG_4_UUID = '770e8400-e29b-41d4-a716-446655440004'; // Ideas
+const TAG_5_UUID = '770e8400-e29b-41d4-a716-446655440005'; // Travel
+const TAG_6_UUID = '770e8400-e29b-41d4-a716-446655440006'; // Project
+const TAG_7_UUID = '770e8400-e29b-41d4-a716-446655440007'; // Meeting Notes
+const TAG_8_UUID = '770e8400-e29b-41d4-a716-446655440008'; // Shopping
+const TAG_9_UUID = '770e8400-e29b-41d4-a716-446655440009'; // Recipes
+const TAG_10_UUID = '770e8400-e29b-41d4-a716-446655440010'; // Health
+
+// Note IDs (generating UUIDs for all notes)
+const NOTE_1_UUID = '880e8400-e29b-41d4-a716-446655440001';
+const NOTE_2_UUID = '880e8400-e29b-41d4-a716-446655440002';
+const NOTE_3_UUID = '880e8400-e29b-41d4-a716-446655440003';
+const NOTE_4_UUID = '880e8400-e29b-41d4-a716-446655440004';
+const NOTE_5_UUID = '880e8400-e29b-41d4-a716-446655440005';
+const NOTE_6_UUID = '880e8400-e29b-41d4-a716-446655440006';
+const NOTE_7_UUID = '880e8400-e29b-41d4-a716-446655440007';
+const NOTE_8_UUID = '880e8400-e29b-41d4-a716-446655440008';
+const NOTE_9_UUID = '880e8400-e29b-41d4-a716-446655440009';
+const NOTE_10_UUID = '880e8400-e29b-41d4-a716-446655440010';
+const NOTE_11_UUID = '880e8400-e29b-41d4-a716-446655440011';
+const NOTE_12_UUID = '880e8400-e29b-41d4-a716-446655440012';
+const NOTE_13_UUID = '880e8400-e29b-41d4-a716-446655440013';
+const NOTE_14_UUID = '880e8400-e29b-41d4-a716-446655440014';
+const NOTE_15_UUID = '880e8400-e29b-41d4-a716-446655440015';
+const NOTE_16_UUID = '880e8400-e29b-41d4-a716-446655440016';
+const NOTE_17_UUID = '880e8400-e29b-41d4-a716-446655440017';
+const NOTE_18_UUID = '880e8400-e29b-41d4-a716-446655440018';
+const NOTE_19_UUID = '880e8400-e29b-41d4-a716-446655440019';
+const NOTE_20_UUID = '880e8400-e29b-41d4-a716-446655440020';
 
 /**
  * Generates a random date between start and end dates (defaults to last 90 days)
@@ -85,14 +143,14 @@ export function generateRichContent(title: string, paragraphs = 2): string {
 
 export const users: User[] = [
   {
-    id: 'user_1',
+    id: USER_1_UUID,
     email: 'john.doe@example.com',
     displayName: 'John Doe',
     avatarUrl: 'https://ui-avatars.com/api/?name=John+Doe&background=6366f1&color=fff',
     createdAt: pastDate(120)
   },
   {
-    id: 'user_2',
+    id: USER_2_UUID,
     email: 'jane.smith@example.com',
     displayName: 'Jane Smith',
     avatarUrl: 'https://ui-avatars.com/api/?name=Jane+Smith&background=ec4899&color=fff',
@@ -106,73 +164,73 @@ export const users: User[] = [
 
 export const tags: Tag[] = [
   {
-    id: 'tag_1',
+    id: TAG_1_UUID,
     name: 'Important',
     color: '#ef4444',
-    userId: 'user_1',
+    userId: USER_1_UUID,
     createdAt: pastDate(100)
   },
   {
-    id: 'tag_2',
+    id: TAG_2_UUID,
     name: 'Work',
     color: '#3b82f6',
-    userId: 'user_1',
+    userId: USER_1_UUID,
     createdAt: pastDate(95)
   },
   {
-    id: 'tag_3',
+    id: TAG_3_UUID,
     name: 'Personal',
     color: '#10b981',
-    userId: 'user_1',
+    userId: USER_1_UUID,
     createdAt: pastDate(90)
   },
   {
-    id: 'tag_4',
+    id: TAG_4_UUID,
     name: 'Ideas',
     color: '#f59e0b',
-    userId: 'user_1',
+    userId: USER_1_UUID,
     createdAt: pastDate(85)
   },
   {
-    id: 'tag_5',
+    id: TAG_5_UUID,
     name: 'Travel',
     color: '#8b5cf6',
-    userId: 'user_1',
+    userId: USER_1_UUID,
     createdAt: pastDate(80)
   },
   {
-    id: 'tag_6',
+    id: TAG_6_UUID,
     name: 'Project',
     color: '#06b6d4',
-    userId: 'user_1',
+    userId: USER_1_UUID,
     createdAt: pastDate(75)
   },
   {
-    id: 'tag_7',
+    id: TAG_7_UUID,
     name: 'Meeting Notes',
     color: '#ec4899',
-    userId: 'user_2',
+    userId: USER_2_UUID,
     createdAt: pastDate(70)
   },
   {
-    id: 'tag_8',
+    id: TAG_8_UUID,
     name: 'Shopping',
     color: '#f97316',
-    userId: 'user_2',
+    userId: USER_2_UUID,
     createdAt: pastDate(65)
   },
   {
-    id: 'tag_9',
+    id: TAG_9_UUID,
     name: 'Recipes',
     color: '#84cc16',
-    userId: 'user_2',
+    userId: USER_2_UUID,
     createdAt: pastDate(60)
   },
   {
-    id: 'tag_10',
+    id: TAG_10_UUID,
     name: 'Health',
     color: '#14b8a6',
-    userId: 'user_2',
+    userId: USER_2_UUID,
     createdAt: pastDate(55)
   }
 ];
@@ -183,8 +241,8 @@ export const tags: Tag[] = [
 
 export const notebooks: Notebook[] = [
   {
-    id: 'notebook_1',
-    userId: 'user_1',
+    id: NOTEBOOK_1_UUID,
+    userId: USER_1_UUID,
     name: 'Work Notes',
     description: 'All work-related notes and meeting minutes',
     color: '#3b82f6',
@@ -192,8 +250,8 @@ export const notebooks: Notebook[] = [
     updatedAt: recentDate(2)
   },
   {
-    id: 'notebook_2',
-    userId: 'user_1',
+    id: NOTEBOOK_2_UUID,
+    userId: USER_1_UUID,
     name: 'Personal Journal',
     description: 'Personal thoughts and daily reflections',
     color: '#10b981',
@@ -201,8 +259,8 @@ export const notebooks: Notebook[] = [
     updatedAt: recentDate(5)
   },
   {
-    id: 'notebook_3',
-    userId: 'user_1',
+    id: NOTEBOOK_3_UUID,
+    userId: USER_1_UUID,
     name: 'Project Ideas',
     description: 'Brainstorming and project planning',
     color: '#f59e0b',
@@ -210,8 +268,8 @@ export const notebooks: Notebook[] = [
     updatedAt: recentDate(1)
   },
   {
-    id: 'notebook_4',
-    userId: 'user_2',
+    id: NOTEBOOK_4_UUID,
+    userId: USER_2_UUID,
     name: 'Meetings',
     description: 'Meeting notes and action items',
     color: '#ec4899',
@@ -219,8 +277,8 @@ export const notebooks: Notebook[] = [
     updatedAt: recentDate(3)
   },
   {
-    id: 'notebook_5',
-    userId: 'user_2',
+    id: NOTEBOOK_5_UUID,
+    userId: USER_2_UUID,
     name: 'Recipes',
     description: 'Favorite recipes and cooking tips',
     color: '#84cc16',
@@ -236,12 +294,12 @@ export const notebooks: Notebook[] = [
 export const notes: Note[] = [
   // User 1 - Pinned Notes
   {
-    id: 'note_1',
-    userId: 'user_1',
+    id: NOTE_1_UUID,
+    userId: USER_1_UUID,
     title: 'Quarterly Planning Session',
     content: generateRichContent('Quarterly Planning Session', 3),
-    tags: ['tag_1', 'tag_2', 'tag_6'],
-    notebookId: 'notebook_1',
+    tags: [TAG_1_UUID, TAG_2_UUID, TAG_6_UUID],
+    notebookId: NOTEBOOK_1_UUID,
     pinned: true,
     archived: false,
     trashed: false,
@@ -251,12 +309,12 @@ export const notes: Note[] = [
     attachments: []
   },
   {
-    id: 'note_2',
-    userId: 'user_1',
+    id: NOTE_2_UUID,
+    userId: USER_1_UUID,
     title: 'Product Launch Checklist',
     content: generateRichContent('Product Launch Checklist', 2),
-    tags: ['tag_2', 'tag_6'],
-    notebookId: 'notebook_1',
+    tags: [TAG_2_UUID, TAG_6_UUID],
+    notebookId: NOTEBOOK_1_UUID,
     pinned: true,
     archived: false,
     trashed: false,
@@ -265,8 +323,8 @@ export const notes: Note[] = [
     updatedAt: recentDate(1),
     tasks: [
       {
-        id: 'task_1',
-        noteId: 'note_2',
+        id: generateUUID(),
+        noteId: NOTE_2_UUID,
         content: 'Finalize product requirements',
         completed: true,
         dueDate: pastDate(5),
@@ -276,8 +334,8 @@ export const notes: Note[] = [
         updatedAt: pastDate(5)
       },
       {
-        id: 'task_2',
-        noteId: 'note_2',
+        id: generateUUID(),
+        noteId: NOTE_2_UUID,
         content: 'Prepare marketing materials',
         completed: false,
         dueDate: recentDate(0),
@@ -287,8 +345,8 @@ export const notes: Note[] = [
         updatedAt: pastDate(25)
       },
       {
-        id: 'task_3',
-        noteId: 'note_2',
+        id: generateUUID(),
+        noteId: NOTE_2_UUID,
         content: 'Schedule launch date',
         completed: false,
         dueDate: recentDate(-2),
@@ -301,12 +359,12 @@ export const notes: Note[] = [
   },
   // User 1 - Regular Notes
   {
-    id: 'note_3',
-    userId: 'user_1',
+    id: NOTE_3_UUID,
+    userId: USER_1_UUID,
     title: 'Team Standup Notes',
     content: generateRichContent('Team Standup Notes', 2),
-    tags: ['tag_2', 'tag_7'],
-    notebookId: 'notebook_1',
+    tags: [TAG_2_UUID, TAG_7_UUID],
+    notebookId: NOTEBOOK_1_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -315,12 +373,12 @@ export const notes: Note[] = [
     updatedAt: pastDate(1)
   },
   {
-    id: 'note_4',
-    userId: 'user_1',
+    id: NOTE_4_UUID,
+    userId: USER_1_UUID,
     title: 'Weekend Trip Ideas',
     content: generateRichContent('Weekend Trip Ideas', 3),
-    tags: ['tag_3', 'tag_5'],
-    notebookId: 'notebook_2',
+    tags: [TAG_3_UUID, TAG_5_UUID],
+    notebookId: NOTEBOOK_2_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -329,12 +387,12 @@ export const notes: Note[] = [
     updatedAt: pastDate(25)
   },
   {
-    id: 'note_5',
-    userId: 'user_1',
+    id: NOTE_5_UUID,
+    userId: USER_1_UUID,
     title: 'Mobile App Feature Ideas',
     content: generateRichContent('Mobile App Feature Ideas', 4),
-    tags: ['tag_4', 'tag_6'],
-    notebookId: 'notebook_3',
+    tags: [TAG_4_UUID, TAG_6_UUID],
+    notebookId: NOTEBOOK_3_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -343,12 +401,12 @@ export const notes: Note[] = [
     updatedAt: recentDate(5)
   },
   {
-    id: 'note_6',
-    userId: 'user_1',
+    id: NOTE_6_UUID,
+    userId: USER_1_UUID,
     title: 'Morning Reflection',
     content: generateRichContent('Morning Reflection', 2),
-    tags: ['tag_3'],
-    notebookId: 'notebook_2',
+    tags: [TAG_3_UUID],
+    notebookId: NOTEBOOK_2_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -357,12 +415,12 @@ export const notes: Note[] = [
     updatedAt: pastDate(25)
   },
   {
-    id: 'note_7',
-    userId: 'user_1',
+    id: NOTE_7_UUID,
+    userId: USER_1_UUID,
     title: 'API Integration Notes',
     content: generateRichContent('API Integration Notes', 3),
-    tags: ['tag_2', 'tag_6'],
-    notebookId: 'notebook_1',
+    tags: [TAG_2_UUID, TAG_6_UUID],
+    notebookId: NOTEBOOK_1_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -371,12 +429,12 @@ export const notes: Note[] = [
     updatedAt: pastDate(15)
   },
   {
-    id: 'note_8',
-    userId: 'user_1',
+    id: NOTE_8_UUID,
+    userId: USER_1_UUID,
     title: 'Vacation Planning',
     content: generateRichContent('Vacation Planning', 4),
-    tags: ['tag_3', 'tag_5'],
-    notebookId: 'notebook_2',
+    tags: [TAG_3_UUID, TAG_5_UUID],
+    notebookId: NOTEBOOK_2_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -385,12 +443,12 @@ export const notes: Note[] = [
     updatedAt: recentDate(8)
   },
   {
-    id: 'note_9',
-    userId: 'user_1',
+    id: NOTE_9_UUID,
+    userId: USER_1_UUID,
     title: 'New Feature Brainstorming',
     content: generateRichContent('New Feature Brainstorming', 3),
-    tags: ['tag_4'],
-    notebookId: 'notebook_3',
+    tags: [TAG_4_UUID],
+    notebookId: NOTEBOOK_3_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -399,12 +457,12 @@ export const notes: Note[] = [
     updatedAt: pastDate(12)
   },
   {
-    id: 'note_10',
-    userId: 'user_1',
+    id: NOTE_10_UUID,
+    userId: USER_1_UUID,
     title: 'Client Meeting Summary',
     content: generateRichContent('Client Meeting Summary', 2),
-    tags: ['tag_1', 'tag_2'],
-    notebookId: 'notebook_1',
+    tags: [TAG_1_UUID, TAG_2_UUID],
+    notebookId: NOTEBOOK_1_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -414,12 +472,12 @@ export const notes: Note[] = [
   },
   // User 1 - Archived Note
   {
-    id: 'note_11',
-    userId: 'user_1',
+    id: NOTE_11_UUID,
+    userId: USER_1_UUID,
     title: 'Old Project Documentation',
     content: generateRichContent('Old Project Documentation', 2),
-    tags: ['tag_6'],
-    notebookId: 'notebook_1',
+    tags: [TAG_6_UUID],
+    notebookId: NOTEBOOK_1_UUID,
     pinned: false,
     archived: true,
     trashed: false,
@@ -429,12 +487,12 @@ export const notes: Note[] = [
   },
   // User 2 - Notes
   {
-    id: 'note_12',
-    userId: 'user_2',
+    id: NOTE_12_UUID,
+    userId: USER_2_UUID,
     title: 'Sprint Planning Meeting',
     content: generateRichContent('Sprint Planning Meeting', 3),
-    tags: ['tag_7'],
-    notebookId: 'notebook_4',
+    tags: [TAG_7_UUID],
+    notebookId: NOTEBOOK_4_UUID,
     pinned: true,
     archived: false,
     trashed: false,
@@ -443,12 +501,12 @@ export const notes: Note[] = [
     updatedAt: recentDate(3)
   },
   {
-    id: 'note_13',
-    userId: 'user_2',
+    id: NOTE_13_UUID,
+    userId: USER_2_UUID,
     title: 'Chocolate Chip Cookie Recipe',
     content: generateRichContent('Chocolate Chip Cookie Recipe', 2),
-    tags: ['tag_9'],
-    notebookId: 'notebook_5',
+    tags: [TAG_9_UUID],
+    notebookId: NOTEBOOK_5_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -457,12 +515,12 @@ export const notes: Note[] = [
     updatedAt: pastDate(25)
   },
   {
-    id: 'note_14',
-    userId: 'user_2',
+    id: NOTE_14_UUID,
+    userId: USER_2_UUID,
     title: 'Weekly Team Sync',
     content: generateRichContent('Weekly Team Sync', 2),
-    tags: ['tag_7'],
-    notebookId: 'notebook_4',
+    tags: [TAG_7_UUID],
+    notebookId: NOTEBOOK_4_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -471,11 +529,11 @@ export const notes: Note[] = [
     updatedAt: recentDate(4)
   },
   {
-    id: 'note_15',
-    userId: 'user_2',
+    id: NOTE_15_UUID,
+    userId: USER_2_UUID,
     title: 'Grocery Shopping List',
     content: generateRichContent('Grocery Shopping List', 1),
-    tags: ['tag_8'],
+    tags: [TAG_8_UUID],
     notebookId: undefined,
     pinned: false,
     archived: false,
@@ -485,12 +543,12 @@ export const notes: Note[] = [
     updatedAt: recentDate(1)
   },
   {
-    id: 'note_16',
-    userId: 'user_2',
+    id: NOTE_16_UUID,
+    userId: USER_2_UUID,
     title: 'Mediterranean Diet Plan',
     content: generateRichContent('Mediterranean Diet Plan', 3),
-    tags: ['tag_9', 'tag_10'],
-    notebookId: 'notebook_5',
+    tags: [TAG_9_UUID, TAG_10_UUID],
+    notebookId: NOTEBOOK_5_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -499,12 +557,12 @@ export const notes: Note[] = [
     updatedAt: pastDate(15)
   },
   {
-    id: 'note_17',
-    userId: 'user_2',
+    id: NOTE_17_UUID,
+    userId: USER_2_UUID,
     title: 'One-on-One with Manager',
     content: generateRichContent('One-on-One with Manager', 2),
-    tags: ['tag_7'],
-    notebookId: 'notebook_4',
+    tags: [TAG_7_UUID],
+    notebookId: NOTEBOOK_4_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -513,12 +571,12 @@ export const notes: Note[] = [
     updatedAt: pastDate(14)
   },
   {
-    id: 'note_18',
-    userId: 'user_2',
+    id: NOTE_18_UUID,
+    userId: USER_2_UUID,
     title: 'Weekly Meal Prep',
     content: generateRichContent('Weekly Meal Prep', 2),
-    tags: ['tag_9', 'tag_10'],
-    notebookId: 'notebook_5',
+    tags: [TAG_9_UUID, TAG_10_UUID],
+    notebookId: NOTEBOOK_5_UUID,
     pinned: false,
     archived: false,
     trashed: false,
@@ -528,11 +586,11 @@ export const notes: Note[] = [
   },
   // User 2 - Trashed Note
   {
-    id: 'note_19',
-    userId: 'user_2',
+    id: NOTE_19_UUID,
+    userId: USER_2_UUID,
     title: 'Old Shopping List',
     content: generateRichContent('Old Shopping List', 1),
-    tags: ['tag_8'],
+    tags: [TAG_8_UUID],
     notebookId: undefined,
     pinned: false,
     archived: false,
@@ -543,12 +601,12 @@ export const notes: Note[] = [
   },
   // Recent Note
   {
-    id: 'note_20',
-    userId: 'user_1',
+    id: NOTE_20_UUID,
+    userId: USER_1_UUID,
     title: 'Quick Ideas',
     content: generateRichContent('Quick Ideas', 2),
-    tags: ['tag_4'],
-    notebookId: 'notebook_3',
+    tags: [TAG_4_UUID],
+    notebookId: NOTEBOOK_3_UUID,
     pinned: false,
     archived: false,
     trashed: false,
