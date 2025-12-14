@@ -4,6 +4,9 @@ import { map } from 'rxjs/operators';
 import { Note } from '../../../core/models';
 import { NotesService } from './notes.service';
 
+// TEMP: This service uses NotesService which sources data from sample-data.ts via StorageService
+// No direct API calls - all data comes from local storage populated with sample data
+
 @Injectable({
   providedIn: 'root'
 })

@@ -41,10 +41,10 @@ const routes: VexRoutes = [
       //   redirectTo: '/',
       //   pathMatch: 'full'
       // },
-      // {
-      //   path: 'dashboards/analytics',
-      //   loadChildren: () => import('./pages/dashboards/dashboard-analytics/dashboard-analytics.module').then(m => m.DashboardAnalyticsModule),
-      // },
+      {
+        path: 'dashboards/analytics',
+        loadChildren: () => import('./pages/dashboards/dashboard-analytics/dashboard-analytics.module').then(m => m.DashboardAnalyticsModule),
+      },
       {
         path: 'apps',
         children: [
@@ -57,25 +57,25 @@ const routes: VexRoutes = [
             }
           },
           // Unused app routes - commented out
-          // {
-          //   path: 'chat',
-          //   loadChildren: () => import('./pages/apps/chat/chat.module').then(m => m.ChatModule),
-          //   data: {
-          //     toolbarShadowEnabled: true
-          //   }
-          // },
-          // {
-          //   path: 'mail',
-          //   loadChildren: () => import('./pages/apps/mail/mail.module').then(m => m.MailModule),
-          //   data: {
-          //     toolbarShadowEnabled: true,
-          //     scrollDisabled: true
-          //   }
-          // },
-          // {
-          //   path: 'social',
-          //   loadChildren: () => import('./pages/apps/social/social.module').then(m => m.SocialModule)
-          // },
+          {
+            path: 'chat',
+            loadChildren: () => import('./pages/apps/chat/chat.module').then(m => m.ChatModule),
+            data: {
+              toolbarShadowEnabled: true
+            }
+          },
+          {
+            path: 'mail',
+            loadChildren: () => import('./pages/apps/mail/mail.module').then(m => m.MailModule),
+            data: {
+              toolbarShadowEnabled: true,
+              scrollDisabled: true
+            }
+          },
+          {
+            path: 'social',
+            loadChildren: () => import('./pages/apps/social/social.module').then(m => m.SocialModule)
+          },
           // {
           //   path: 'contacts',
           //   loadChildren: () => import('./pages/apps/contacts/contacts.module').then(m => m.ContactsModule)

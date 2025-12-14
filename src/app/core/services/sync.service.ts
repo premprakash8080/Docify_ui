@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, interval, fromEvent, merge, firstValueFrom } from 'rxjs';
-import { switchMap, filter, catchError, tap } from 'rxjs/operators';
+import { BehaviorSubject, interval, fromEvent, merge, firstValueFrom, of, delay } from 'rxjs';
+import { switchMap, filter, tap } from 'rxjs/operators';
 import { StorageService } from './storage.service';
 import { ApiService } from './api.service';
 import { SyncQueueItem } from '../models';
 import { AuthService } from './auth.service';
+// TEMP: Using sample data until API is ready
+import { getNotesByUserId, getNotebooksByUserId, getTagsByUserId } from '../data/sample-data';
 
 @Injectable({
   providedIn: 'root'
@@ -109,50 +111,51 @@ export class SyncService {
   }
 
   private async processQueueItem(item: SyncQueueItem): Promise<void> {
-    const endpoint = `/${item.entityType}s`;
+    // TEMP: Using sample data until API is ready
+    // Simulate API delay
+    await firstValueFrom(of(null).pipe(delay(100)));
     
+    // Mock API behavior - in real implementation, this would call the API
+    // For now, we just simulate success since data is already in local storage
     switch (item.operation) {
       case 'create':
-        await firstValueFrom(this.apiService.post(endpoint, item.payload));
+        // TEMP: Data already in storage, just simulate success
         break;
       case 'update':
-        await firstValueFrom(this.apiService.put(`${endpoint}/${item.entityId}`, item.payload));
+        // TEMP: Data already in storage, just simulate success
         break;
       case 'delete':
-        await firstValueFrom(this.apiService.delete(`${endpoint}/${item.entityId}`));
+        // TEMP: Data already in storage, just simulate success
         break;
     }
   }
 
   private async downloadUpdates(): Promise<void> {
-    const lastSync = this.lastSyncTimeSubject.value;
-    const params = lastSync ? { since: lastSync.toISOString() } : {};
-
-    // Download notes updates
-    const notesResponse = await firstValueFrom(this.apiService.get('/notes', params));
-    if (notesResponse?.data) {
-      const notes = Array.isArray(notesResponse.data) ? notesResponse.data : [notesResponse.data];
-      for (const note of notes) {
-        await this.storage.put('notes', note);
-      }
+    // TEMP: Using sample data until API is ready
+    // Simulate API delay
+    await firstValueFrom(of(null).pipe(delay(200)));
+    
+    const userId = this.authService.currentUserValue?.id;
+    if (!userId) {
+      return;
     }
 
-    // Download notebooks updates
-    const notebooksResponse = await firstValueFrom(this.apiService.get('/notebooks', params));
-    if (notebooksResponse?.data) {
-      const notebooks = Array.isArray(notebooksResponse.data) ? notebooksResponse.data : [notebooksResponse.data];
-      for (const notebook of notebooks) {
-        await this.storage.put('notebooks', notebook);
-      }
+    // TEMP: Get sample data filtered by user
+    const sampleNotes = getNotesByUserId(userId);
+    const sampleNotebooks = getNotebooksByUserId(userId);
+    const sampleTags = getTagsByUserId(userId);
+
+    // Store sample data in local storage
+    for (const note of sampleNotes) {
+      await this.storage.put('notes', note);
     }
 
-    // Download tags updates
-    const tagsResponse = await firstValueFrom(this.apiService.get('/tags', params));
-    if (tagsResponse?.data) {
-      const tags = Array.isArray(tagsResponse.data) ? tagsResponse.data : [tagsResponse.data];
-      for (const tag of tags) {
-        await this.storage.put('tags', tag);
-      }
+    for (const notebook of sampleNotebooks) {
+      await this.storage.put('notebooks', notebook);
+    }
+
+    for (const tag of sampleTags) {
+      await this.storage.put('tags', tag);
     }
   }
 
@@ -160,7 +163,7 @@ export class SyncService {
     operation: SyncQueueItem['operation'],
     entityType: SyncQueueItem['entityType'],
     entityId: string,
-    payload: any
+    payload: unknown
   ): Promise<void> {
     const queueItem: SyncQueueItem = {
       id: `sync_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

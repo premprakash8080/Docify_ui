@@ -30,6 +30,8 @@
     "@tiptap/extension-bubble-menu": "^3.13.0",
     "@tiptap/extension-floating-menu": "^3.13.0",
     "@tiptap/extension-placeholder": "^3.13.0",
+    "@tiptap/extension-task-item": "^3.13.0",
+    "@tiptap/extension-task-list": "^3.13.0",
     "@tiptap/starter-kit": "^3.13.0",
     "angular-calendar": "~0.31.0",
     "apexcharts": "~3.37.1",
