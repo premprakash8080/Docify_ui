@@ -1,21 +1,13 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { TagsComponent } from './tags.component';
 import { TagsRoutingModule } from './tags-routing.module';
-import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { RouterModule } from '@angular/router';
+import { TagsComponent } from './tags.component';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @NgModule({
-  declarations: [TagsComponent],
   imports: [
-    CommonModule,
     TagsRoutingModule,
-    PageLayoutModule,
-    MatIconModule,
-    MatButtonModule,
-    RouterModule
+    TagsComponent, // Import standalone component
+    MatDialogModule // For AddTagComponent dialog
   ]
 })
 export class TagsModule { }

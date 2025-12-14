@@ -1,0 +1,47 @@
+<div class="add-tag-dialog">
+  <h2 mat-dialog-title>Create new tag</h2>
+
+  <mat-dialog-content>
+    <form [formGroup]="form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Tag name</mat-label>
+        <input 
+          matInput 
+          formControlName="name" 
+          placeholder="Enter tag name"
+          maxlength="50"
+          (keydown.enter)="onCreate()"
+          autocomplete="off">
+        <mat-error *ngIf="nameControl?.hasError('required')">
+          Tag name is required
+        </mat-error>
+        <mat-error *ngIf="nameControl?.hasError('maxlength')">
+          Tag name must be less than 50 characters
+        </mat-error>
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button 
+      mat-button 
+      (click)="onCancel()"
+      [disabled]="isCreating"
+      type="button">
+      Cancel
+    </button>
+    <button 
+      mat-raised-button 
+      color="primary"
+      (click)="onCreate()"
+      [disabled]="form.invalid || isCreating"
+      type="button">
+      @if (isCreating) {
+        <mat-icon class="spinning" svgIcon="mat:refresh"></mat-icon>
+      } @else {
+        <mat-icon svgIcon="mat:add"></mat-icon>
+      }
+      Create
+    </button>
+  </mat-dialog-actions>
+</div>

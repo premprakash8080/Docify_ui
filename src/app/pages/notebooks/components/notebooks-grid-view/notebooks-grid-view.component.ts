@@ -39,6 +39,11 @@ export class NotebooksGridViewComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['notebooks']) {
+      // Reset navigation stack when notebooks input changes (e.g., when search filter changes)
+      // This ensures the view shows filtered results at the top level
+      if (!changes['notebooks'].firstChange) {
+        this.navigationStack = [];
+      }
       this.updateCurrentViewItems();
     }
   }

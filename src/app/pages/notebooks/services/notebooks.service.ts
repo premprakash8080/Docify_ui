@@ -239,11 +239,13 @@ export class NotebooksService {
   /**
    * Filter notebooks by parent notebook (for nested notebooks)
    * In a real app, this would be: return this.http.get<Notebook[]>('/api/notebooks/filter', { params: { parentNotebookId } });
-   * @param parentNotebookId - The parent notebook ID
+   * @param _parentNotebookId - The parent notebook ID (currently unused, TODO: Implement nested notebook filtering)
    * @returns Observable of filtered notebooks
    */
-  filterNotebooksByParentNotebook(parentNotebookId: string): Observable<Notebook[]> {
+  filterNotebooksByParentNotebook(_parentNotebookId: string): Observable<Notebook[]> {
     // For now, return all notebooks (nested notebooks not implemented in data model yet)
+    // Parameter intentionally unused - will be used when nested notebooks are implemented
+    void _parentNotebookId;
     const allNotebooks = [...notebooks, ...this.createdNotebooks];
     // TODO: Implement nested notebook filtering when data model supports it
     return of(allNotebooks).pipe(delay(100));
@@ -295,8 +297,8 @@ export class NotebooksService {
    * @returns Observable of filter options
    */
   getFilterOptions(): Observable<{
-    tags: Array<{ id: string; name: string }>;
-    dateRanges: Array<{ label: string; startDate: string; endDate?: string }>;
+    tags: { id: string; name: string }[];
+    dateRanges: { label: string; startDate: string; endDate?: string }[];
   }> {
     // Mock filter options
     const dateRanges = [

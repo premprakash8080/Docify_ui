@@ -57,8 +57,13 @@
         <!-- Search -->
         <mat-form-field appearance="outline" class="w-64">
           <mat-label>Find Notebooks...</mat-label>
-          <input matInput type="text">
+          <input matInput type="text" [formControl]="searchControl" placeholder="Search notebooks, stacks, notes...">
           <mat-icon matPrefix svgIcon="mat:search"></mat-icon>
+          @if (searchControl.value) {
+            <button mat-icon-button matSuffix (click)="searchControl.setValue('')" type="button" aria-label="Clear search">
+              <mat-icon svgIcon="mat:close"></mat-icon>
+            </button>
+          }
         </mat-form-field>
       </div>
     </div>
@@ -82,7 +87,7 @@
         </vex-notebooks-list-view>
       } @else {
         <vex-notebooks-grid-view
-          [notebooks]="notebooks"
+          [notebooks]="filteredNotebooks.length > 0 ? filteredNotebooks : notebooks"
           (notebookClick)="onGridNotebookOrNoteClick($event)"
           (stackClick)="onGridStackClick($event)"
           (menuClick)="onGridMenuClick($event)">

@@ -10,8 +10,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Subject, combineLatest, BehaviorSubject } from 'rxjs';
-import { takeUntil, map, filter, switchMap } from 'rxjs/operators';
+import { takeUntil, filter, debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 import { NOTEBOOK_1_UUID, NOTEBOOK_2_UUID, NOTEBOOK_3_UUID, NOTEBOOK_4_UUID, NOTEBOOK_5_UUID } from '../../core/data/sample-data';
 import { NotesService } from '../notes/services/notes.service';
 import { NotebooksService } from './services/notebooks.service';
@@ -36,7 +37,8 @@ import { NotebookRow } from '../../core/models/notebook.model';
     MatDialogModule,
     PageLayoutModule,
     NotebooksListViewComponent,
-    NotebooksGridViewComponent
+    NotebooksGridViewComponent,
+    ReactiveFormsModule
   ],
   templateUrl: './notebooks.component.html',
   styleUrls: ['./notebooks.component.scss'],
@@ -63,6 +65,11 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   };
 
   allNotes: Note[] = [];
+  filteredNotebooks: NotebookRow[] = [];
+  allNotebooksData: Notebook[] = [];
+  
+  // Search form control
+  searchControl = new FormControl('');
 
   // Mock data with stacks and notebooks
   notebooks: NotebookRow[] = [
@@ -110,10 +117,23 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: ([allNotebooks, notes]) => {
         this.allNotes = notes;
+        this.allNotebooksData = allNotebooks;
         this.buildNotebooksStructure(allNotebooks);
         this.populateNotesInNotebooks();
+        this.applySearchFilter('');
         this.cdr.markForCheck();
       }
+    });
+
+    // Setup search with debounce
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      startWith(''),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.applySearchFilter(query || '');
+      this.cdr.markForCheck();
     });
   }
 
@@ -194,6 +214,88 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Apply search filter to notebooks
+   * Searches through stacks, notebooks, and notes recursively
+   */
+  private applySearchFilter(query: string): void {
+    if (!query || query.trim().length === 0) {
+      // No filter - show all notebooks
+      this.filteredNotebooks = [...this.notebooks];
+      return;
+    }
+
+    const searchTerm = query.toLowerCase().trim();
+    this.filteredNotebooks = this.filterNotebooksRecursive(this.notebooks, searchTerm);
+  }
+
+  /**
+   * Recursively filter notebooks, stacks, and notes based on search query
+   */
+  private filterNotebooksRecursive(items: NotebookRow[], searchTerm: string): NotebookRow[] {
+    const filtered: NotebookRow[] = [];
+
+    for (const item of items) {
+      const matchesSearch = this.itemMatchesSearch(item, searchTerm);
+
+      if (item.isStack) {
+        // For stacks, check if stack name matches or any child notebooks/notes match
+        const filteredNotebooks = item.notebooks 
+          ? this.filterNotebooksRecursive(item.notebooks, searchTerm)
+          : [];
+        
+        // Include stack if it matches or has matching children
+        if (matchesSearch || filteredNotebooks.length > 0) {
+          filtered.push({
+            ...item,
+            notebooks: filteredNotebooks
+          });
+        }
+      } else if (item.isNotebook) {
+        // For notebooks, check if notebook name matches or any child notes match
+        const filteredNotes = item.notes
+          ? this.filterNotebooksRecursive(item.notes, searchTerm)
+          : [];
+        
+        // Include notebook if it matches or has matching children
+        if (matchesSearch || filteredNotes.length > 0) {
+          filtered.push({
+            ...item,
+            notes: filteredNotes,
+            noteCount: filteredNotes.length
+          });
+        }
+      } else if (item.isNote) {
+        // For notes, include if title matches
+        if (matchesSearch) {
+          filtered.push(item);
+        }
+      }
+    }
+
+    return filtered;
+  }
+
+  /**
+   * Check if a NotebookRow item matches the search query
+   */
+  private itemMatchesSearch(item: NotebookRow, searchTerm: string): boolean {
+    // Search in title (works for stacks, notebooks, and notes)
+    const titleMatch = item.title.toLowerCase().includes(searchTerm);
+    
+    // For notes, also search in note content if available
+    if (item.isNote && item.noteId) {
+      const note = this.allNotes.find(n => n.id === item.noteId);
+      if (note) {
+        // Search in note title and content
+        const contentMatch = note.content?.toLowerCase().includes(searchTerm) || false;
+        return titleMatch || contentMatch;
+      }
+    }
+    
+    return titleMatch;
   }
 
   /**
@@ -294,6 +396,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   }
 
   // Flattened view for table rendering (includes stacks, notebooks, and notes)
+  // Uses filtered notebooks if search is active
   get flattenedRows(): NotebookRow[] {
     const rows: NotebookRow[] = [];
     
