@@ -1,19 +1,22 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef, OnChanges, SimpleChanges } from '@angular/core';
 import { Note } from '../../../../core/models';
 import { formatTimeSince } from '../utils/date-formatter.util';
+import { Editor } from '@tiptap/core';
 
 /**
  * Unified header component for note editor.
  * Combines navigation controls (prev/next/fullscreen) with note actions (share/link/more).
  * This header appears ONLY ONCE in the note-content-area.
+ * Contains the fixed formatting toolbar at the top position.
  */
 @Component({
   selector: 'vex-unified-note-header',
   templateUrl: './unified-note-header.component.html',
   styleUrls: ['./unified-note-header.component.scss'],
-  standalone: false
+  standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class UnifiedNoteHeaderComponent {
+export class UnifiedNoteHeaderComponent implements OnChanges {
   /** Current note being edited */
   @Input() note: Note | null = null;
   
@@ -25,6 +28,21 @@ export class UnifiedNoteHeaderComponent {
   
   /** Name of the notebook containing this note */
   @Input() notebookName = '';
+  
+  /** Editor instance for toolbar actions */
+  @Input() editor: Editor | null = null;
+  
+  constructor(private cdr: ChangeDetectorRef) {}
+  
+  /**
+   * Called when editor input changes - ensures toolbar updates
+   */
+  ngOnChanges(changes: SimpleChanges): void {
+    // Trigger change detection when editor becomes available
+    if (changes['editor'] && this.editor) {
+      this.cdr.markForCheck();
+    }
+  }
   
   /** Emits when previous note button is clicked */
   @Output() previous = new EventEmitter<void>();
@@ -55,6 +73,21 @@ export class UnifiedNoteHeaderComponent {
   
   /** Emits when delete button is clicked */
   @Output() delete = new EventEmitter<void>();
+  
+  /** Emits when duplicate button is clicked */
+  @Output() duplicate = new EventEmitter<void>();
+  
+  /** Emits when find in note button is clicked */
+  @Output() find = new EventEmitter<void>();
+  
+  /** Emits when note info button is clicked */
+  @Output() info = new EventEmitter<void>();
+  
+  /** Emits when note history button is clicked */
+  @Output() history = new EventEmitter<void>();
+  
+  /** Emits when print button is clicked */
+  @Output() print = new EventEmitter<void>();
 
   /**
    * Handles previous note action
@@ -126,6 +159,40 @@ export class UnifiedNoteHeaderComponent {
     this.delete.emit();
   }
 
+  /**
+   * Handles duplicate note action
+   */
+  onDuplicate(): void {
+    this.duplicate.emit();
+  }
+
+  /**
+   * Handles find in note action
+   */
+  onFindInNote(): void {
+    this.find.emit();
+  }
+
+  /**
+   * Handles note info action
+   */
+  onNoteInfo(): void {
+    this.info.emit();
+  }
+
+  /**
+   * Handles note history action
+   */
+  onNoteHistory(): void {
+    this.history.emit();
+  }
+
+  /**
+   * Handles print note action
+   */
+  onPrint(): void {
+    this.print.emit();
+  }
   /**
    * Formats the last saved timestamp for display
    * @returns Formatted time string (e.g., "2m ago", "Just now")

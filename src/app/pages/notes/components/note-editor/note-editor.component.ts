@@ -25,6 +25,7 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy {
   @Output() noteSaved = new EventEmitter<Note>();
   @Output() wordCountChange = new EventEmitter<number>();
   @Output() savingStateChange = new EventEmitter<{ isSaving: boolean; lastSaved: Date | null }>();
+  @Output() editorReady = new EventEmitter<Editor | null>();
   @ViewChild(NoteEditorContentComponent, { static: false }) editorContentComponent?: NoteEditorContentComponent;
 
   form!: FormGroup<{
@@ -90,14 +91,20 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy {
   
   ngAfterViewInit(): void {
     // Get editor instance after view is initialized
-    if (this.editorContentComponent) {
-      this.editor = this.editorContentComponent.getEditor();
-      
-      // If note was loaded before view init, update editor content
-      if (this.note && this.note.content) {
-        this.editorContentComponent.updateContent(this.note.content);
+    // Use setTimeout to ensure editor is fully initialized
+    setTimeout(() => {
+      if (this.editorContentComponent) {
+        this.editor = this.editorContentComponent.getEditor();
+        if (this.editor) {
+          this.editorReady.emit(this.editor);
+        }
+        
+        // If note was loaded before view init, update editor content
+        if (this.note && this.note.content) {
+          this.editorContentComponent.updateContent(this.note.content);
+        }
       }
-    }
+    }, 100);
   }
   
   @HostListener('mouseup', ['$event'])

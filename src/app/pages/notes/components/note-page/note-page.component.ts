@@ -34,15 +34,15 @@ export class NotePageComponent implements OnInit, OnDestroy {
   note: Note | null = null;
   noteId: string | null = null;
   notebooks: Notebook[] = [];
-  
+
   // For notes list sidebar
   filteredNotes$: Observable<Note[]>;
   isMobile = false;
-  
+
   // Editor state
   isSaving = false;
   lastSaved: Date | null = null;
-  
+
   private destroy$ = new Subject<void>();
   private notebooksMap = new Map<string, Notebook>();
 
@@ -177,6 +177,232 @@ export class NotePageComponent implements OnInit, OnDestroy {
 
   onManageTags(): void {
     // TODO: Implement tag management dialog
+  }
+
+  /**
+   * Duplicates the current note with a new ID and opens it
+   */
+  onDuplicate(): void {
+    if (!this.note) return;
+
+    // Create duplicate with new ID, preserving all content
+    const duplicatedNote: Partial<Note> = {
+      title: `${this.note.title} (Copy)`,
+      content: this.note.content,
+      tags: [...(this.note.tags || [])],
+      notebookId: this.note.notebookId,
+      pinned: false, // Don't duplicate pinned status
+      archived: false, // Don't duplicate archived status
+      trashed: false,
+      attachments: this.note.attachments ? [...this.note.attachments] : [],
+      tasks: this.note.tasks ? this.note.tasks.map(task => ({ ...task })) : []
+    };
+
+    // Create the duplicate note
+    this.notesService.createNote(duplicatedNote)
+      .then(duplicate => {
+        // Navigate to the duplicated note
+        this.router.navigate(['/notes', duplicate.id]);
+      })
+      .catch(error => {
+        console.error('Failed to duplicate note:', error);
+        alert('Failed to duplicate note. Please try again.');
+      });
+  }
+
+  /**
+   * Triggers find/search within the current note editor
+   */
+  onFind(): void {
+    // Trigger browser's native find functionality (Ctrl+F / Cmd+F)
+    // This will search within the focused editor content
+    if (document.activeElement) {
+      // If editor is focused, browser find will search within it
+      document.execCommand('find', false, '');
+    } else {
+      // Focus the editor first, then trigger find
+      const editorElement = document.querySelector('.ProseMirror, .tiptap-editor, [contenteditable="true"]') as HTMLElement;
+      if (editorElement) {
+        editorElement.focus();
+        // Small delay to ensure focus is set
+        setTimeout(() => {
+          document.execCommand('find', false, '');
+        }, 100);
+      } else {
+        // Fallback: just trigger browser find
+        document.execCommand('find', false, '');
+      }
+    }
+  }
+
+  /**
+   * Shows note metadata in a simple dialog
+   */
+  onInfo(): void {
+    if (!this.note) return;
+
+    const createdDate = new Date(this.note.createdAt).toLocaleString();
+    const updatedDate = new Date(this.note.updatedAt).toLocaleString();
+    const tagsText = this.note.tags && this.note.tags.length > 0
+      ? this.note.tags.join(', ')
+      : 'No tags';
+    const notebookText = this.note.notebookId
+      ? this.getNotebookName(this.note.notebookId)
+      : 'No notebook';
+
+    // Calculate word count from content (simple approximation)
+    const textContent = this.note.content.replace(/<[^>]*>/g, ' ').trim();
+    const wordCount = textContent ? textContent.split(/\s+/).filter(w => w.length > 0).length : 0;
+    const charCount = textContent.length;
+
+    const info = `
+Note Information
+
+Title: ${this.note.title}
+Created: ${createdDate}
+Last Updated: ${updatedDate}
+Notebook: ${notebookText}
+Tags: ${tagsText}
+Word Count: ${wordCount}
+Character Count: ${charCount}
+Version: ${this.note.version || 1}
+${this.note.pinned ? 'Status: Pinned' : ''}
+${this.note.archived ? 'Status: Archived' : ''}
+    `.trim();
+
+    alert(info);
+  }
+
+  /**
+   * Shows note version history
+   */
+  onHistory(): void {
+    if (!this.note) return;
+
+    // For now, show current version info
+    // In a full implementation, this would fetch version history from the API
+    const version = this.note.version || 1;
+    const createdDate = new Date(this.note.createdAt).toLocaleString();
+    const updatedDate = new Date(this.note.updatedAt).toLocaleString();
+
+    const history = `
+Note History
+
+Current Version: ${version}
+Created: ${createdDate}
+Last Modified: ${updatedDate}
+
+Note: Version history will be available when the API is implemented.
+    `.trim();
+
+    alert(history);
+  }
+
+  /**
+   * Prints the current note content
+   */
+  onPrint(): void {
+    if (!this.note) return;
+
+    // Create a print-friendly window
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to print this note.');
+      return;
+    }
+
+    // Extract text content from HTML (remove tags for cleaner print)
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = this.note.content;
+    const textContent = tempDiv.textContent || tempDiv.innerText || '';
+
+    // Create print-friendly HTML
+    const printHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>${this.note.title}</title>
+  <style>
+    @media print {
+      body { margin: 0; padding: 20px; }
+      .no-print { display: none; }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #000;
+    }
+    .content {
+      font-size: 15px;
+      line-height: 1.8;
+      color: #333;
+    }
+    .content p {
+      margin: 12px 0;
+    }
+    .content h1, .content h2, .content h3 {
+      margin-top: 24px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .content ul, .content ol {
+      margin: 12px 0;
+      padding-left: 24px;
+    }
+    .content li {
+      margin: 6px 0;
+    }
+    .content blockquote {
+      border-left: 4px solid #ddd;
+      padding-left: 16px;
+      margin: 16px 0;
+      color: #666;
+    }
+    .content code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+    .content pre {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    @page {
+      margin: 1cm;
+    }
+  </style>
+</head>
+<body>
+  <h1>${this.note.title || 'Untitled'}</h1>
+  <div class="content">${this.note.content || ''}</div>
+</body>
+</html>
+    `;
+
+    printWindow.document.write(printHTML);
+    printWindow.document.close();
+
+    // Wait for content to load, then trigger print
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+        // Close window after printing (optional)
+        // printWindow.close();
+      }, 250);
+    };
   }
 
   onDelete(): void {

@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { NotePageContentComponent } from './note-page-content.component';
 import { NoteEditorModule } from '../note-editor/note-editor.module';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,6 +20,7 @@ import { UnifiedNoteHeaderComponent } from '../unified-note-header/unified-note-
   imports: [
     CommonModule,
     RouterModule,
+    FormsModule,
     NoteEditorModule,
     MatIconModule,
     MatButtonModule,

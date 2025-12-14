@@ -83,6 +83,24 @@
       </button>
       
       <mat-menu #moreMenu="matMenu">
+        <!-- share button -->
+        <button mat-menu-item (click)="onShare()">
+          <mat-icon svgIcon="mat:share"></mat-icon>
+          <span>Share</span>
+        </button>
+        <!-- copy link button -->
+        <button mat-menu-item (click)="onLink()">
+          <mat-icon svgIcon="mat:link"></mat-icon>
+          <span>Copy link</span>
+        </button>
+        <!-- horizontal line top bottom spacing 8px-->
+        <mat-divider style="margin: 8px 0;"></mat-divider>
+        <!-- Duplicate button -->
+        <button mat-menu-item (click)="onDuplicate()">
+          <mat-icon svgIcon="mat:content_copy"></mat-icon>
+          <span>Duplicate</span>
+        </button>
+        <!-- Pin button -->
         <button mat-menu-item (click)="onPin()">
           <mat-icon [svgIcon]="note?.pinned ? 'mat:push_pin' : 'mat:push_pin_outlined'"></mat-icon>
           <span>{{ note?.pinned ? 'Unpin' : 'Pin' }}</span>
@@ -99,7 +117,33 @@
           <mat-icon svgIcon="mat:label"></mat-icon>
           <span>Tags</span>
         </button>
-        <mat-divider></mat-divider>
+        <mat-divider style="margin: 8px 0;"></mat-divider>
+        <!-- Find in note , note info , note history button -->
+        <button mat-menu-item (click)="onFindInNote()">
+          <mat-icon svgIcon="mat:search"></mat-icon>
+          <span>Find in note</span>
+        </button>
+        <button mat-menu-item (click)="onNoteInfo()">
+          <mat-icon svgIcon="mat:info"></mat-icon>
+          <span>Note info</span>
+        </button>
+        <button mat-menu-item (click)="onNoteHistory()">
+          <mat-icon svgIcon="mat:history"></mat-icon>
+          <span>Note history</span>
+        </button>
+
+        <!-- horizontal line top bottom spacing 8px-->
+        <mat-divider style="margin: 8px 0;"></mat-divider>
+
+        <!-- print button -->
+        <button mat-menu-item (click)="onPrint()">
+          <mat-icon svgIcon="mat:print"></mat-icon>
+          <span>Print</span>
+        </button>
+
+
+        <mat-divider style="margin: 8px 0;"></mat-divider>
+
         <button mat-menu-item (click)="onDelete()" class="delete-action">
           <mat-icon svgIcon="mat:delete"></mat-icon>
           <span>Delete</span>
@@ -107,4 +151,14 @@
       </mat-menu>
     </div>
   </div>
+  
+  <!-- Fixed Toolbar: Always visible in header at top position -->
+  @if (editor) {
+    <div class="editor-toolbar-container">
+      <vex-note-editor-toolbar
+        [editor]="editor"
+        class="always-visible">
+      </vex-note-editor-toolbar>
+    </div>
+  }
 </header>

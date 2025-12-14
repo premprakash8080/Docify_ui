@@ -1,133 +1,195 @@
-<div 
-  class="formatting-toolbar"
-  [class.visible]="visible"
-  [style.left.px]="position.x"
-  [style.top.px]="position.y">
+<!-- Evernote/Notion-style formatting toolbar -->
+<div class="formatting-toolbar always-visible" [class.disabled]="!isEditorReady">
   <div class="toolbar-content">
-    <button 
-      mat-icon-button
-      (click)="onFormatText('bold')"
-      [class.active]="isFormatActive('bold')"
-      [attr.aria-label]="'Bold'"
-      type="button">
-      <mat-icon svgIcon="mat:format_bold"></mat-icon>
-    </button>
-    <button 
-      mat-icon-button
-      (click)="onFormatText('italic')"
-      [class.active]="isFormatActive('italic')"
-      [attr.aria-label]="'Italic'"
-      type="button">
-      <mat-icon svgIcon="mat:format_italic"></mat-icon>
-    </button>
-    <button 
-      mat-icon-button
-      (click)="onFormatText('underline')"
-      [class.active]="isFormatActive('underline')"
-      [attr.aria-label]="'Underline'"
-      type="button">
-      <mat-icon svgIcon="mat:format_underlined"></mat-icon>
-    </button>
-    <button 
-      mat-icon-button
-      (click)="onFormatText('strikethrough')"
-      [class.active]="isFormatActive('strikethrough')"
-      [attr.aria-label]="'Strikethrough'"
-      type="button">
-      <mat-icon svgIcon="mat:strikethrough_s"></mat-icon>
-    </button>
     
-    <div class="toolbar-divider"></div>
-    
-    <button 
-      mat-icon-button
-      [matMenuTriggerFor]="headingMenu"
-      [attr.aria-label]="'Headings'"
-      type="button">
-      <mat-icon svgIcon="mat:title"></mat-icon>
-    </button>
-    <mat-menu #headingMenu="matMenu">
-      <button mat-menu-item (click)="onFormatHeading('h1')">
-        <span class="heading-option h1">Heading 1</span>
+    <!-- Text Formatting Group -->
+    <div class="toolbar-group">
+      <button 
+        mat-icon-button
+        (click)="toggleBold()"
+        [class.active]="isBoldActive()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Bold'"
+        [attr.aria-pressed]="isBoldActive()"
+        type="button"
+        title="Bold (Ctrl+B)">
+        <mat-icon svgIcon="mat:format_bold"></mat-icon>
       </button>
-      <button mat-menu-item (click)="onFormatHeading('h2')">
-        <span class="heading-option h2">Heading 2</span>
+      
+      <button 
+        mat-icon-button
+        (click)="toggleItalic()"
+        [class.active]="isItalicActive()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Italic'"
+        [attr.aria-pressed]="isItalicActive()"
+        type="button"
+        title="Italic (Ctrl+I)">
+        <mat-icon svgIcon="mat:format_italic"></mat-icon>
       </button>
-      <button mat-menu-item (click)="onFormatHeading('h3')">
-        <span class="heading-option h3">Heading 3</span>
+      
+      <button 
+        mat-icon-button
+        (click)="toggleStrike()"
+        [class.active]="isStrikeActive()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Strikethrough'"
+        [attr.aria-pressed]="isStrikeActive()"
+        type="button"
+        title="Strikethrough">
+        <mat-icon svgIcon="mat:strikethrough_s"></mat-icon>
       </button>
-    </mat-menu>
-    
-    <button 
-      mat-icon-button
-      [matMenuTriggerFor]="listMenu"
-      [attr.aria-label]="'Lists'"
-      type="button">
-      <mat-icon svgIcon="mat:list"></mat-icon>
-    </button>
-    <mat-menu #listMenu="matMenu">
-      <button mat-menu-item (click)="onFormatList('bullet')">
-        <mat-icon svgIcon="mat:format_list_bulleted"></mat-icon>
-        <span>Bulleted List</span>
-      </button>
-      <button mat-menu-item (click)="onFormatList('ordered')">
-        <mat-icon svgIcon="mat:format_list_numbered"></mat-icon>
-        <span>Numbered List</span>
-      </button>
-    </mat-menu>
-    
-    <div class="toolbar-divider"></div>
-    
-    <button 
-      mat-icon-button
-      [matMenuTriggerFor]="alignMenu"
-      [attr.aria-label]="'Alignment'"
-      type="button">
-      <mat-icon svgIcon="mat:format_align_left"></mat-icon>
-    </button>
-    <mat-menu #alignMenu="matMenu">
-      <button mat-menu-item (click)="onFormatAlign('left')">
-        <mat-icon svgIcon="mat:format_align_left"></mat-icon>
-        <span>Left</span>
-      </button>
-      <button mat-menu-item (click)="onFormatAlign('center')">
-        <mat-icon svgIcon="mat:format_align_center"></mat-icon>
-        <span>Center</span>
-      </button>
-      <button mat-menu-item (click)="onFormatAlign('right')">
-        <mat-icon svgIcon="mat:format_align_right"></mat-icon>
-        <span>Right</span>
-      </button>
-    </mat-menu>
-    
-    <button 
-      mat-icon-button
-      [matMenuTriggerFor]="insertMenu"
-      [attr.aria-label]="'Insert'"
-      type="button">
-      <mat-icon svgIcon="mat:add"></mat-icon>
-    </button>
-    <mat-menu #insertMenu="matMenu">
-      <button mat-menu-item (click)="onInsertBlock('image')">
-        <mat-icon svgIcon="mat:image"></mat-icon>
-        <span>Image</span>
-      </button>
-      <button mat-menu-item (click)="onInsertBlock('file')">
-        <mat-icon svgIcon="mat:attach_file"></mat-icon>
-        <span>File</span>
-      </button>
-      <button mat-menu-item (click)="onInsertBlock('divider')">
-        <mat-icon svgIcon="mat:horizontal_rule"></mat-icon>
-        <span>Divider</span>
-      </button>
-      <button mat-menu-item (click)="onInsertBlock('code')">
+      
+      <button 
+        mat-icon-button
+        (click)="toggleCode()"
+        [class.active]="isCodeActive()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Inline Code'"
+        [attr.aria-pressed]="isCodeActive()"
+        type="button"
+        title="Inline Code">
         <mat-icon svgIcon="mat:code"></mat-icon>
-        <span>Code Block</span>
       </button>
-      <button mat-menu-item (click)="onInsertBlock('quote')">
+    </div>
+    
+    <div class="toolbar-divider"></div>
+    
+    <!-- Heading Selector -->
+    <div class="toolbar-group">
+      <button 
+        mat-icon-button
+        [matMenuTriggerFor]="headingMenu"
+        [class.active]="getCurrentHeadingLevel() !== null"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Heading'"
+        type="button"
+        title="Heading">
+        <mat-icon svgIcon="mat:title"></mat-icon>
+      </button>
+      <mat-menu #headingMenu="matMenu">
+        <button 
+          mat-menu-item 
+          (click)="setHeading(1)"
+          [class.active]="isHeadingActive(1)">
+          <span class="heading-option h1">Heading 1</span>
+        </button>
+        <button 
+          mat-menu-item 
+          (click)="setHeading(2)"
+          [class.active]="isHeadingActive(2)">
+          <span class="heading-option h2">Heading 2</span>
+        </button>
+        <button 
+          mat-menu-item 
+          (click)="setHeading(3)"
+          [class.active]="isHeadingActive(3)">
+          <span class="heading-option h3">Heading 3</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button 
+          mat-menu-item 
+          (click)="setParagraph()"
+          [class.active]="getCurrentHeadingLevel() === null">
+          <span>Paragraph</span>
+        </button>
+      </mat-menu>
+    </div>
+    
+    <div class="toolbar-divider"></div>
+    
+    <!-- Lists Group -->
+    <div class="toolbar-group">
+      <button 
+        mat-icon-button
+        (click)="toggleBulletList()"
+        [class.active]="isBulletListActive()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Bullet List'"
+        [attr.aria-pressed]="isBulletListActive()"
+        type="button"
+        title="Bullet List">
+        <mat-icon svgIcon="mat:format_list_bulleted"></mat-icon>
+      </button>
+      
+      <button 
+        mat-icon-button
+        (click)="toggleOrderedList()"
+        [class.active]="isOrderedListActive()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Numbered List'"
+        [attr.aria-pressed]="isOrderedListActive()"
+        type="button"
+        title="Numbered List">
+        <mat-icon svgIcon="mat:format_list_numbered"></mat-icon>
+      </button>
+      
+      <button 
+        mat-icon-button
+        (click)="toggleTaskList()"
+        [class.active]="isTaskListActive()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Task List'"
+        [attr.aria-pressed]="isTaskListActive()"
+        type="button"
+        title="Task List (Checklist)">
+        <mat-icon svgIcon="mat:checklist"></mat-icon>
+      </button>
+    </div>
+    
+    <div class="toolbar-divider"></div>
+    
+    <!-- Block Elements Group -->
+    <div class="toolbar-group">
+      <button 
+        mat-icon-button
+        (click)="toggleBlockquote()"
+        [class.active]="isBlockquoteActive()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Quote'"
+        [attr.aria-pressed]="isBlockquoteActive()"
+        type="button"
+        title="Quote">
         <mat-icon svgIcon="mat:format_quote"></mat-icon>
-        <span>Quote</span>
       </button>
-    </mat-menu>
+      
+      <button 
+        mat-icon-button
+        (click)="toggleCodeBlock()"
+        [class.active]="isCodeBlockActive()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Code Block'"
+        [attr.aria-pressed]="isCodeBlockActive()"
+        type="button"
+        title="Code Block">
+        <mat-icon svgIcon="mat:code_blocks"></mat-icon>
+      </button>
+      
+      <button 
+        mat-icon-button
+        (click)="insertHorizontalRule()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Divider'"
+        type="button"
+        title="Divider (Horizontal Rule)">
+        <mat-icon svgIcon="mat:horizontal_rule"></mat-icon>
+      </button>
+    </div>
+    
+    <div class="toolbar-divider"></div>
+    
+    <!-- Utility Group -->
+    <div class="toolbar-group">
+      <button 
+        mat-icon-button
+        (click)="clearFormatting()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Clear Formatting'"
+        type="button"
+        title="Clear Formatting">
+        <mat-icon svgIcon="mat:format_clear"></mat-icon>
+      </button>
+    </div>
+    
   </div>
 </div>

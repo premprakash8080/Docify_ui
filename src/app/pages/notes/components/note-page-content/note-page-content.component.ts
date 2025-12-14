@@ -1,4 +1,5 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Note, Notebook } from '../../../../core/models';
 import { NotesService } from '../../services/notes.service';
 import { Subject } from 'rxjs';
@@ -26,13 +27,27 @@ export class NotePageContentComponent implements OnInit, OnDestroy {
   @Output() archive = new EventEmitter<void>();
   @Output() export = new EventEmitter<void>();
   @Output() manageTags = new EventEmitter<void>();
+  @Output() duplicate = new EventEmitter<void>();
+  @Output() find = new EventEmitter<void>();
+  @Output() info = new EventEmitter<void>();
+  @Output() history = new EventEmitter<void>();
+  @Output() print = new EventEmitter<void>();
   @Output() delete = new EventEmitter<void>();
   @Output() noteUpdated = new EventEmitter<Note>();
+  
+  // Editor reference for toolbar
+  editor: any = null;
+  
+  // Tag input state
+  showTagInput = false;
+  tagInputValue = '';
+  @ViewChild('tagInput', { static: false }) tagInputRef?: ElementRef<HTMLInputElement>;
   
   notebooks: Notebook[] = [];
   private notebooksMap = new Map<string, Notebook>();
   private destroy$ = new Subject<void>();
   private notesService = inject(NotesService);
+  private cdr = inject(ChangeDetectorRef);
   
   get notebookName(): string {
     if (!this.note?.notebookId) return '';
@@ -68,6 +83,75 @@ export class NotePageContentComponent implements OnInit, OnDestroy {
   onSavingStateChange(state: { isSaving: boolean; lastSaved: Date | null }): void {
     this.isSaving = state.isSaving;
     this.lastSaved = state.lastSaved;
+  }
+
+  /**
+   * Handles editor ready event - updates editor reference for toolbar
+   */
+  onEditorReady(editor: any): void {
+    this.editor = editor;
+    this.cdr.detectChanges(); // Force update to show toolbar
+  }
+
+  /**
+   * Toggles tag input visibility
+   */
+  toggleTagInput(): void {
+    this.showTagInput = !this.showTagInput;
+    if (this.showTagInput) {
+      // Focus input after view update
+      setTimeout(() => {
+        this.tagInputRef?.nativeElement?.focus();
+      }, 0);
+    } else {
+      this.tagInputValue = '';
+    }
+  }
+
+  /**
+   * Closes tag input
+   */
+  closeTagInput(): void {
+    this.showTagInput = false;
+    this.tagInputValue = '';
+  }
+
+  /**
+   * Handles Enter key in tag input
+   */
+  onTagInputEnter(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    keyboardEvent.preventDefault();
+    const tag = this.tagInputValue.trim();
+    if (tag) {
+      // Add tag logic would go here
+      // For now, just close the input
+      this.closeTagInput();
+    }
+  }
+
+  /**
+   * Handles blur event on tag input
+   */
+  onTagInputBlur(): void {
+    // Close input after a short delay to allow click events to fire
+    setTimeout(() => {
+      if (this.tagInputValue.trim()) {
+        // If there's a value, keep it open or process it
+        // For now, close it
+        this.closeTagInput();
+      } else {
+        this.closeTagInput();
+      }
+    }, 200);
+  }
+
+  /**
+   * Checks if note has a reminder set
+   */
+  hasReminder(): boolean {
+    // Check if note has reminder property (can be extended when API is ready)
+    return false; // Placeholder - will be based on note.reminder when available
   }
 
   getFormattedDate = formatShortDate;
@@ -110,6 +194,14 @@ export class NotePageContentComponent implements OnInit, OnDestroy {
       .catch(error => {
         console.error('Failed to remove tag:', error);
       });
+  }
+
+  /**
+   * Handles tag remove button click with event propagation control
+   */
+  onRemoveTagClick(tag: string, event: Event): void {
+    event.stopPropagation();
+    this.onRemoveTag(tag);
   }
 
   getDisplayTags(tags: string[]): string[] {
@@ -213,6 +305,26 @@ export class NotePageContentComponent implements OnInit, OnDestroy {
 
   onManageTags(): void {
     this.manageTags.emit();
+  }
+
+  onDuplicate(): void {
+    this.duplicate.emit();
+  }
+
+  onFind(): void {
+    this.find.emit();
+  }
+
+  onInfo(): void {
+    this.info.emit();
+  }
+
+  onHistory(): void {
+    this.history.emit();
+  }
+
+  onPrint(): void {
+    this.print.emit();
   }
 
   onDelete(): void {

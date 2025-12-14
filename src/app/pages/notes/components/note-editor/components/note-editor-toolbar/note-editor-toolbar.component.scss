@@ -1,14 +1,197 @@
+/**
+ * Evernote/Notion-style formatting toolbar styles
+ * Clean, horizontal, compact design
+ */
+
 .formatting-toolbar {
-  position: fixed;
-  z-index: 1000;
-  background-color: var(--background-card);
-  border: 1px solid var(--foreground-divider);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 0.5rem;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 8px 16px;
+  background: var(--background-card, #ffffff);
+  border-top: 1px solid var(--foreground-divider, #e0e0e0);
+  min-height: 48px;
+  visibility: visible !important;
+  opacity: 1 !important;
+  
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  
+  // When used in header (always-visible class)
+  &.always-visible {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+  }
+}
+
+.toolbar-content {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 4px;
+  max-width: 100%;
+  overflow-x: auto;
+  
+  // Hide scrollbar but keep functionality
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Edge
+  
+  &::-webkit-scrollbar {
+    display: none; // Chrome/Safari
+  }
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--foreground-divider, #e0e0e0);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+// Button styles - Evernote-like clarity
+.formatting-toolbar button {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border-radius: 4px;
+  color: var(--text-secondary, #666666);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+  
+  // Hover state
+  &:hover:not(:disabled) {
+    background-color: var(--background-hover, #f5f5f5);
+    color: var(--text-color, #333333);
+  }
+  
+  // Active state - when format is applied
+  &.active {
+    background-color: var(--color-primary, #1976d2);
+    color: white;
+    
+    &:hover {
+      background-color: var(--color-primary, #1976d2);
+      opacity: 0.9;
+    }
+  }
+  
+  // Disabled state
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  
+  // Focus state for keyboard navigation
+  &:focus-visible {
+    outline: 2px solid var(--color-primary, #1976d2);
+    outline-offset: 2px;
+  }
+}
+
+// Heading menu items
+.heading-option {
+  display: block;
+  font-weight: 600;
+  
+  &.h1 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+  
+  &.h2 {
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+  
+  &.h3 {
+    font-size: 1.125rem;
+    line-height: 1.4;
+  }
+}
+
+// Menu item active state
+.mat-mdc-menu-item.active {
+  background-color: var(--background-hover, #f5f5f5);
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .formatting-toolbar {
+    padding: 6px 8px;
+    min-height: 44px;
+  }
+  
+  .toolbar-content {
+    gap: 2px;
+  }
+  
+  .formatting-toolbar button {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+  
+  .toolbar-divider {
+    height: 20px;
+    margin: 0 2px;
+  }
+}
+
+// When always-visible class is present (fixed in header)
+.formatting-toolbar.always-visible {
+  position: relative !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  pointer-events: all !important;
+  width: 100% !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border-top: none !important;
+  padding: 8px 16px !important;
+}
+
+// Legacy support for floating toolbar (when used in floating context - not always-visible)
+.formatting-toolbar:not(.always-visible) {
+  position: fixed;
+  z-index: 1000;
+  background-color: var(--background-card, #ffffff);
+  border: 1px solid var(--foreground-divider, #e0e0e0);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  width: auto;
+  min-height: auto;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
@@ -20,60 +203,5 @@
     visibility: visible;
     transform: translateY(0);
     pointer-events: all;
-  }
-}
-
-.toolbar-content {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.toolbar-divider {
-  width: 1px;
-  height: 24px;
-  background-color: var(--foreground-divider);
-  margin: 0 0.25rem;
-}
-
-.formatting-toolbar button {
-  width: 32px;
-  height: 32px;
-  color: var(--text-secondary);
-  
-  &:hover {
-    background-color: var(--background-hover);
-    color: var(--text-color);
-  }
-  
-  &.active {
-    background-color: var(--color-primary);
-    color: white;
-  }
-}
-
-.heading-option {
-  display: block;
-  
-  &.h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-  
-  &.h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
-  
-  &.h3 {
-    font-size: 1.125rem;
-    font-weight: 600;
-  }
-}
-
-// Hide formatting toolbar on mobile
-@media (max-width: 768px) {
-  .formatting-toolbar {
-    display: none;
   }
 }

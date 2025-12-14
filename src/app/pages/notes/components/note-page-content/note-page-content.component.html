@@ -6,6 +6,7 @@
       [isSaving]="isSaving"
       [lastSaved]="lastSaved"
       [notebookName]="notebookName"
+      [editor]="editor"
       (previous)="onPrevious()"
       (next)="onNext()"
       (fullscreen)="onFullscreen()"
@@ -15,21 +16,21 @@
       (archive)="onArchive()"
       (export)="onExport()"
       (manageTags)="onManageTags()"
+      (duplicate)="onDuplicate()"
+      (find)="onFind()"
+      (info)="onInfo()"
+      (history)="onHistory()"
+      (print)="onPrint()"
       (delete)="onDelete()">
     </vex-unified-note-header>
 
     <!-- Note Title Section (appears ONLY ONCE) -->
     <div class="note-title-section">
-      <h1 class="note-title">{{ note.title || 'Untitled' }}</h1>
+      <!-- <h1 class="note-title">{{ note.title || 'Untitled' }}</h1> -->
     </div>
 
     <!-- Metadata: Secondary, low-contrast -->
-    <vex-note-editor-metadata
-      [note]="note"
-      [lastEdited]="note?.updatedAt ? getLastEditedText(note.updatedAt) : null"
-      [wordCount]="wordCount"
-      (removeTag)="onRemoveTag($event)">
-    </vex-note-editor-metadata>
+  
 
     <!-- Tasks List (shown above editor if tasks exist) -->
     @if (note.tasks && note.tasks.length > 0) {
@@ -92,23 +93,71 @@
     <!-- Note Content Editor (focused on content only) -->
     <div class="note-editor-wrapper">
       <vex-note-editor
+        #noteEditor
         [note]="note"
         (noteUpdated)="onNoteUpdated($event)"
         (wordCountChange)="onWordCountChange($event)"
-        (savingStateChange)="onSavingStateChange($event)">
+        (savingStateChange)="onSavingStateChange($event)"
+        (editorReady)="onEditorReady($event)">
       </vex-note-editor>
     </div>
 
     <!-- Single Footer (appears ONLY ONCE) -->
     <footer class="note-footer">
       <div class="footer-content">
-        <button mat-icon-button aria-label="Add reminder" (click)="addReminder()" type="button">
-          <mat-icon svgIcon="mat:notifications_none"></mat-icon>
+        <!-- Notification Icon -->
+        <button 
+          mat-icon-button 
+          aria-label="Add reminder" 
+          (click)="addReminder()" 
+          type="button"
+          class="footer-icon-button reminder-button"
+          [class.active]="hasReminder()"
+          [title]="hasReminder() ? 'Reminder set' : 'Add reminder'">
+          <mat-icon [svgIcon]="hasReminder() ? 'mat:notifications' : 'mat:notifications_none'"></mat-icon>
         </button>
-        <button mat-icon-button aria-label="Add tag" (click)="addTag()" class="add-tag-button" type="button">
+
+        <!-- Add Tag Icon -->
+        <button 
+          mat-icon-button 
+          aria-label="Add tags" 
+          (click)="toggleTagInput()" 
+          type="button"
+          class="footer-icon-button tag-button"
+          title="Add tags">
           <mat-icon svgIcon="mat:label"></mat-icon>
-          <span>Add tag</span>
         </button>
+
+        <!-- Tag Input (appears inline when active) -->
+        <div class="tag-input-wrapper" *ngIf="showTagInput">
+          <input 
+            type="text"
+            class="tag-input"
+            placeholder="Add or select a tag…"
+            [(ngModel)]="tagInputValue"
+            (keydown.enter)="onTagInputEnter($event)"
+            (keydown.escape)="closeTagInput()"
+            (blur)="onTagInputBlur()"
+            #tagInput
+            autocomplete="off">
+        </div>
+
+        <!-- Tags Display (compact chips) -->
+        <div class="tags-container" *ngIf="note?.tags && note.tags.length > 0">
+          @for (tag of note.tags; track tag) {
+            <span class="tag-chip" [attr.aria-label]="'Tag: ' + tag">
+              <span class="tag-chip-text">{{ tag }}</span>
+              <button 
+                mat-icon-button
+                (click)="onRemoveTagClick(tag, $event)"
+                [attr.aria-label]="'Remove tag ' + tag"
+                type="button"
+                class="tag-chip-remove">
+                <mat-icon svgIcon="mat:close"></mat-icon>
+              </button>
+            </span>
+          }
+        </div>
       </div>
     </footer>
   </div>

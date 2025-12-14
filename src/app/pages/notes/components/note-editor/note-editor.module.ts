@@ -31,7 +31,8 @@ import { RouterModule } from '@angular/router';
   ],
   exports: [
     NoteEditorComponent,
-    NoteEditorMetadataComponent // Export for use in note-page-content
+    NoteEditorMetadataComponent, // Export for use in note-page-content
+    NoteEditorToolbarComponent // Export for use in unified header
   ]
 })
 export class NoteEditorModule { }

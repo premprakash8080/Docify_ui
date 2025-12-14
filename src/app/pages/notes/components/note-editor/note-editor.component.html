@@ -2,19 +2,6 @@
   <!-- Editor Container: Centered, max-width ~720px -->
   <div class="editor-container">
     <div class="editor-wrapper">
-      <!-- Floating Formatting Toolbar (contextual, appears on selection) -->
-      <vex-note-editor-toolbar
-        [visible]="showFormattingToolbar"
-        [position]="toolbarPosition"
-        [editor]="editor"
-        (formatText)="onFormatText($event)"
-        (formatHeading)="onFormatHeading($event)"
-        (formatList)="onFormatList($event)"
-        (formatAlign)="onFormatAlign($event)"
-        (insertBlock)="onInsertBlock($event)"
-      >
-      </vex-note-editor-toolbar>
-
       <!-- Main Editor Content Area -->
       <div class="editor-content" (click)="onEditorClick($event)">
         <vex-note-editor-content

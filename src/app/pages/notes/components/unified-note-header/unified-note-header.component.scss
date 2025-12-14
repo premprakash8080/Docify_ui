@@ -8,6 +8,9 @@
   flex-shrink: 0;
   // Subtle shadow for depth
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 .app-bar-content {
@@ -193,5 +196,46 @@
   .nav-button {
     width: 36px;
     height: 36px;
+  }
+}
+
+// Fixed Toolbar Container in Header - Top position
+.editor-toolbar-container {
+  width: 100%;
+  border-top: 1px solid var(--foreground-divider);
+  background: var(--background-card);
+  padding: 8px 16px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-height: 48px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  
+  // Ensure toolbar is always visible
+  ::ng-deep {
+    vex-note-editor-toolbar {
+      display: block !important;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      visibility: visible !important;
+      opacity: 1 !important;
+      
+      .formatting-toolbar {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+      }
+      
+      .toolbar-content {
+        display: flex !important;
+        visibility: visible !important;
+      }
+    }
   }
 }
