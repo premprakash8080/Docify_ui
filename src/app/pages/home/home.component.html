@@ -33,14 +33,18 @@
                         <span 
                           class="task-badge"
                           [attr.aria-label]="getCompletedTasksCount(note.tasks || []) + '/' + (note.tasks?.length || 0) + ' tasks completed'">
-                          <mat-icon>checklist</mat-icon>
-                          {{ getCompletedTasksCount(note.tasks || []) }}/{{ note.tasks?.length || 0 }}
+                          <mat-icon svgIcon="mat:checklist"></mat-icon>
+                          <span class="task-badge-text">{{ getCompletedTasksCount(note.tasks || []) }}/{{ note.tasks?.length || 0 }}</span>
                         </span>
                       }
                       @if (note.tags && note.tags.length > 0) {
-                        <mat-icon 
+                        <mat-icon
                           class="note-card-icon"
-                          [style.color]="getTagColor(note.tags[0])">description</mat-icon>
+                          [svgIcon]="'mat:label'"
+                          [style.color]="getTagColor(note.tags[0])"
+                          [attr.aria-label]="'Tag: ' + (note.tags[0])"
+                          [title]="note.tags[0]">
+                        </mat-icon>
                       }
                     </div>
                   </div>
