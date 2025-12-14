@@ -18,17 +18,12 @@ export class DataInitService {
 
   async initialize(): Promise<void> {
     try {
-      // Ensure a user is authenticated (set default user if none exists)
-      if (!this.authService.currentUserValue) {
-        // Set the first user from sample data as current user
-        if (SAMPLE_DATA.users && SAMPLE_DATA.users.length > 0) {
-          this.authService.setCurrentUser(SAMPLE_DATA.users[0]);
-        }
-      }
-
+      // Only initialize data if user is authenticated
+      // Users must login through the login page
       const userId = this.authService.currentUserValue?.id;
       if (!userId) {
-        console.warn('No user available for data initialization');
+        // No user authenticated, skip data initialization
+        // User will need to login first
         return;
       }
 

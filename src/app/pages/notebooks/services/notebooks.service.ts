@@ -1,12 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, delay } from 'rxjs/operators';
-import { Notebook, Note } from '../../../../core/models';
+import { Notebook, Note } from '../../../core/models';
 import {
   notebooks,
   notes,
-  getNotebookById as getNotebookByIdFromData
-} from '../../../../core/data/sample-data';
+  getNotebookById as getNotebookByIdFromData,
+  generateUUID
+} from '../../../core/data/sample-data';
+import { AuthService } from '../../../core/services/auth.service';
 
 /**
  * Service for managing notebooks data.
@@ -21,12 +23,23 @@ import {
   providedIn: 'root'
 })
 export class NotebooksService {
+  private authService = inject(AuthService);
+  
+  // In-memory storage for created notebooks (in a real app, this would be persisted to backend)
+  private createdNotebooks: Notebook[] = [];
   /**
    * Get a notebook by its ID
    * @param notebookId - The UUID of the notebook
    * @returns Observable of the notebook, or undefined if not found
    */
   getNotebookById(notebookId: string): Observable<Notebook | undefined> {
+    // Check created notebooks first, then sample data
+    const createdNotebook = this.createdNotebooks.find(nb => nb.id === notebookId);
+    if (createdNotebook) {
+      return of(createdNotebook).pipe(delay(0));
+    }
+    
+    // Check sample data
     // Simulate API delay (remove when switching to real HTTP)
     return of(getNotebookByIdFromData(notebookId)).pipe(
       delay(0) // Change to realistic delay if needed: delay(100)
@@ -34,12 +47,14 @@ export class NotebooksService {
   }
 
   /**
-   * Get all notebooks
+   * Get all notebooks (includes sample data and user-created notebooks)
    * @returns Observable of all notebooks
    */
   getAllNotebooks(): Observable<Notebook[]> {
+    // Combine sample notebooks with user-created notebooks
+    const allNotebooks = [...notebooks, ...this.createdNotebooks];
     // Simulate API delay (remove when switching to real HTTP)
-    return of([...notebooks]).pipe(
+    return of(allNotebooks).pipe(
       delay(0) // Change to realistic delay if needed: delay(100)
     );
   }
@@ -50,8 +65,11 @@ export class NotebooksService {
    * @returns Observable of notebooks belonging to the user
    */
   getNotebooksByUserId(userId: string): Observable<Notebook[]> {
+    // Combine sample notebooks with user-created notebooks
+    const allNotebooks = [...notebooks, ...this.createdNotebooks];
+    const userNotebooks = allNotebooks.filter(notebook => notebook.userId === userId);
+    
     // Simulate API delay (remove when switching to real HTTP)
-    const userNotebooks = notebooks.filter(notebook => notebook.userId === userId);
     return of(userNotebooks).pipe(
       delay(0) // Change to realistic delay if needed: delay(100)
     );
@@ -119,9 +137,11 @@ export class NotebooksService {
    * @returns Observable of notebooks with noteCount property
    */
   getNotebooksWithCounts(userId?: string): Observable<(Notebook & { noteCount: number })[]> {
+    // Combine sample notebooks with user-created notebooks
+    const allNotebooks = [...notebooks, ...this.createdNotebooks];
     const notebooksToProcess = userId 
-      ? notebooks.filter(nb => nb.userId === userId)
-      : notebooks;
+      ? allNotebooks.filter(nb => nb.userId === userId)
+      : allNotebooks;
     
     const notebooksWithCounts = notebooksToProcess.map(notebook => {
       // Count notes for this notebook (excluding archived and trashed)
@@ -154,7 +174,8 @@ export class NotebooksService {
     }
     
     const searchTerm = query.toLowerCase().trim();
-    const matchingNotebooks = notebooks.filter(notebook =>
+    const allNotebooks = [...notebooks, ...this.createdNotebooks];
+    const matchingNotebooks = allNotebooks.filter(notebook =>
       notebook.name.toLowerCase().includes(searchTerm) ||
       notebook.description?.toLowerCase().includes(searchTerm)
     );
@@ -162,6 +183,37 @@ export class NotebooksService {
     // Simulate API delay (remove when switching to real HTTP)
     return of(matchingNotebooks).pipe(
       delay(0) // Change to realistic delay if needed: delay(100)
+    );
+  }
+
+  /**
+   * Create a new notebook
+   * @param notebookData - Partial notebook data (at minimum, name is required)
+   * @returns Observable of the created notebook
+   */
+  createNotebook(notebookData: { name: string; description?: string; color?: string }): Observable<Notebook> {
+    const currentUser = this.authService.currentUserValue;
+    const userId = currentUser?.id || '1'; // Fallback to sample user if no current user
+    
+    const now = new Date().toISOString();
+    
+    const newNotebook: Notebook = {
+      id: generateUUID(),
+      userId: userId,
+      name: notebookData.name.trim(),
+      description: notebookData.description?.trim(),
+      color: notebookData.color,
+      createdAt: now,
+      updatedAt: now
+    };
+
+    // Add to in-memory storage
+    this.createdNotebooks.push(newNotebook);
+
+    // In a real app, this would be: return this.http.post<Notebook>('/api/notebooks', newNotebook);
+    // Simulate API delay
+    return of(newNotebook).pipe(
+      delay(200) // Simulate network delay
     );
   }
 }

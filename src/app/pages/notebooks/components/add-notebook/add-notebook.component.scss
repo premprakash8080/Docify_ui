@@ -1,0 +1,67 @@
+.dialog-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 0;
+  margin-bottom: 0;
+
+  .title-text {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-color);
+  }
+
+  .close-button {
+    color: var(--text-secondary);
+    
+    &:hover {
+      background-color: var(--background-hover);
+    }
+  }
+}
+
+.dialog-content {
+  padding: 24px;
+  min-width: 400px;
+  max-width: 500px;
+
+  .description-text {
+    margin: 0 0 24px 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .full-width {
+    width: 100%;
+  }
+
+  ::ng-deep {
+    .mat-mdc-form-field {
+      width: 100%;
+    }
+
+    .mat-mdc-text-field-wrapper {
+      background-color: var(--background-foreground);
+    }
+  }
+}
+
+.dialog-actions {
+  padding: 8px 24px 24px;
+  gap: 8px;
+
+  .cancel-button {
+    color: var(--text-secondary);
+  }
+
+  .create-button {
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+}
+
+// Dark theme support is handled through CSS variables
+// The dialog will automatically adapt to the current theme

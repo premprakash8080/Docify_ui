@@ -1,81 +1,66 @@
 <!-- Evernote Tasks Page - Pixel Perfect Recreation -->
-<div class="min-h-screen bg-[#1e1e1e] text-white">
+<div class="tasks-container">
   <!-- Header Section -->
-  <div class="px-8 pt-8 pb-4">
+  <div class="header-section">
     <!-- Title and Top Bar -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="title-bar">
       <div class="flex-1">
-        <h1 class="text-4xl font-semibold text-white mb-6">Tasks</h1>
+        <h1 class="title">Tasks</h1>
         
         <!-- Tabs -->
-        <div class="flex items-center gap-8 border-b border-[#3a3a3a]">
+        <div class="tabs-container">
           <button 
             (click)="setActiveTab('my-tasks')"
-            [class.border-b-2]="activeTab === 'my-tasks'"
-            [class.border-[#6366f1]]="activeTab === 'my-tasks'"
-            [class.text-white]="activeTab === 'my-tasks'"
-            [class.text-[#9ca3af]]="activeTab !== 'my-tasks'"
-            class="pb-3 px-1 font-medium text-sm hover:text-white transition-colors">
+            [class.active]="activeTab === 'my-tasks'"
+            class="tab-button">
             My tasks
           </button>
           <button 
             (click)="setActiveTab('notebooks')"
-            [class.border-b-2]="activeTab === 'notebooks'"
-            [class.border-[#6366f1]]="activeTab === 'notebooks'"
-            [class.text-white]="activeTab === 'notebooks'"
-            [class.text-[#9ca3af]]="activeTab !== 'notebooks'"
-            class="pb-3 px-1 font-medium text-sm hover:text-white transition-colors">
+            [class.active]="activeTab === 'notebooks'"
+            class="tab-button">
             Notebooks
           </button>
           <button 
             (click)="setActiveTab('notes')"
-            [class.border-b-2]="activeTab === 'notes'"
-            [class.border-[#6366f1]]="activeTab === 'notes'"
-            [class.text-white]="activeTab === 'notes'"
-            [class.text-[#9ca3af]]="activeTab !== 'notes'"
-            class="pb-3 px-1 font-medium text-sm hover:text-white transition-colors">
+            [class.active]="activeTab === 'notes'"
+            class="tab-button">
             Notes
           </button>
           <button 
             (click)="setActiveTab('today')"
-            [class.border-b-2]="activeTab === 'today'"
-            [class.border-[#6366f1]]="activeTab === 'today'"
-            [class.text-white]="activeTab === 'today'"
-            [class.text-[#9ca3af]]="activeTab !== 'today'"
-            class="pb-3 px-1 font-medium text-sm hover:text-white transition-colors">
+            [class.active]="activeTab === 'today'"
+            class="tab-button">
             Today
           </button>
           <button 
             (click)="setActiveTab('assigned')"
-            [class.border-b-2]="activeTab === 'assigned'"
-            [class.border-[#6366f1]]="activeTab === 'assigned'"
-            [class.text-white]="activeTab === 'assigned'"
-            [class.text-[#9ca3af]]="activeTab !== 'assigned'"
-            class="pb-3 px-1 font-medium text-sm hover:text-white transition-colors">
+            [class.active]="activeTab === 'assigned'"
+            class="tab-button">
             Assigned
           </button>
         </div>
       </div>
 
       <!-- Right Side Actions -->
-      <div class="flex items-center gap-4 ml-8">
+      <div class="actions-bar">
         <button 
           (click)="openNewTaskModal()"
-          class="bg-[#6366f1] hover:bg-[#5856d6] text-white px-4 py-2 rounded-md font-medium text-sm transition-colors">
+          class="new-task-button">
           + New Task
         </button>
-        <button class="text-[#9ca3af] hover:text-white p-2 transition-colors">
+        <button class="filter-button">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6l4 4-4 4"></path>
           </svg>
         </button>
-        <div class="relative">
+        <div class="search-container">
           <input 
             type="text" 
             placeholder="Find tasks…" 
-            class="bg-[#2a2a2a] border border-[#3a3a3a] rounded-md pl-10 pr-4 py-2 text-sm text-white placeholder-[#6b7280] focus:outline-none focus:border-[#6366f1] w-48">
-          <svg class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6b7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            class="search-input">
+          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
         </div>
@@ -84,44 +69,44 @@
   </div>
 
   <!-- Tasks Table -->
-  <div class="px-8">
+  <div class="tasks-table-container">
     <div class="overflow-x-auto">
-      <table class="w-full border-collapse">
+      <table class="tasks-table">
         <thead>
-          <tr class="border-b border-[#3a3a3a]">
-            <th class="text-left py-3 px-4 w-12">
-              <input type="checkbox" class="w-4 h-4 rounded border-[#3a3a3a] bg-[#2a2a2a] text-[#6366f1] focus:ring-[#6366f1]">
+          <tr class="table-header">
+            <th class="table-header-cell">
+              <input type="checkbox" class="task-checkbox">
             </th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[#9ca3af]">Title</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[#9ca3af] w-40">Due date</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[#9ca3af] w-40">Assigned note</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[#9ca3af] w-32">Assigned to</th>
+            <th class="table-header-cell">Title</th>
+            <th class="table-header-cell">Due date</th>
+            <th class="table-header-cell">Assigned note</th>
+            <th class="table-header-cell">Assigned to</th>
           </tr>
         </thead>
         <tbody>
           @for (task of tasks; track task.id) {
-            <tr class="border-b border-[#3a3a3a] hover:bg-[#2a2a2a] transition-colors">
-              <td class="py-4 px-4">
+            <tr class="table-row">
+              <td class="table-cell">
                 <input 
                   type="checkbox" 
                   [checked]="task.completed"
-                  class="w-4 h-4 rounded border-[#3a3a3a] bg-[#2a2a2a] text-[#6366f1] focus:ring-[#6366f1]">
+                  class="task-checkbox">
               </td>
-              <td class="py-4 px-4 text-white text-sm">
+              <td class="table-cell task-title">
                 {{ task.title }}
               </td>
-              <td class="py-4 px-4 text-sm" [class.text-red-500]="task.isOverdue" [class.text-white]="!task.isOverdue">
+              <td class="table-cell" [class.overdue]="task.isOverdue">
                 {{ task.dueDate }}
               </td>
-              <td class="py-4 px-4 text-white text-sm">
+              <td class="table-cell">
                 <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-[#9ca3af]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="task-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
                   <span>{{ task.assignedNote }}</span>
                 </div>
               </td>
-              <td class="py-4 px-4 text-white text-sm">
+              <td class="table-cell">
                 {{ task.assignedTo }}
               </td>
             </tr>
@@ -132,10 +117,10 @@
   </div>
 
   <!-- New Task Modal Component -->
-              @if (isNewTaskModalOpen) {
-                <vex-new-task-modal 
-                  (closed)="closeNewTaskModal()" 
-                  (created)="onCreateTask($event)">
-                </vex-new-task-modal>
-              }
+  @if (isNewTaskModalOpen) {
+    <vex-new-task-modal 
+      (closed)="closeNewTaskModal()" 
+      (created)="onCreateTask($event)">
+    </vex-new-task-modal>
+  }
 </div>

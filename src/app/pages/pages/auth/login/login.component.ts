@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animation';
+import { AuthService } from '../../../../core/services';
 
 @Component({
   selector: 'vex-login',
@@ -17,27 +18,68 @@ import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animati
 export class LoginComponent implements OnInit {
 
   form: UntypedFormGroup;
-
   inputType = 'password';
   visible = false;
+  isLoading = false;
+  returnUrl: string = '/';
 
-  constructor(private router: Router,
-              private fb: UntypedFormBuilder,
-              private cd: ChangeDetectorRef,
-              private snackbar: MatSnackBar
-  ) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private fb: UntypedFormBuilder,
+    private cd: ChangeDetectorRef,
+    private snackbar: MatSnackBar,
+    private authService: AuthService
+  ) {
+    // Redirect to home if already logged in
+    if (this.authService.isAuthenticated) {
+      this.router.navigate(['/']);
+    }
+
+    // Get return url from route parameters or default to '/'
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+  }
 
   ngOnInit() {
+    // TODO: Remove default values before production
     this.form = this.fb.group({
-      email: ['', Validators.required],
-      password: ['', Validators.required]
+      email: ['john.doe@example.com', [Validators.required, Validators.email]],
+      password: ['password123', Validators.required]
     });
   }
 
   send() {
-    this.router.navigate(['/']);
-    this.snackbar.open('Lucky you! Looks like you didn\'t need a password or email address! For a real application we provide validators to prevent this. ;)', 'LOL THANKS', {
-      duration: 10000
+    if (this.form.invalid || this.isLoading) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.cd.markForCheck();
+
+    const { email, password } = this.form.value;
+
+    this.authService.login({ email, password }).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.cd.markForCheck();
+        
+        // Show success message
+        this.snackbar.open('Login successful!', 'Close', {
+          duration: 3000
+        });
+
+        // Navigate to return url or home
+        this.router.navigate([this.returnUrl]);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.cd.markForCheck();
+        
+        const errorMessage = error?.message || 'Invalid email or password. Please try again.';
+        this.snackbar.open(errorMessage, 'Close', {
+          duration: 5000
+        });
+      }
     });
   }
 

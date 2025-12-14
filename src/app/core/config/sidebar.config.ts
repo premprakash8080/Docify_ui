@@ -24,7 +24,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
         {
           type: 'link',
           label: 'Home',
-          route: '/',
+          route: '/home',
           icon: 'mat:home',
           routerLinkActiveOptions: { exact: true }
         },

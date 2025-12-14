@@ -3,6 +3,7 @@ import { RouterModule } from '@angular/router';
 import { CustomLayoutComponent } from './custom-layout/custom-layout.component';
 import { VexRoutes } from '../@vex/interfaces/vex-route.interface';
 import { QuicklinkModule, QuicklinkStrategy } from 'ngx-quicklink';
+import { AuthGuard } from './core/guards';
 
 const routes: VexRoutes = [
   // Auth routes - KEEP (needed for authentication, not in sidebar)
@@ -26,14 +27,21 @@ const routes: VexRoutes = [
   {
     path: '',
     component: CustomLayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       // Home route - USED in sidebar
       {
-        path: '',
+        path: 'home',
         loadChildren: () => import('./pages/home/home.module').then(m => m.HomeModule),
         data: {
           toolbarShadowEnabled: false
         }
+      },
+      // Root path redirects to home
+      {
+        path: '',
+        redirectTo: 'home',
+        pathMatch: 'full'
       },
       // Dashboard Analytics - NOT USED in sidebar (commented out)
       // {

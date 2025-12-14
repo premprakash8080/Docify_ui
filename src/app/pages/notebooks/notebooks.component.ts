@@ -8,12 +8,14 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
 import { Subject } from 'rxjs';
-import { takeUntil, map } from 'rxjs/operators';
+import { takeUntil, map, filter } from 'rxjs/operators';
 import { NOTEBOOK_1_UUID, NOTEBOOK_2_UUID, NOTEBOOK_3_UUID, NOTEBOOK_4_UUID, NOTEBOOK_5_UUID } from '../../core/data/sample-data';
 import { NotesService } from '../notes/services/notes.service';
 import { Note } from '../../core/models';
+import { AddNotebookComponent, AddNotebookDialogResult } from './components/add-notebook/add-notebook.component';
 
 type RowType = 'stack' | 'notebook' | 'note';
 
@@ -50,6 +52,7 @@ interface NotebookRow {
     MatFormFieldModule,
     MatInputModule,
     MatTooltipModule,
+    MatDialogModule,
     PageLayoutModule
   ],
   templateUrl: './notebooks.component.html',
@@ -60,6 +63,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private notesService = inject(NotesService);
+  private dialog = inject(MatDialog);
   private destroy$ = new Subject<void>();
 
   displayedColumns: string[] = ['title', 'space', 'createdBy', 'updated', 'sharedWith'];
@@ -232,8 +236,29 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   viewMode: 'list' | 'grid' = 'list';
 
   onCreateNotebook(): void {
-    // TODO: Implement create notebook
-    console.log('Create notebook');
+    const dialogRef = this.dialog.open(AddNotebookComponent, {
+      width: '500px',
+      maxWidth: '90vw',
+      disableClose: false,
+      autoFocus: true
+    });
+
+    dialogRef.afterClosed()
+      .pipe(
+        filter<AddNotebookDialogResult>(result => result !== undefined && !result.cancelled),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(result => {
+        if (result?.notebook) {
+          // Notebook was created successfully
+          // In a real app, you might want to refresh the notebook list or navigate to the new notebook
+          console.log('Notebook created:', result.notebook);
+          
+          // TODO: Refresh the notebook list or add the new notebook to the current view
+          // For now, the notebook is stored in the service and will appear on next page refresh
+          // You might want to reload the notebooks data here
+        }
+      });
   }
 
   onSort(column: string): void {

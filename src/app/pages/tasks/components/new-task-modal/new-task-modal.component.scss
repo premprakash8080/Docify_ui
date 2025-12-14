@@ -1,2 +1,229 @@
-// Modal component styles - using Tailwind for all styling
+// Modal Overlay
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+.modal-container {
+  background-color: var(--background-card, var(--background-foreground));
+  border-radius: 0.5rem;
+  box-shadow: var(--elevation-z8);
+  width: 100%;
+  max-width: 42rem;
+  margin: 1rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+// Modal Header
+.modal-header {
+  border-bottom: 1px solid var(--foreground-divider);
+  padding: 1rem 1.5rem;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+}
+
+// Modal Content
+.modal-content {
+  padding: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  background-color: var(--background-foreground);
+  border: 1px solid var(--foreground-divider);
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-color);
+  transition: border-color 0.2s;
+
+  &::placeholder {
+    color: var(--text-hint);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary-rgb);
+  }
+}
+
+.form-textarea {
+  resize: none;
+  min-height: 6rem;
+}
+
+.form-select {
+  appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  background-size: 1rem;
+}
+
+// Button Groups
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.option-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--foreground-divider);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: var(--background-foreground);
+  color: var(--text-secondary);
+
+  &:hover {
+    border-color: var(--color-primary-rgb);
+  }
+
+  &.active {
+    background-color: var(--color-primary-rgb);
+    color: var(--color-primary-contrast-rgb);
+    border-color: var(--color-primary-rgb);
+  }
+}
+
+// Link Button
+.link-button {
+  color: var(--color-primary-rgb);
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+
+  &:hover {
+    color: rgba(var(--color-primary), 0.9);
+  }
+}
+
+// Toggle Switch
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  height: 1.5rem;
+  width: 2.75rem;
+  align-items: center;
+  border-radius: 9999px;
+  background-color: var(--foreground-divider);
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-primary-rgb);
+  }
+
+  &.active {
+    background-color: var(--color-primary-rgb);
+  }
+}
+
+.toggle-thumb {
+  display: inline-block;
+  height: 1rem;
+  width: 1rem;
+  transform: translateX(0.25rem);
+  border-radius: 9999px;
+  background-color: white;
+  transition: transform 0.2s;
+
+  &.active {
+    transform: translateX(1.5rem);
+  }
+}
+
+// Modal Footer
+.modal-footer {
+  border-top: 1px solid var(--foreground-divider);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.footer-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &.cancel {
+    border: 1px solid var(--foreground-divider);
+    background-color: transparent;
+    color: var(--text-color);
+
+    &:hover {
+      border-color: var(--color-primary-rgb);
+    }
+  }
+
+  &.primary {
+    background-color: var(--color-primary-rgb);
+    color: var(--color-primary-contrast-rgb);
+    border: none;
+
+    &:hover {
+      background-color: rgba(var(--color-primary), 0.9);
+    }
+  }
+}
+
+// Icon containers
+.select-icon-container {
+  position: relative;
+}
+
+.select-icon {
+  position: absolute;
+  right: 2.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+}

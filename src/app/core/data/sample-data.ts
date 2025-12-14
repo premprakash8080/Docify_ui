@@ -38,8 +38,8 @@ export function randomId(prefix = 'item'): string {
 // ============================================================================
 
 // User IDs
-const USER_1_UUID = '550e8400-e29b-41d4-a716-446655440001';
-const USER_2_UUID = '550e8400-e29b-41d4-a716-446655440002';
+const USER_1_UUID = '1';
+const USER_2_UUID = '2';
 
 // Notebook IDs (exported for use in components)
 export const NOTEBOOK_1_UUID = '660e8400-e29b-41d4-a716-446655440001'; // Work Notes
@@ -49,16 +49,16 @@ export const NOTEBOOK_4_UUID = '660e8400-e29b-41d4-a716-446655440004'; // Meetin
 export const NOTEBOOK_5_UUID = '660e8400-e29b-41d4-a716-446655440005'; // Recipes
 
 // Tag IDs
-const TAG_1_UUID = '770e8400-e29b-41d4-a716-446655440001'; // Important
-const TAG_2_UUID = '770e8400-e29b-41d4-a716-446655440002'; // Work
-const TAG_3_UUID = '770e8400-e29b-41d4-a716-446655440003'; // Personal
-const TAG_4_UUID = '770e8400-e29b-41d4-a716-446655440004'; // Ideas
-const TAG_5_UUID = '770e8400-e29b-41d4-a716-446655440005'; // Travel
-const TAG_6_UUID = '770e8400-e29b-41d4-a716-446655440006'; // Project
-const TAG_7_UUID = '770e8400-e29b-41d4-a716-446655440007'; // Meeting Notes
-const TAG_8_UUID = '770e8400-e29b-41d4-a716-446655440008'; // Shopping
-const TAG_9_UUID = '770e8400-e29b-41d4-a716-446655440009'; // Recipes
-const TAG_10_UUID = '770e8400-e29b-41d4-a716-446655440010'; // Health
+export const TAG_1_UUID = '1'; // Important
+export const TAG_2_UUID = '2'; // Work
+export const TAG_3_UUID = '3'; // Personal
+export const TAG_4_UUID = '4'; // Ideas
+export const TAG_5_UUID = '5'; // Travel
+export const TAG_6_UUID = '6'; // Project
+export const TAG_7_UUID = '7'; // Meeting Notes
+export const TAG_8_UUID = '8'; // Shopping
+export const TAG_9_UUID = '9'; // Recipes
+export const TAG_10_UUID = '10'; // Health
 
 // Note IDs (generating UUIDs for all notes)
 const NOTE_1_UUID = '880e8400-e29b-41d4-a716-446655440001';
@@ -157,6 +157,44 @@ export const users: User[] = [
     createdAt: pastDate(90)
   }
 ];
+
+// Mock user credentials for authentication (not stored in User model)
+export interface MockUserCredentials {
+  email: string;
+  password: string;
+  userId: string;
+}
+
+export const mockUserCredentials: MockUserCredentials[] = [
+  {
+    email: 'john.doe@example.com',
+    password: 'password123', // In production, this would be hashed
+    userId: USER_1_UUID
+  },
+  {
+    email: 'jane.smith@example.com',
+    password: 'password123', // In production, this would be hashed
+    userId: USER_2_UUID
+  }
+];
+
+/**
+ * Find user credentials by email
+ */
+export function findUserByEmail(email: string): MockUserCredentials | undefined {
+  return mockUserCredentials.find(cred => cred.email.toLowerCase() === email.toLowerCase());
+}
+
+/**
+ * Find user by email and password (for login)
+ */
+export function authenticateUser(email: string, password: string): User | null {
+  const credentials = findUserByEmail(email);
+  if (credentials && credentials.password === password) {
+    return users.find(u => u.id === credentials.userId) || null;
+  }
+  return null;
+}
 
 // ============================================================================
 // Sample Tags
