@@ -6,17 +6,39 @@
   width: 100%;
   background-color: var(--background-foreground);
   position: relative;
+  overflow: hidden; // Prevent editor from causing parent scroll
 }
 
 // Editor Container: Centered layout with max-width
-// Note: Scrolling is handled by parent .note-editor-wrapper
+// This component handles its own scrolling
 .editor-container {
   flex: 1;
-  overflow: visible; // No scroll here - parent handles it
+  overflow-y: auto; // Enable vertical scrolling within this component
+  overflow-x: hidden; // Prevent horizontal scrolling
+  -webkit-overflow-scrolling: touch; // Smooth scrolling on iOS
   display: flex;
   justify-content: center;
   padding: 24px 16px;
-  min-height: 0;
+  min-height: 0; // Critical for flex scrolling
+  height: 100%; // Take full height
+  
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--foreground-divider);
+    border-radius: 4px;
+    
+    &:hover {
+      background: var(--text-hint);
+    }
+  }
 }
 
 .editor-wrapper {

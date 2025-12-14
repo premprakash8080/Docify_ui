@@ -1,17 +1,22 @@
 .note-page-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100vh - 100px); // Use viewport height to fill screen
   width: 100%;
   background: var(--background-foreground);
   overflow: hidden; // Prevent page-level scrolling
+  margin: 0;
+  padding: 0;
 
   &.mobile {
     .note-page-mobile {
       display: flex;
       flex-direction: column;
       height: 100%;
+      width: 100%;
       overflow: hidden; // Prevent mobile layout from scrolling
+      margin: 0;
+      padding: 0;
     }
   }
 }
@@ -23,6 +28,9 @@
   width: 100%;
   overflow: hidden; // Prevent layout from scrolling
   min-height: 0; // Critical for flex scrolling
+  margin: 0;
+  padding: 0;
+  flex: 1; // Take all available space
 }
 
 .note-page-sidebar {
@@ -36,6 +44,8 @@
   flex-direction: column; // Stack children vertically
   min-height: 0; // Critical for flex scrolling
   height: 100%; // Take full height
+  margin: 0;
+  padding: 0;
   
   // Ensure the notes-list component can scroll independently
   ::ng-deep {
@@ -57,4 +67,18 @@
   overflow: hidden; // Prevent content area from scrolling
   background: var(--background-foreground);
   min-height: 0; // Important for flex scrolling
+  height: 100%; // Ensure it takes full height
+  margin: 0;
+  padding: 0;
+  
+  // Ensure child component fills the area
+  ::ng-deep {
+    vex-note-page-content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      min-height: 0;
+    }
+  }
 }

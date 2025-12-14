@@ -44,6 +44,43 @@
   }
 }
 
+// Menu styling
+::ng-deep {
+  .mat-mdc-menu-panel {
+    min-width: 200px;
+  }
+  
+  .mat-mdc-menu-item {
+    .mat-icon {
+      margin-right: 12px;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+    
+    &.danger {
+      color: var(--color-warn, #f44336);
+      
+      .mat-icon {
+        color: var(--color-warn, #f44336);
+      }
+      
+      &:hover {
+        background: rgba(244, 67, 54, 0.1);
+      }
+    }
+  }
+  
+  .mat-mdc-menu-content {
+    padding: 8px 0;
+  }
+  
+  .mat-divider {
+    margin: 8px 0;
+  }
+}
+
+
 .side-list-content {
   flex: 1;
   overflow-y: auto; // Enable vertical scrolling for list items

@@ -39,6 +39,10 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
   slashMenuPosition: { top: number; left: number } | null = null;
   slashMenuQuery = '';
 
+  // Checkbox sync state
+  private checkboxSyncPending = false;
+  private checkboxObserver: MutationObserver | null = null;
+
   /**
    * Initializes the Tiptap editor ONLY in ngAfterViewInit after ViewChild is available.
    * Editor is explicitly mounted to the DOM element.
@@ -132,6 +136,8 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
           // Only emit for user-driven edits (not programmatic updates)
           const html = editor.getHTML();
           this.contentChange.emit(html);
+          // Sync checkbox checked state with parent data-checked attribute (debounced)
+          this.scheduleCheckboxSync();
         },
         editorProps: {
           attributes: {
@@ -186,6 +192,12 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
           editorDOM.style.opacity = '1';
           editorDOM.style.minHeight = '400px';
           editorDOM.style.width = '100%';
+          
+          // Sync checkbox states after initialization (with delay to ensure DOM is ready)
+          setTimeout(() => this.scheduleCheckboxSync(), 100);
+          
+          // Set up MutationObserver to sync checkboxes when DOM changes
+          this.setupCheckboxSyncObserver(editorDOM);
         }
       }
     } catch (error) {
@@ -331,9 +343,99 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
   }
 
   /**
+   * Schedules checkbox sync with debouncing to avoid conflicts
+   */
+  private scheduleCheckboxSync(): void {
+    if (this.checkboxSyncPending) return;
+    
+    this.checkboxSyncPending = true;
+    requestAnimationFrame(() => {
+      this.syncCheckboxStates();
+      this.checkboxSyncPending = false;
+    });
+  }
+
+  /**
+   * Syncs checkbox checked attribute with parent li's data-checked attribute
+   * This ensures accessibility and proper visual state
+   */
+  private syncCheckboxStates(): void {
+    if (!this.editor || !this.editorElement?.nativeElement) return;
+    
+    const editorDOM = this.editorElement.nativeElement;
+    const taskItems = editorDOM.querySelectorAll('li.task-item, li[data-type="taskItem"]');
+    
+    taskItems.forEach((taskItem: Element) => {
+      const isChecked = taskItem.getAttribute('data-checked') === 'true';
+      const checkbox = taskItem.querySelector('input[type="checkbox"]') as HTMLInputElement;
+      
+      if (checkbox) {
+        // Only update if the state differs to avoid unnecessary DOM changes
+        if (checkbox.checked !== isChecked) {
+          checkbox.checked = isChecked;
+          // Also set the checked attribute for better compatibility
+          if (isChecked) {
+            checkbox.setAttribute('checked', 'checked');
+          } else {
+            checkbox.removeAttribute('checked');
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Sets up a MutationObserver to sync checkbox states when DOM changes
+   * Uses attributeFilter to only watch for data-checked changes
+   */
+  private setupCheckboxSyncObserver(editorDOM: HTMLElement): void {
+    // Disconnect existing observer if any
+    if (this.checkboxObserver) {
+      this.checkboxObserver.disconnect();
+    }
+
+    this.checkboxObserver = new MutationObserver((mutations) => {
+      // Only sync if data-checked attribute changed on task items
+      // Ignore changes to the checkbox itself to avoid loops
+      const shouldSync = mutations.some(mutation => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-checked') {
+          const target = mutation.target as HTMLElement;
+          // Only sync if the target is a task item (li), not the checkbox itself
+          return target.tagName === 'LI' && 
+                 (target.classList.contains('task-item') || 
+                  target.getAttribute('data-type') === 'taskItem');
+        }
+        return false;
+      });
+      
+      if (shouldSync) {
+        // Use a small delay to let TipTap finish its updates
+        setTimeout(() => this.scheduleCheckboxSync(), 10);
+      }
+    });
+
+    this.checkboxObserver.observe(editorDOM, {
+      childList: false, // Don't watch for child changes, only attributes
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-checked'], // Only watch data-checked attribute
+    });
+  }
+
+
+  /**
    * Safely destroys the editor instance
    */
   private destroyEditor(): void {
+    // Clean up MutationObserver if it exists
+    if (this.checkboxObserver) {
+      this.checkboxObserver.disconnect();
+      this.checkboxObserver = null;
+    }
+
+    // Clean up checkbox sync state
+    this.checkboxSyncPending = false;
+
     if (this.editor) {
       try {
         this.editor.destroy();

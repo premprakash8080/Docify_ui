@@ -11,6 +11,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { SideListItem, SideListDisplayConfig, SideListAction, SideListBadgeConfig } from './side-list-item.interface';
 
@@ -21,6 +23,8 @@ import { SideListItem, SideListDisplayConfig, SideListAction, SideListBadgeConfi
     CommonModule,
     MatIconModule,
     MatButtonModule,
+    MatMenuModule,
+    MatDividerModule,
     ScrollingModule
   ],
   templateUrl: './side-list.component.html',
@@ -234,6 +238,27 @@ export class SideListComponent implements OnInit, OnDestroy {
    */
   onHeaderActionClick(action: string): void {
     this.headerAction.emit(action);
+  }
+
+  /**
+   * Handle menu item click from filter menu
+   */
+  onFilterOptionClick(option: string): void {
+    this.headerAction.emit(`filter:${option}`);
+  }
+
+  /**
+   * Handle menu item click from sort menu
+   */
+  onSortOptionClick(option: string): void {
+    this.headerAction.emit(`sort:${option}`);
+  }
+
+  /**
+   * Handle menu item click from more options menu
+   */
+  onMoreOptionClick(option: string): void {
+    this.headerAction.emit(`menu:${option}`);
   }
 
   /**
