@@ -299,4 +299,3 @@ export class SideListComponent implements OnInit, OnDestroy {
     }
   }
 }
-

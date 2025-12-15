@@ -1,17 +1,6 @@
 <div class="files-page-container">
   <!-- Sidebar: Files List -->
   <div class="files-sidebar">
-    <div class="files-sidebar-header">
-      <h2 class="files-sidebar-title">Files</h2>
-      <button 
-        mat-icon-button 
-        (click)="onUploadFile()"
-        type="button"
-        aria-label="Upload file">
-        <mat-icon svgIcon="mat:add"></mat-icon>
-      </button>
-    </div>
-
     <!-- Search -->
     <div class="files-search">
       <mat-form-field appearance="outline" class="search-field">
@@ -35,69 +24,23 @@
       </mat-form-field>
     </div>
 
-    <!-- Files List -->
-    <div class="files-list">
-      @if (filteredFiles$ | async; as files) {
-        @if (files.length > 0) {
-          <div class="files-list-content">
-            @for (file of files; track trackByFileId($index, file)) {
-              <div 
-                class="file-item"
-                [class.selected]="isFileSelected(file)"
-                (click)="onFileClick(file)">
-                <div class="file-item-icon">
-                  <mat-icon [svgIcon]="getFileIcon(file.mimeType || '')"></mat-icon>
-                  @if (getFileType(file.mimeType || '') === 'Images' && file.url) {
-                    <img [src]="file.url" class="file-thumbnail" [alt]="file.filename">
-                  }
-                </div>
-                <div class="file-item-info">
-                  <div class="file-item-name">{{ file.filename || 'Unnamed file' }}</div>
-                  <div class="file-item-meta">
-                    <span>{{ formatFileSize(file.size) }}</span>
-                    <span class="meta-separator">•</span>
-                    <span>{{ getRelativeDate(file.createdAt) }}</span>
-                  </div>
-                  @if (file.description) {
-                    <div class="file-item-description">{{ file.description }}</div>
-                  }
-                </div>
-                <button 
-                  mat-icon-button 
-                  class="file-item-action"
-                  (click)="onDeleteFile(file, $event)"
-                  type="button"
-                  aria-label="Delete file">
-                  <mat-icon svgIcon="mat:delete"></mat-icon>
-                </button>
-              </div>
-            }
-          </div>
-        } @else {
-          <div class="files-empty-state">
-            <mat-icon class="empty-icon" svgIcon="mat:folder_open"></mat-icon>
-            <p class="empty-text">No files found</p>
-            @if (searchControl.value) {
-              <button 
-                mat-button 
-                (click)="searchControl.setValue('')"
-                type="button">
-                Clear search
-              </button>
-            } @else {
-              <button 
-                mat-raised-button 
-                color="primary"
-                (click)="onUploadFile()"
-                type="button">
-                <mat-icon svgIcon="mat:cloud_upload"></mat-icon>
-                Upload File
-              </button>
-            }
-          </div>
-        }
-      }
-    </div>
+    <!-- Files List using side-list component -->
+    @if (items$ | async; as items) {
+      <vex-side-list
+        [items]="items"
+        [selectedItemId]="selectedFileId"
+        [displayConfig]="displayConfig"
+        title="Files"
+        emptyStateIcon="folder_open"
+        emptyStateText="No files found"
+        [showHeader]="true"
+        [showHeaderActions]="true"
+        [enableVirtualScroll]="false"
+        (itemSelected)="onItemSelected($event)"
+        (itemAction)="onItemAction($event)"
+        (headerAction)="onHeaderAction($event)">
+      </vex-side-list>
+    }
   </div>
 
   <!-- Main Content: File Preview -->

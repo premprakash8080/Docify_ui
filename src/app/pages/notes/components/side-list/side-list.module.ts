@@ -15,4 +15,3 @@ export class SideListModule { }
 
 // Export types for use in other modules
 export { SideListItem, SideListDisplayConfig, SideListAction, SideListBadgeConfig } from './side-list-item.interface';
-

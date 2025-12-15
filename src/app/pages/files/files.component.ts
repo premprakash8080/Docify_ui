@@ -11,6 +11,9 @@ import { map, debounceTime, distinctUntilChanged, startWith, takeUntil } from 'r
 import { FilesService, FileAttachment } from './services/files.service';
 import { AddFileComponent, AddFileDialogResult } from './components/add-file/add-file.component';
 import { FilePreviewComponent } from './components/file-preview/file-preview.component';
+import { SideListComponent } from '../notes/components/side-list/side-list.component';
+import { SideListItem, SideListAction } from '../notes/components/side-list/side-list-item.interface';
+import { FILES_LIST_DISPLAY_CONFIG } from './files-list.config';
 
 @Component({
   selector: 'vex-files',
@@ -23,7 +26,8 @@ import { FilePreviewComponent } from './components/file-preview/file-preview.com
     MatFormFieldModule,
     MatInputModule,
     MatDialogModule,
-    FilePreviewComponent
+    FilePreviewComponent,
+    SideListComponent
   ],
   templateUrl: './files.component.html',
   styleUrls: ['./files.component.scss'],
@@ -37,6 +41,9 @@ export class FilesComponent implements OnInit, OnDestroy {
 
   // Search form control
   searchControl = new FormControl('');
+
+  // Display configuration for side list
+  displayConfig = FILES_LIST_DISPLAY_CONFIG;
 
   // File list and selection
   files$ = this.filesService.getAllFiles();
@@ -62,6 +69,17 @@ export class FilesComponent implements OnInit, OnDestroy {
   
   selectedFile: FileAttachment | null = null;
 
+  // Items for side list component (convert FileAttachment[] to SideListItem[])
+  get items$(): Observable<SideListItem[]> {
+    return this.filteredFiles$.pipe(
+      map(files => files as SideListItem[])
+    );
+  }
+
+  get selectedFileId(): string | null {
+    return this.selectedFile?.id || null;
+  }
+
   ngOnInit(): void {
     // Component initialization
     // Search filtering is handled via filteredFiles$ observable
@@ -75,6 +93,36 @@ export class FilesComponent implements OnInit, OnDestroy {
   onFileClick(file: FileAttachment): void {
     this.selectedFile = file;
     this.cdr.markForCheck();
+  }
+
+  onItemSelected(item: SideListItem): void {
+    const file = item as FileAttachment;
+    this.onFileClick(file);
+  }
+
+  onItemAction(action: SideListAction): void {
+    const file = action.item as FileAttachment;
+    
+    switch (action.type) {
+      case 'select':
+        this.onItemSelected(action.item);
+        break;
+      case 'delete':
+        // Create a synthetic event for delete
+        const syntheticEvent = new Event('click') as any;
+        this.onDeleteFile(file, syntheticEvent);
+        break;
+      default:
+        console.warn('Unknown action type:', action.type);
+    }
+  }
+
+  onHeaderAction(action: string): void {
+    // Handle header actions from side-list component
+    if (action === 'new' || action === 'menu:new') {
+      this.onUploadFile();
+    }
+    // Handle other header actions as needed
   }
 
   onUploadFile(): void {
