@@ -1,53 +1,110 @@
-<vex-page-layout mode="simple">
-  <vex-page-layout-header>
-    <div class="files-header">
-      <h1 class="files-title">Files</h1>
-      <button mat-raised-button color="primary" (click)="uploadFile()">
-        <mat-icon svgIcon="mat:cloud_upload"></mat-icon>
-        Upload File
+<div class="files-page-container">
+  <!-- Sidebar: Files List -->
+  <div class="files-sidebar">
+    <div class="files-sidebar-header">
+      <h2 class="files-sidebar-title">Files</h2>
+      <button 
+        mat-icon-button 
+        (click)="onUploadFile()"
+        type="button"
+        aria-label="Upload file">
+        <mat-icon svgIcon="mat:add"></mat-icon>
       </button>
     </div>
-  </vex-page-layout-header>
 
-  <vex-page-layout-content>
-    <div class="files-container">
-      @if (files$ | async; as files) {
+    <!-- Search -->
+    <div class="files-search">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search files...</mat-label>
+        <input 
+          matInput 
+          type="text" 
+          [formControl]="searchControl" 
+          placeholder="Search by name or description">
+        <mat-icon matPrefix svgIcon="mat:search"></mat-icon>
+        @if (searchControl.value) {
+          <button 
+            mat-icon-button 
+            matSuffix 
+            (click)="searchControl.setValue('')" 
+            type="button"
+            aria-label="Clear search">
+            <mat-icon svgIcon="mat:close"></mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    </div>
+
+    <!-- Files List -->
+    <div class="files-list">
+      @if (filteredFiles$ | async; as files) {
         @if (files.length > 0) {
-          <div class="files-grid">
+          <div class="files-list-content">
             @for (file of files; track trackByFileId($index, file)) {
-              <div class="file-card">
-                <div class="file-icon-wrapper">
-                  <mat-icon class="file-icon" [svgIcon]="getFileIcon(file.mimeType || '')"></mat-icon>
+              <div 
+                class="file-item"
+                [class.selected]="isFileSelected(file)"
+                (click)="onFileClick(file)">
+                <div class="file-item-icon">
+                  <mat-icon [svgIcon]="getFileIcon(file.mimeType || '')"></mat-icon>
                   @if (getFileType(file.mimeType || '') === 'Images' && file.url) {
-                    <img [src]="file.url" class="file-thumbnail" [alt]="file.filename || 'File'">
+                    <img [src]="file.url" class="file-thumbnail" [alt]="file.filename">
                   }
                 </div>
-                <div class="file-info">
-                  <h3 class="file-name">{{ file.filename || 'Unnamed file' }}</h3>
-                  <div class="file-meta">
-                    <span class="file-size">{{ formatFileSize(file.size) }}</span>
-                    <span class="file-date">{{ getRelativeDate(file.createdAt || '') }}</span>
+                <div class="file-item-info">
+                  <div class="file-item-name">{{ file.filename || 'Unnamed file' }}</div>
+                  <div class="file-item-meta">
+                    <span>{{ formatFileSize(file.size) }}</span>
+                    <span class="meta-separator">•</span>
+                    <span>{{ getRelativeDate(file.createdAt) }}</span>
                   </div>
-                  <div class="file-type">{{ getFileType(file.mimeType || '') }}</div>
+                  @if (file.description) {
+                    <div class="file-item-description">{{ file.description }}</div>
+                  }
                 </div>
-                <button mat-icon-button class="file-action" (click)="downloadFile(file)">
-                  <mat-icon svgIcon="mat:download"></mat-icon>
+                <button 
+                  mat-icon-button 
+                  class="file-item-action"
+                  (click)="onDeleteFile(file, $event)"
+                  type="button"
+                  aria-label="Delete file">
+                  <mat-icon svgIcon="mat:delete"></mat-icon>
                 </button>
               </div>
             }
           </div>
         } @else {
-          <div class="empty-state">
+          <div class="files-empty-state">
             <mat-icon class="empty-icon" svgIcon="mat:folder_open"></mat-icon>
-            <h3 class="empty-title">No files yet</h3>
-            <p class="empty-description">Files attached to your notes will appear here</p>
-            <button mat-raised-button color="primary" (click)="uploadFile()">
-              <mat-icon svgIcon="mat:cloud_upload"></mat-icon>
-              Upload File
-            </button>
+            <p class="empty-text">No files found</p>
+            @if (searchControl.value) {
+              <button 
+                mat-button 
+                (click)="searchControl.setValue('')"
+                type="button">
+                Clear search
+              </button>
+            } @else {
+              <button 
+                mat-raised-button 
+                color="primary"
+                (click)="onUploadFile()"
+                type="button">
+                <mat-icon svgIcon="mat:cloud_upload"></mat-icon>
+                Upload File
+              </button>
+            }
           </div>
         }
       }
     </div>
-  </vex-page-layout-content>
-</vex-page-layout>
+  </div>
+
+  <!-- Main Content: File Preview -->
+  <div class="files-preview-panel">
+    <vex-file-preview 
+      [file]="selectedFile"
+      (close)="onClosePreview()">
+    </vex-file-preview>
+  </div>
+</div>

@@ -1,0 +1,91 @@
+@if (file) {
+  <div class="file-preview-container">
+    <!-- Header with breadcrumb and actions -->
+    <div class="file-preview-header">
+      <div class="breadcrumb">
+        <span class="breadcrumb-item">Files</span>
+        <mat-icon class="breadcrumb-separator" svgIcon="mat:chevron_right"></mat-icon>
+        <span class="breadcrumb-item current">{{ file.filename }}</span>
+      </div>
+      <div class="header-actions">
+        @if (file.noteId) {
+          <button 
+            mat-button 
+            (click)="onGoToNote()"
+            type="button">
+            <mat-icon svgIcon="mat:note"></mat-icon>
+            Go to note
+          </button>
+        }
+        <button 
+          mat-icon-button 
+          (click)="onDownload()"
+          type="button"
+          [disabled]="!file.url">
+          <mat-icon svgIcon="mat:download"></mat-icon>
+        </button>
+        <button 
+          mat-icon-button 
+          (click)="onClose()"
+          type="button">
+          <mat-icon svgIcon="mat:close"></mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- File Info -->
+    <div class="file-info-section">
+      <div class="file-title-section">
+        <mat-icon class="file-icon-large" [svgIcon]="getFileIcon(file.mimeType || '')"></mat-icon>
+        <div class="file-title-info">
+          <h1 class="file-title">{{ file.filename }}</h1>
+          <div class="file-meta-info">
+            <span class="meta-item">{{ formatFileSize(file.size) }}</span>
+            <span class="meta-separator">•</span>
+            <span class="meta-item">{{ fileType }}</span>
+            @if (file.createdAt) {
+              <span class="meta-separator">•</span>
+              <span class="meta-item">{{ formatDate(file.createdAt) }}</span>
+            }
+          </div>
+        </div>
+      </div>
+      @if (file.description) {
+        <div class="file-description">
+          <p>{{ file.description }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- File Preview Area -->
+    <div class="file-preview-area">
+      @if (fileType === 'Image' && file.url) {
+        <div class="image-preview">
+          <img [src]="file.url" [alt]="file.filename" class="preview-image">
+        </div>
+      } @else if (fileType === 'PDF' && file.url) {
+        <div class="pdf-preview">
+          <iframe [src]="file.url" class="preview-iframe" frameborder="0"></iframe>
+        </div>
+      } @else {
+        <div class="preview-placeholder">
+          <mat-icon class="placeholder-icon" [svgIcon]="getFileIcon(file.mimeType || '')"></mat-icon>
+          <p class="placeholder-text">Preview not available for this file type</p>
+          <button 
+            mat-raised-button 
+            color="primary"
+            (click)="onDownload()"
+            [disabled]="!file.url">
+            <mat-icon svgIcon="mat:download"></mat-icon>
+            Download File
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+} @else {
+  <div class="no-file-selected">
+    <mat-icon class="empty-icon" svgIcon="mat:insert_drive_file"></mat-icon>
+    <p class="empty-text">Select a file to preview</p>
+  </div>
+}

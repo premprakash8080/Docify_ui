@@ -1,21 +1,13 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FilesComponent } from './files.component';
 import { FilesRoutingModule } from './files-routing.module';
-import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { RouterModule } from '@angular/router';
+import { FilesComponent } from './files.component';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @NgModule({
-  declarations: [FilesComponent],
   imports: [
-    CommonModule,
     FilesRoutingModule,
-    PageLayoutModule,
-    MatIconModule,
-    MatButtonModule,
-    RouterModule
+    FilesComponent, // Import standalone component
+    MatDialogModule // For AddFileComponent dialog
   ]
 })
 export class FilesModule { }

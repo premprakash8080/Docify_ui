@@ -1,63 +1,122 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
-import { Note, Attachment } from '../../core/models';
-import { NotesService } from '../notes/services/notes.service';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, inject, OnInit, OnDestroy } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { Subject, combineLatest, Observable } from 'rxjs';
+import { map, debounceTime, distinctUntilChanged, startWith, takeUntil } from 'rxjs/operators';
+import { FilesService, FileAttachment } from './services/files.service';
+import { AddFileComponent, AddFileDialogResult } from './components/add-file/add-file.component';
+import { FilePreviewComponent } from './components/file-preview/file-preview.component';
 
 @Component({
-  selector: 'app-files',
-  standalone: false,
+  selector: 'vex-files',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDialogModule,
+    FilePreviewComponent
+  ],
   templateUrl: './files.component.html',
   styleUrls: ['./files.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FilesComponent {
+export class FilesComponent implements OnInit, OnDestroy {
+  private filesService = inject(FilesService);
+  private dialog = inject(MatDialog);
+  private cdr = inject(ChangeDetectorRef);
+  private destroy$ = new Subject<void>();
 
-  // Get all attachments from notes
-  files$: Observable<Attachment[]>;
-  filesByType$: Observable<{ [key: string]: Attachment[] }>;
+  // Search form control
+  searchControl = new FormControl('');
 
-  constructor(
-    private notesService: NotesService,
-    private router: Router
-  ) {
-    // Extract all attachments from all notes
-    // Remove takeUntil - this is a pure observable chain that doesn't need cleanup
-    this.files$ = this.notesService.getNotes().pipe(
-      // Flatten attachments array
-      map(notes => {
-        const allAttachments: Attachment[] = [];
-        notes.forEach(note => {
-          if (note.attachments && note.attachments.length > 0) {
-            allAttachments.push(...note.attachments);
-          }
-        });
-        // Sort by upload date (newest first)
-        return allAttachments.sort((a, b) => {
-          const dateA = new Date(a.createdAt || 0).getTime();
-          const dateB = new Date(b.createdAt || 0).getTime();
-          return dateB - dateA;
-        });
-      }),
-      // Share the result to avoid multiple subscriptions
-      shareReplay(1)
+  // File list and selection
+  files$ = this.filesService.getAllFiles();
+  filteredFiles$: Observable<FileAttachment[]> = combineLatest([
+    this.filesService.getAllFiles(),
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      startWith('')
+    )
+  ]).pipe(
+    map(([files, query]) => {
+      if (!query || query.trim().length === 0) {
+        return files;
+      }
+      const searchTerm = query.toLowerCase().trim();
+      return files.filter(file =>
+        file.filename.toLowerCase().includes(searchTerm) ||
+        file.description?.toLowerCase().includes(searchTerm)
+      );
+    })
+  );
+  
+  selectedFile: FileAttachment | null = null;
+
+  ngOnInit(): void {
+    // Component initialization
+    // Search filtering is handled via filteredFiles$ observable
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onFileClick(file: FileAttachment): void {
+    this.selectedFile = file;
+    this.cdr.markForCheck();
+  }
+
+  onUploadFile(): void {
+    const dialogRef = this.dialog.open<AddFileComponent, void, AddFileDialogResult>(
+      AddFileComponent,
+      {
+        width: '550px',
+        disableClose: false
+      }
     );
 
-    // Group files by type - removed as it's not used in template
-    this.filesByType$ = this.files$.pipe(
-      map(files => {
-        const grouped: { [key: string]: Attachment[] } = {};
-        files.forEach(file => {
-          const type = this.getFileType(file.mimeType || '');
-          if (!grouped[type]) {
-            grouped[type] = [];
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result && !result.cancelled && result.file) {
+        // File uploaded successfully - the service already updated the state
+        // Auto-select the newly uploaded file
+        this.selectedFile = result.file;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onDeleteFile(file: FileAttachment, event: Event): void {
+    event.stopPropagation();
+    if (confirm(`Are you sure you want to delete "${file.filename}"?`)) {
+      this.filesService.deleteFile(file.id).subscribe({
+        next: () => {
+          // File deleted successfully - the service already updated the state
+          if (this.selectedFile?.id === file.id) {
+            this.selectedFile = null;
           }
-          grouped[type].push(file);
-        });
-        return grouped;
-      })
-    );
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('Failed to delete file:', err);
+        }
+      });
+    }
+  }
+
+  onClosePreview(): void {
+    this.selectedFile = null;
+    this.cdr.markForCheck();
   }
 
   getFileType(mimeType: string): string {
@@ -91,7 +150,8 @@ export class FilesComponent {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
-  getRelativeDate(dateString: string): string {
+  getRelativeDate(dateString?: string): string {
+    if (!dateString) return '';
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -105,20 +165,11 @@ export class FilesComponent {
     return `${date.getDate()} ${months[date.getMonth()]}`;
   }
 
-  trackByFileId(index: number, file: Attachment): string {
-    return file.id || index.toString();
+  trackByFileId(index: number, file: FileAttachment): string {
+    return file.id;
   }
 
-  uploadFile(): void {
-    // TODO: Implement file upload
-    console.log('Upload file');
-  }
-
-  downloadFile(file: Attachment): void {
-    // TODO: Implement file download
-    if (file.url) {
-      window.open(file.url, '_blank');
-    }
-    console.log('Download file', file);
+  isFileSelected(file: FileAttachment): boolean {
+    return this.selectedFile?.id === file.id;
   }
 }

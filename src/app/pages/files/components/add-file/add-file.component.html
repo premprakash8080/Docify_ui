@@ -1,0 +1,71 @@
+<div class="add-file-dialog">
+  <h2 mat-dialog-title>Upload File</h2>
+
+  <mat-dialog-content>
+    <form [formGroup]="form">
+      <!-- File Selection -->
+      <div class="file-selection-section">
+        <input 
+          #fileInput
+          type="file" 
+          (change)="onFileSelected($event)"
+          style="display: none;"
+          accept="*/*">
+        
+        <div class="file-input-area" (click)="onFileSelectClick()">
+          @if (selectedFile) {
+            <mat-icon class="file-selected-icon" svgIcon="mat:check_circle"></mat-icon>
+            <div class="file-info">
+              <div class="file-name-display">{{ getFileName() }}</div>
+              <div class="file-size-display">{{ getFileSize() }}</div>
+            </div>
+          } @else {
+            <mat-icon class="file-upload-icon" svgIcon="mat:cloud_upload"></mat-icon>
+            <div class="file-input-text">
+              <span class="primary-text">Click to select a file</span>
+              <span class="secondary-text">or drag and drop</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Description Input -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description (optional)</mat-label>
+        <textarea 
+          matInput 
+          formControlName="description" 
+          placeholder="Add a description for this file"
+          rows="3"
+          maxlength="500"></textarea>
+        <mat-hint>{{ descriptionControl?.value?.length || 0 }}/500</mat-hint>
+        <mat-error *ngIf="descriptionControl?.hasError('maxlength')">
+          Description must be less than 500 characters
+        </mat-error>
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button 
+      mat-button 
+      (click)="onCancel()"
+      [disabled]="isUploading"
+      type="button">
+      Cancel
+    </button>
+    <button 
+      mat-raised-button 
+      color="primary"
+      (click)="onUpload()"
+      [disabled]="!selectedFile || isUploading"
+      type="button">
+      @if (isUploading) {
+        <mat-icon class="spinning" svgIcon="mat:refresh"></mat-icon>
+      } @else {
+        <mat-icon svgIcon="mat:cloud_upload"></mat-icon>
+      }
+      Upload
+    </button>
+  </mat-dialog-actions>
+</div>
