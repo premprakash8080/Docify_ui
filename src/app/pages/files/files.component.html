@@ -1,49 +1,19 @@
 <div class="files-page-container">
-  <!-- Sidebar: Files List -->
-  <div class="files-sidebar">
-    <!-- Search -->
-    <div class="files-search">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Search files...</mat-label>
-        <input 
-          matInput 
-          type="text" 
-          [formControl]="searchControl" 
-          placeholder="Search by name or description">
-        <mat-icon matPrefix svgIcon="mat:search"></mat-icon>
-        @if (searchControl.value) {
-          <button 
-            mat-icon-button 
-            matSuffix 
-            (click)="searchControl.setValue('')" 
-            type="button"
-            aria-label="Clear search">
-            <mat-icon svgIcon="mat:close"></mat-icon>
-          </button>
-        }
-      </mat-form-field>
-    </div>
-
-    <!-- Files List using side-list component -->
-    @if (items$ | async; as items) {
-      <vex-side-list
-        [items]="items"
-        [selectedItemId]="selectedFileId"
-        [displayConfig]="displayConfig"
-        title="Files"
-        emptyStateIcon="folder_open"
-        emptyStateText="No files found"
-        [showHeader]="true"
-        [showHeaderActions]="true"
-        [enableVirtualScroll]="false"
-        (itemSelected)="onItemSelected($event)"
-        (itemAction)="onItemAction($event)"
-        (headerAction)="onHeaderAction($event)">
-      </vex-side-list>
-    }
+  <!-- Middle Panel: Files List -->
+  <div class="files-list-panel">
+    <vex-item-list-panel
+      [title]="'Files'"
+      [items]="(panelItems$ | async) || []"
+      [selectedItemId]="selectedFileId"
+      [searchControl]="searchControl"
+      searchPlaceholder="Search files..."
+      [config]="{ showCount: true, showActions: true, enableMeta: true }"
+      (itemSelected)="onItemSelected($event)"
+      (headerAction)="onHeaderAction($event)">
+    </vex-item-list-panel>
   </div>
 
-  <!-- Main Content: File Preview -->
+  <!-- Preview Panel: File Preview -->
   <div class="files-preview-panel">
     <vex-file-preview 
       [file]="selectedFile"

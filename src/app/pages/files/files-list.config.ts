@@ -1,5 +1,5 @@
 import { SideListDisplayConfig, SideListBadgeConfig } from '../notes/components/side-list/side-list-item.interface';
-import { FileAttachment } from './services/files.service';
+import { FileAttachment } from '../../core/data/sample-data';
 
 /**
  * Display configuration for files in the side list

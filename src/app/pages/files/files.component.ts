@@ -6,14 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { Subject, combineLatest, Observable } from 'rxjs';
-import { map, debounceTime, distinctUntilChanged, startWith, takeUntil } from 'rxjs/operators';
-import { FilesService, FileAttachment } from './services/files.service';
+import { Subject, Observable, of, combineLatest } from 'rxjs';
+import { map, debounceTime, distinctUntilChanged, startWith, takeUntil, switchMap, take, shareReplay } from 'rxjs/operators';
+import { FilesService } from './services/files.service';
+import { FileAttachment } from '../../core/data/sample-data';
 import { AddFileComponent, AddFileDialogResult } from './components/add-file/add-file.component';
 import { FilePreviewComponent } from './components/file-preview/file-preview.component';
-import { SideListComponent } from '../notes/components/side-list/side-list.component';
-import { SideListItem, SideListAction } from '../notes/components/side-list/side-list-item.interface';
-import { FILES_LIST_DISPLAY_CONFIG } from './files-list.config';
+import { ItemListPanelComponent, ItemListPanelItem } from '../ui/components/item-list-panel/item-list-panel.component';
 
 @Component({
   selector: 'vex-files',
@@ -27,7 +26,7 @@ import { FILES_LIST_DISPLAY_CONFIG } from './files-list.config';
     MatInputModule,
     MatDialogModule,
     FilePreviewComponent,
-    SideListComponent
+    ItemListPanelComponent
   ],
   templateUrl: './files.component.html',
   styleUrls: ['./files.component.scss'],
@@ -42,37 +41,32 @@ export class FilesComponent implements OnInit, OnDestroy {
   // Search form control
   searchControl = new FormControl('');
 
-  // Display configuration for side list
-  displayConfig = FILES_LIST_DISPLAY_CONFIG;
-
   // File list and selection
   files$ = this.filesService.getAllFiles();
-  filteredFiles$: Observable<FileAttachment[]> = combineLatest([
-    this.filesService.getAllFiles(),
-    this.searchControl.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      startWith('')
-    )
-  ]).pipe(
-    map(([files, query]) => {
-      if (!query || query.trim().length === 0) {
-        return files;
+  filteredFiles$: Observable<FileAttachment[]> = this.searchControl.valueChanges.pipe(
+    startWith(''),
+    debounceTime(300),
+    distinctUntilChanged(),
+    switchMap(query => {
+      const q = (query || '').trim();
+      if (!q) {
+        return this.filesService.getAllFiles();
       }
-      const searchTerm = query.toLowerCase().trim();
-      return files.filter(file =>
-        file.filename.toLowerCase().includes(searchTerm) ||
-        file.description?.toLowerCase().includes(searchTerm)
-      );
+      return this.filesService.searchFiles(q);
     })
   );
   
   selectedFile: FileAttachment | null = null;
 
-  // Items for side list component (convert FileAttachment[] to SideListItem[])
-  get items$(): Observable<SideListItem[]> {
+  // Items for item list panel component
+  get panelItems$(): Observable<ItemListPanelItem[]> {
     return this.filteredFiles$.pipe(
-      map(files => files as SideListItem[])
+      map(files => files.map(file => ({
+        id: file.id,
+        title: file.filename || 'Unnamed file',
+        description: file.description || '',
+        meta: `${this.formatFileSize(file.size)} • ${this.getRelativeDate(file.createdAt)}`
+      } as ItemListPanelItem)))
     );
   }
 
@@ -81,8 +75,12 @@ export class FilesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Component initialization
-    // Search filtering is handled via filteredFiles$ observable
+    // Trigger initial load and ensure change detection
+    this.filteredFiles$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.cdr.markForCheck();
+    });
   }
 
   ngOnDestroy(): void {
@@ -95,34 +93,23 @@ export class FilesComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  onItemSelected(item: SideListItem): void {
-    const file = item as FileAttachment;
-    this.onFileClick(file);
-  }
-
-  onItemAction(action: SideListAction): void {
-    const file = action.item as FileAttachment;
-    
-    switch (action.type) {
-      case 'select':
-        this.onItemSelected(action.item);
-        break;
-      case 'delete':
-        // Create a synthetic event for delete
-        const syntheticEvent = new Event('click') as any;
-        this.onDeleteFile(file, syntheticEvent);
-        break;
-      default:
-        console.warn('Unknown action type:', action.type);
-    }
+  onItemSelected(item: ItemListPanelItem): void {
+    this.filesService.getFileById(item.id).pipe(take(1)).subscribe(file => {
+      if (file) {
+        this.onFileClick(file);
+      }
+    });
   }
 
   onHeaderAction(action: string): void {
-    // Handle header actions from side-list component
-    if (action === 'new' || action === 'menu:new') {
-      this.onUploadFile();
+    if (action === 'filter:default') {
+      // placeholder for filter handling
+      return;
     }
-    // Handle other header actions as needed
+    if (action.startsWith('sort')) {
+      // placeholder for sort handling
+      return;
+    }
   }
 
   onUploadFile(): void {

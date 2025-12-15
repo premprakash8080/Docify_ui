@@ -1,0 +1,92 @@
+<div class="item-list-panel">
+  <div class="panel-header">
+    <div class="title">
+      <span class="title-text">{{ title }}</span>
+      @if (showCount) {
+        <span class="count">({{ items.length }})</span>
+      }
+    </div>
+    @if (showActions) {
+      <div class="actions">
+        <button mat-icon-button [matMenuTriggerFor]="filterMenu" aria-label="Filter" type="button">
+          <mat-icon svgIcon="mat:filter_list"></mat-icon>
+        </button>
+        <button mat-icon-button [matMenuTriggerFor]="sortMenu" aria-label="Sort" type="button">
+          <mat-icon svgIcon="mat:tune"></mat-icon>
+        </button>
+        <mat-menu #filterMenu="matMenu" xPosition="before">
+          <button mat-menu-item (click)="onAction('filter:default')">
+            <mat-icon svgIcon="mat:filter_list"></mat-icon>
+            <span>Filter</span>
+          </button>
+        </mat-menu>
+        <mat-menu #sortMenu="matMenu" xPosition="before">
+          <button mat-menu-item (click)="onAction('sort:asc')">
+            <mat-icon svgIcon="mat:arrow_upward"></mat-icon>
+            <span>Sort Asc</span>
+          </button>
+          <button mat-menu-item (click)="onAction('sort:desc')">
+            <mat-icon svgIcon="mat:arrow_downward"></mat-icon>
+            <span>Sort Desc</span>
+          </button>
+        </mat-menu>
+      </div>
+    }
+  </div>
+
+  @if (searchControl) {
+    <div class="panel-search">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>{{ searchPlaceholder }}</mat-label>
+        <input
+          matInput
+          type="text"
+          [formControl]="searchControl"
+          [placeholder]="searchPlaceholder">
+        <mat-icon matPrefix svgIcon="mat:search"></mat-icon>
+        @if (searchControl.value) {
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="searchControl.setValue('')"
+            type="button"
+            aria-label="Clear search">
+            <mat-icon svgIcon="mat:close"></mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    </div>
+  }
+
+  <div class="panel-content">
+    @if (items.length > 0) {
+      @for (item of items; track item.id) {
+        <div
+          class="item-row"
+          [class.active]="selectedItemId === item.id"
+          (click)="onSelect(item)"
+          [attr.tabindex]="0"
+          [attr.role]="'button'"
+          [attr.aria-label]="item.title">
+
+          <div class="item-body">
+            <div class="item-main">
+              <div class="item-title">{{ item.title }}</div>
+              @if (item.description) {
+                <div class="item-description">{{ item.description }}</div>
+              }
+            </div>
+            @if (enableMeta && item.meta) {
+              <div class="item-meta">{{ item.meta }}</div>
+            }
+          </div>
+        </div>
+      }
+    } @else {
+      <div class="empty-state">
+        <mat-icon class="empty-icon" svgIcon="mat:list_alt"></mat-icon>
+        <p class="empty-text">No items found</p>
+      </div>
+    }
+  </div>
+</div>

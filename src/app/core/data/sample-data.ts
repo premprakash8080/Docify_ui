@@ -655,22 +655,123 @@ export const notes: Note[] = [
 ];
 
 // ============================================================================
-// Sample Attachments (Optional - for future use)
+// Sample Attachments/Files
 // ============================================================================
 
-export const attachments: Attachment[] = [
-  // Can be added when attachment feature is implemented
-  // {
-  //   id: 'attachment_1',
-  //   noteId: 'note_1',
-  //   filename: 'screenshot.png',
-  //   mimeType: 'image/png',
-  //   size: 245678,
-  //   url: 'https://example.com/attachments/screenshot.png',
-  //   createdAt: pastDate(45),
-  //   updatedAt: pastDate(45)
-  // }
+/**
+ * Extended Attachment interface for files with userId and description
+ */
+export interface FileAttachment extends Attachment {
+  userId?: string;
+  description?: string;
+}
+
+// File IDs
+const FILE_1_UUID = '990e8400-e29b-41d4-a716-446655440001';
+const FILE_2_UUID = '990e8400-e29b-41d4-a716-446655440002';
+const FILE_3_UUID = '990e8400-e29b-41d4-a716-446655440003';
+const FILE_4_UUID = '990e8400-e29b-41d4-a716-446655440004';
+const FILE_5_UUID = '990e8400-e29b-41d4-a716-446655440005';
+const FILE_6_UUID = '990e8400-e29b-41d4-a716-446655440006';
+const FILE_7_UUID = '990e8400-e29b-41d4-a716-446655440007';
+const FILE_8_UUID = '990e8400-e29b-41d4-a716-446655440008';
+
+/**
+ * Sample file attachments with userId and description
+ */
+export const sampleFiles: FileAttachment[] = [
+  {
+    id: FILE_1_UUID,
+    filename: 'demo-0.jpg',
+    mimeType: 'image/jpeg',
+    size: 245678,
+    url: 'assets/img/demo/0.jpg',
+    userId: USER_1_UUID,
+    createdAt: pastDate(5),
+    updatedAt: pastDate(5)
+  },
+  {
+    id: FILE_2_UUID,
+    filename: 'demo-1.jpg',
+    mimeType: 'image/jpeg',
+    size: 312456,
+    url: 'assets/img/demo/1.jpg',
+    userId: USER_1_UUID,
+    description: 'Beautiful landscape photography',
+    createdAt: pastDate(10),
+    updatedAt: pastDate(10)
+  },
+  {
+    id: FILE_3_UUID,
+    filename: 'demo-2.jpg',
+    mimeType: 'image/jpeg',
+    size: 189234,
+    url: 'assets/img/demo/2.jpg',
+    userId: USER_1_UUID,
+    createdAt: pastDate(15),
+    updatedAt: pastDate(15)
+  },
+  {
+    id: FILE_4_UUID,
+    filename: 'demo-3.jpg',
+    mimeType: 'image/jpeg',
+    size: 456789,
+    url: 'assets/img/demo/3.jpg',
+    userId: USER_1_UUID,
+    description: 'Mountain view from my last trip',
+    createdAt: pastDate(20),
+    updatedAt: pastDate(20)
+  },
+  {
+    id: FILE_5_UUID,
+    filename: 'demo-4.jpg',
+    mimeType: 'image/jpeg',
+    size: 278901,
+    url: 'assets/img/demo/4.jpg',
+    userId: USER_1_UUID,
+    createdAt: pastDate(25),
+    updatedAt: pastDate(25)
+  },
+  {
+    id: FILE_6_UUID,
+    filename: 'demo-5.jpg',
+    mimeType: 'image/jpeg',
+    size: 334567,
+    url: 'assets/img/demo/5.jpg',
+    userId: USER_1_UUID,
+    description: 'Cityscape at sunset',
+    createdAt: pastDate(30),
+    updatedAt: pastDate(30)
+  },
+  {
+    id: FILE_7_UUID,
+    filename: 'landscape.jpg',
+    mimeType: 'image/jpeg',
+    size: 512345,
+    url: 'assets/img/demo/landscape.jpg',
+    userId: USER_1_UUID,
+    description: 'Wide landscape photo for project presentation',
+    createdAt: pastDate(35),
+    updatedAt: pastDate(35)
+  },
+  {
+    id: FILE_8_UUID,
+    filename: 'mountain-cinematic.jpg',
+    mimeType: 'image/jpeg',
+    size: 678901,
+    url: 'assets/img/demo/mountain-cinematic.jpg',
+    userId: USER_1_UUID,
+    description: 'Cinematic mountain shot',
+    createdAt: pastDate(40),
+    updatedAt: pastDate(40)
+  }
 ];
+
+// Base attachments array (for backward compatibility)
+export const attachments: Attachment[] = sampleFiles.map(file => {
+  const { userId, description, ...attachment } = file;
+  return attachment;
+});
 
 // ============================================================================
 // Main Export - API-Ready Structure
@@ -685,7 +786,8 @@ export const SAMPLE_DATA = {
   notes,
   tags,
   notebooks,
-  attachments
+  attachments,
+  files: sampleFiles
 };
 
 /**

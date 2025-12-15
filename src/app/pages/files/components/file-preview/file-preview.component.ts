@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
-import { FileAttachment } from '../../services/files.service';
+import { FileAttachment } from '../../../../core/data/sample-data';
 
 @Component({
   selector: 'vex-file-preview',

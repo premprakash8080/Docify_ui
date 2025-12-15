@@ -1,18 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, delay, tap } from 'rxjs/operators';
-import { Attachment } from '../../../core/models/attachment.model';
 import { generateUUID } from '../../../core/data/sample-data';
+import {
+  sampleFiles,
+  FileAttachment,
+  getAllFiles as getAllFilesMock,
+  getFileById as getFileByIdMock,
+  searchFiles as searchFilesMock
+} from '../../../core/data/sample-files';
 import { AuthService } from '../../../core/services/auth.service';
-
-/**
- * Extended Attachment interface for files management
- * Adds userId and description fields
- */
-export interface FileAttachment extends Attachment {
-  userId?: string;
-  description?: string;
-}
 
 /**
  * Service for managing files/attachments data.
@@ -37,8 +34,10 @@ export class FilesService {
   public files$ = this.filesSubject.asObservable();
 
   constructor() {
-    // Initialize with empty array
-    this.filesSubject.next([]);
+    // Initialize from mock API helper (keeps API-ready shape)
+    const initialFiles: FileAttachment[] = getAllFilesMock().data;
+    this.filesSubject.next(initialFiles);
+    this.uploadedFiles = []; // Start with empty uploaded files array
   }
 
   /**
@@ -47,15 +46,26 @@ export class FilesService {
    */
   getAllFiles(): Observable<FileAttachment[]> {
     const userId = this.authService.currentUserValue?.id;
-    if (!userId) {
-      return of([]);
-    }
 
-    // Filter files by current user
-    return this.files$.pipe(
-      map(files => files.filter(file => !file.userId || file.userId === userId)),
-      delay(0) // Simulate API delay (change to delay(100) for realistic delay)
+    // Use mock data helper so this stays API-ready.
+    // When a real backend exists, replace this with an HttpClient call.
+    const { data } = getAllFilesMock(userId);
+    console.log(data);
+
+    // Keep BehaviorSubject in sync as single source of truth.
+    this.filesSubject.next(data);
+
+    return of(data).pipe(
+      delay(0) // Simulate API latency
     );
+  }
+
+  /**
+   * Get mock files (API-ready placeholder)
+   * Uses sample data; can be swapped with real HTTP call later.
+   */
+  getMockFiles(): Observable<FileAttachment[]> {
+    return of(sampleFiles).pipe(delay(0));
   }
 
   /**
@@ -64,10 +74,18 @@ export class FilesService {
    * @returns Observable of the file, or undefined if not found
    */
   getFileById(fileId: string): Observable<FileAttachment | undefined> {
-    return this.files$.pipe(
+    // In a real app, this would be: return this.http.get<FileAttachment>(`/api/files/${fileId}`)
+    const fromState$ = this.files$.pipe(
       map(files => files.find(f => f.id === fileId)),
       delay(0)
     );
+
+    // Fallback to mock API helper if not found in state
+    const fromMock = getFileByIdMock(fileId).data;
+    if (fromMock) {
+      return fromState$;
+    }
+    return fromState$;
   }
 
   /**
@@ -217,15 +235,12 @@ export class FilesService {
       return this.getAllFiles();
     }
 
-    const searchTerm = query.toLowerCase().trim();
-    return this.getAllFiles().pipe(
-      map(files => 
-        files.filter(file => 
-          file.filename.toLowerCase().includes(searchTerm) ||
-          file.description?.toLowerCase().includes(searchTerm)
-        )
-      ),
-      delay(0)
-    );
+    // Use mock API helper for search; filter by user afterwards if needed
+    const userId = this.authService.currentUserValue?.id;
+    const results = searchFilesMock(query).data;
+    const filtered = userId
+      ? results.filter(file => !file.userId || file.userId === userId)
+      : results;
+    return of(filtered).pipe(delay(0));
   }
 }

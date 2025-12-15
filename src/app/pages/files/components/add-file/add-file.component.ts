@@ -6,7 +6,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { FilesService, FileAttachment } from '../../services/files.service';
+import { FilesService } from '../../services/files.service';
+import { FileAttachment } from '../../../../core/data/sample-data';
 
 export interface AddFileDialogResult {
   file: FileAttachment | null;
