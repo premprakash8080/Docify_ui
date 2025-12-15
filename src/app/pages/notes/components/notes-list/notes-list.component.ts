@@ -1,10 +1,11 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnDestroy, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, Input, Output, EventEmitter, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Note } from '../../../../core/models';
 import { NotesService } from '../../services/notes.service';
 import { SearchService } from '../../services/search.service';
-import { Observable, Subject } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { NotebooksService } from '../../../notebooks/services/notebooks.service';
+import { Observable, Subject, combineLatest, of } from 'rxjs';
+import { map, takeUntil, switchMap } from 'rxjs/operators';
 import { SideListItem, SideListAction } from '../../../ui/components/side-list/side-list-item.interface';
 import { NOTES_LIST_DISPLAY_CONFIG } from './notes-list.config';
 import { formatRelativeDate } from '../utils/date-formatter.util';
@@ -36,16 +37,81 @@ export class NotesListComponent implements OnInit, OnDestroy {
   items: SideListItem[] = [];
 
   filteredNotes$: Observable<Note[]>;
+  dynamicTitle = 'Notes';
   private destroy$ = new Subject<void>();
 
   // Inject services using inject() function
   private notesService = inject(NotesService);
   private searchService = inject(SearchService);
+  private notebooksService = inject(NotebooksService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
     this.setupNotesFilter();
     this.subscribeToNotes();
+    this.setupDynamicTitle();
+  }
+
+  private setupDynamicTitle(): void {
+    // Helper to collect all params from route tree
+    const getAllParams = (route: ActivatedRoute): { [key: string]: any } => {
+      const params: { [key: string]: any } = {};
+      
+      // Collect all parent params
+      const parentParams: { [key: string]: any } = {};
+      let parent: ActivatedRoute | null = route.parent;
+      while (parent) {
+        Object.assign(parentParams, parent.snapshot.params);
+        parent = parent.parent;
+      }
+      
+      // Merge with current route params (child params override parent)
+      Object.assign(params, parentParams, route.snapshot.params);
+      
+      return params;
+    };
+
+    // Function to update title based on current route
+    const updateTitle = () => {
+      const allParams = getAllParams(this.route);
+      const notebookId = allParams['notebookId'];
+      const stackId = allParams['stackId'];
+      
+      if (notebookId) {
+        // Get notebook name
+        this.notebooksService.getNotebookById(notebookId).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(notebook => {
+          this.dynamicTitle = notebook?.name || 'Notebook';
+          this.cdr.markForCheck();
+        });
+      } else if (stackId) {
+        // For stack context, format the stack ID to a readable name
+        // Stack IDs are typically slugs like 'personal', 'work', etc.
+        // Format: capitalize first letter and replace hyphens with spaces
+        const formattedStackName = stackId
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        this.dynamicTitle = formattedStackName;
+        this.cdr.markForCheck();
+      } else {
+        this.dynamicTitle = 'Notes';
+        this.cdr.markForCheck();
+      }
+    };
+
+    // Update title on initial load
+    updateTitle();
+
+    // Update title when route changes
+    this.route.params.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      updateTitle();
+    });
   }
 
   ngOnDestroy(): void {
@@ -132,7 +198,31 @@ export class NotesListComponent implements OnInit, OnDestroy {
   }
 
   selectNote(noteId: string): void {
-    this.router.navigate(['/notes', noteId]);
+    // Preserve notebook/stack context from current route
+    const url = this.router.url;
+    const urlSegments = url.split('/').filter(s => s);
+    
+    // Check if we're in a notebook context
+    const notebookIndex = urlSegments.findIndex(s => s === 'notebook');
+    const stackIndex = urlSegments.findIndex(s => s === 'stack');
+    
+    if (notebookIndex !== -1 && notebookIndex + 1 < urlSegments.length) {
+      // We're in a notebook context - preserve it
+      const notebookId = urlSegments[notebookIndex + 1];
+      
+      // Check if we're also in a stack context
+      if (stackIndex !== -1 && stackIndex + 1 < urlSegments.length) {
+        const stackId = urlSegments[stackIndex + 1];
+        // Navigate to: /notes/stack/:stackId/notebook/:notebookId/note/:noteId
+        this.router.navigate(['/notes', 'stack', stackId, 'notebook', notebookId, 'note', noteId]);
+      } else {
+        // Navigate to: /notes/notebook/:notebookId/note/:noteId
+        this.router.navigate(['/notes', 'notebook', notebookId, 'note', noteId]);
+      }
+    } else {
+      // No notebook context - navigate to simple note route
+      this.router.navigate(['/notes', noteId]);
+    }
   }
 
   getRelativeTime = formatRelativeDate;

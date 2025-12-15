@@ -230,8 +230,26 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     });
     
     if (this.isMobile) {
-      // Navigate to full-screen note page on mobile
-      this.router.navigate(['/notes', note.id]);
+      // Preserve notebook/stack context when navigating on mobile
+      const url = this.router.url;
+      const urlSegments = url.split('/').filter(s => s);
+      
+      const notebookIndex = urlSegments.findIndex(s => s === 'notebook');
+      const stackIndex = urlSegments.findIndex(s => s === 'stack');
+      
+      if (notebookIndex !== -1 && notebookIndex + 1 < urlSegments.length) {
+        const notebookId = urlSegments[notebookIndex + 1];
+        
+        if (stackIndex !== -1 && stackIndex + 1 < urlSegments.length) {
+          const stackId = urlSegments[stackIndex + 1];
+          this.router.navigate(['/notes', 'stack', stackId, 'notebook', notebookId, 'note', note.id]);
+        } else {
+          this.router.navigate(['/notes', 'notebook', notebookId, 'note', note.id]);
+        }
+      } else {
+        // No notebook context - navigate to simple note route
+        this.router.navigate(['/notes', note.id]);
+      }
     }
   }
 
