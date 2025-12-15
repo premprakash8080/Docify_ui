@@ -61,7 +61,8 @@ export class NotePageComponent implements OnInit, OnDestroy {
       notebooks.forEach(nb => this.notebooksMap.set(nb.id, nb));
     });
 
-    // Setup filtered notes for sidebar (all notes, sorted by updatedAt)
+    // Setup filtered notes for sidebar based on route context
+    // This will be updated in ngOnInit based on route params
     this.filteredNotes$ = this.notesService.getNotes().pipe(
       map(notes => {
         return notes
@@ -85,13 +86,71 @@ export class NotePageComponent implements OnInit, OnDestroy {
       this.isMobile = isMobile;
     });
 
+    // Helper to collect all params from route tree
+    const getAllParams = (route: ActivatedRoute): { [key: string]: any } => {
+      const params: { [key: string]: any } = {};
+      
+      // Collect all parent params
+      const parentParams: { [key: string]: any } = {};
+      let parent: ActivatedRoute | null = route.parent;
+      while (parent) {
+        Object.assign(parentParams, parent.snapshot.params);
+        parent = parent.parent;
+      }
+      
+      // Merge with current route params (child params override parent)
+      Object.assign(params, parentParams, route.snapshot.params);
+      
+      return params;
+    };
+
+    // Update filtered notes based on route context (notebook filtering)
+    this.route.params.pipe(
+      takeUntil(this.destroy$),
+      switchMap(() => {
+        const allParams = getAllParams(this.route);
+        const notebookId = allParams['notebookId'];
+        
+        // Filter notes by notebook if in notebook context
+        if (notebookId) {
+          this.filteredNotes$ = this.notesService.getNotes().pipe(
+            map(notes => {
+              return notes
+                .filter(note => note.notebookId === notebookId && !note.trashed && !note.archived)
+                .sort((a, b) => {
+                  if (a.pinned && !b.pinned) return -1;
+                  if (!a.pinned && b.pinned) return 1;
+                  return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+                });
+            })
+          );
+        } else {
+          // No notebook context - show all notes
+          this.filteredNotes$ = this.notesService.getNotes().pipe(
+            map(notes => {
+              return notes
+                .filter(note => !note.trashed && !note.archived)
+                .sort((a, b) => {
+                  if (a.pinned && !b.pinned) return -1;
+                  if (!a.pinned && b.pinned) return 1;
+                  return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+                });
+            })
+          );
+        }
+        
+        return this.filteredNotes$;
+      })
+    ).subscribe();
+
     // Load note based on route param
     // Handle both 'id' and 'noteId' for compatibility
     this.route.params.pipe(
       takeUntil(this.destroy$),
-      switchMap(params => {
+      switchMap(() => {
+        const allParams = getAllParams(this.route);
         // Try 'noteId' first (matches route), fallback to 'id' for compatibility
-        const id = params['noteId'] || params['id'];
+        const id = allParams['noteId'] || allParams['id'];
         this.noteId = id;
         if (!id) {
           // No ID in route, redirect to dashboard
@@ -111,8 +170,31 @@ export class NotePageComponent implements OnInit, OnDestroy {
   }
 
   onNoteSelected(note: Note): void {
-    // Navigate to the selected note
-    this.router.navigate(['/notes', note.id]);
+    // Preserve notebook/stack context from current route
+    const url = this.router.url;
+    const urlSegments = url.split('/').filter(s => s);
+    
+    // Check if we're in a notebook context
+    const notebookIndex = urlSegments.findIndex(s => s === 'notebook');
+    const stackIndex = urlSegments.findIndex(s => s === 'stack');
+    
+    if (notebookIndex !== -1 && notebookIndex + 1 < urlSegments.length) {
+      // We're in a notebook context - preserve it
+      const notebookId = urlSegments[notebookIndex + 1];
+      
+      // Check if we're also in a stack context
+      if (stackIndex !== -1 && stackIndex + 1 < urlSegments.length) {
+        const stackId = urlSegments[stackIndex + 1];
+        // Navigate to: /notes/stack/:stackId/notebook/:notebookId/note/:noteId
+        this.router.navigate(['/notes', 'stack', stackId, 'notebook', notebookId, 'note', note.id]);
+      } else {
+        // Navigate to: /notes/notebook/:notebookId/note/:noteId
+        this.router.navigate(['/notes', 'notebook', notebookId, 'note', note.id]);
+      }
+    } else {
+      // No notebook context - navigate to simple note route
+      this.router.navigate(['/notes', note.id]);
+    }
   }
 
   ngOnDestroy(): void {
@@ -211,7 +293,25 @@ export class NotePageComponent implements OnInit, OnDestroy {
     this.notesService.createNote(duplicatedNote).subscribe({
       next: (duplicate) => {
         // Navigate to the duplicated note
-        this.router.navigate(['/notes', duplicate.id]);
+        // Preserve notebook context when navigating to duplicated note
+        const url = this.router.url;
+        const urlSegments = url.split('/').filter(s => s);
+        
+        const notebookIndex = urlSegments.findIndex(s => s === 'notebook');
+        const stackIndex = urlSegments.findIndex(s => s === 'stack');
+        
+        if (notebookIndex !== -1 && notebookIndex + 1 < urlSegments.length) {
+          const notebookId = urlSegments[notebookIndex + 1];
+          
+          if (stackIndex !== -1 && stackIndex + 1 < urlSegments.length) {
+            const stackId = urlSegments[stackIndex + 1];
+            this.router.navigate(['/notes', 'stack', stackId, 'notebook', notebookId, 'note', duplicate.id]);
+          } else {
+            this.router.navigate(['/notes', 'notebook', notebookId, 'note', duplicate.id]);
+          }
+        } else {
+          this.router.navigate(['/notes', duplicate.id]);
+        }
       },
       error: (error) => {
         console.error('Failed to duplicate note:', error);
