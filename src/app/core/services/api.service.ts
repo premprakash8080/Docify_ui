@@ -18,16 +18,12 @@ export class ApiService {
   constructor(private http: HttpClient) {}
 
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('auth_token');
-    let headers = new HttpHeaders({
+    // Note: Token handling is done by HTTP interceptor
+    // This method only sets Content-Type header
+    // The interceptor will automatically add Authorization header
+    return new HttpHeaders({
       'Content-Type': 'application/json'
     });
-
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-
-    return headers;
   }
 
   get<T>(endpoint: string, params?: any): Observable<ApiResponse<T>> {

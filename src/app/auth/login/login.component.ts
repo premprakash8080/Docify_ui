@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animation';
-import { AuthService } from '../../../../core/services';
+import { fadeInUp400ms } from '../../../@vex/animations/fade-in-up.animation';
+import { AuthService } from '../service/auth.service';
 
 @Component({
   selector: 'vex-login',
@@ -21,7 +21,7 @@ export class LoginComponent implements OnInit {
   inputType = 'password';
   visible = false;
   isLoading = false;
-  returnUrl: string = '/';
+  returnUrl = '/';
 
   constructor(
     private router: Router,
@@ -43,8 +43,8 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     // TODO: Remove default values before production
     this.form = this.fb.group({
-      email: ['john.doe@example.com', [Validators.required, Validators.email]],
-      password: ['password123', Validators.required]
+      email: ['dev@yopmail.com', [Validators.required, Validators.email]],
+      password: ['12345678', Validators.required]
     });
   }
 
@@ -59,7 +59,7 @@ export class LoginComponent implements OnInit {
     const { email, password } = this.form.value;
 
     this.authService.login({ email, password }).subscribe({
-      next: (response) => {
+      next: () => {
         this.isLoading = false;
         this.cd.markForCheck();
         

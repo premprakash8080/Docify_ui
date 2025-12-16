@@ -9,15 +9,15 @@ const routes: VexRoutes = [
   // Auth routes - KEEP (needed for authentication, not in sidebar)
   {
     path: 'login',
-    loadChildren: () => import('./pages/pages/auth/login/login.module').then(m => m.LoginModule),
+    loadChildren: () => import('./auth/login/login.module').then(m => m.LoginModule),
   },
   {
     path: 'register',
-    loadChildren: () => import('./pages/pages/auth/register/register.module').then(m => m.RegisterModule),
+    loadChildren: () => import('./auth/register/register.module').then(m => m.RegisterModule),
   },
   {
     path: 'forgot-password',
-    loadChildren: () => import('./pages/pages/auth/forgot-password/forgot-password.module').then(m => m.ForgotPasswordModule),
+    loadChildren: () => import('./auth/forgot-password/forgot-password.module').then(m => m.ForgotPasswordModule),
   },
   // Coming soon - NOT USED in sidebar (commented out)
   // {

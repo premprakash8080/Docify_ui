@@ -12,10 +12,9 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Subject, combineLatest, BehaviorSubject } from 'rxjs';
-import { takeUntil, filter, debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
-import { NOTEBOOK_1_UUID, NOTEBOOK_2_UUID, NOTEBOOK_3_UUID, NOTEBOOK_4_UUID, NOTEBOOK_5_UUID } from '../../core/data/sample-data';
+import { takeUntil, filter, debounceTime, distinctUntilChanged, startWith, map } from 'rxjs/operators';
 import { NotesService } from '../notes/services/notes.service';
-import { NotebooksService } from './services/notebooks.service';
+import { NotebooksService, Stack } from './services/notebooks.service';
 import { Note, Notebook } from '../../core/models';
 import { AddNotebookComponent, AddNotebookDialogResult } from './components/add-notebook/add-notebook.component';
 import { NotebooksListViewComponent } from './components/notebooks-list-view/notebooks-list-view.component';
@@ -53,77 +52,87 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   displayedColumns: string[] = ['title', 'space', 'createdBy', 'updated', 'sharedWith'];
-  
-  // Mapping notebook titles to UUIDs from sample-data.ts
-  private notebookTitleToIdMap: Record<string, string> = {
-    'First Notebook': NOTEBOOK_1_UUID, // Work Notes
-    'Journal': NOTEBOOK_2_UUID, // Personal Journal
-    'Meeting Notes': NOTEBOOK_4_UUID, // Meetings
-    'Projects': NOTEBOOK_3_UUID, // Project Ideas
-    'Ideas': NOTEBOOK_3_UUID, // Project Ideas (same notebook)
-    'Recipes': NOTEBOOK_5_UUID // Recipes
-  };
 
   allNotes: Note[] = [];
   filteredNotebooks: NotebookRow[] = [];
   allNotebooksData: Notebook[] = [];
   
+  // Loading and error states
+  isLoading = false;
+  error: string | null = null;
+  
   // Search form control
   searchControl = new FormControl('');
 
-  // Mock data with stacks and notebooks
-  notebooks: NotebookRow[] = [
-    // Stack 1
-    {
-      title: 'stack',
-      space: '—',
-      createdBy: 'thunder7805',
-      updated: '2 hours ago',
-      sharedWith: '—',
-      noteCount: 1,
-      rowType: 'stack',
-      isStack: true,
-      stackName: 'stack',
-      stackId: 'personal', // Slug for routing
-      expanded: false, // Default: collapsed
-      level: 0,
-      notebooks: [
-        {
-          title: 'First Notebook',
-          space: '—',
-          createdBy: 'thunder7805',
-          updated: '2 hours ago',
-          sharedWith: 'Only you',
-          noteCount: 5,
-          rowType: 'notebook',
-          isNotebook: true,
-          notebookId: NOTEBOOK_1_UUID,
-          level: 1,
-          expanded: false, // Default: collapsed
-          notes: [] // Will be populated from service
-        }
-      ]
-    }
-    // Unstacked notebooks will be added dynamically from service
-  ];
+  // Stacks and notebooks structure
+  notebooks: NotebookRow[] = [];
 
-  ngOnInit(): void {
-    // Load notebooks and notes, then build the UI structure
+  /**
+   * Load stacks and notebooks data from API
+   * Uses the optimized getAllStacks endpoint that returns nested structure
+   */
+  loadData(): void {
+    this.isLoading = true;
+    this.error = null;
+    this.cdr.markForCheck();
+
+    // Fetch all stacks with nested notebooks and notes in a single optimized call
     combineLatest([
-      this.notebooksService.getAllNotebooks(),
-      this.notesService.getNotes()
+      this.notebooksService.getAllStacks(),
+      this.notebooksService.getAllNotebooks(), // For unstacked notebooks
+      this.notesService.getNotes() // Fallback for notes if needed
     ]).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
-      next: ([allNotebooks, notes]) => {
-        this.allNotes = notes;
-        this.allNotebooksData = allNotebooks;
-        this.buildNotebooksStructure(allNotebooks);
-        this.populateNotesInNotebooks();
+      next: ([stacksWithNestedData, allNotebooks, notes]) => {
+        // Extract notes from nested structure and combine with service notes
+        const notesFromStacks = stacksWithNestedData.flatMap(stack =>
+          stack.notebooks.flatMap(notebook =>
+            notebook.notes.map(note => ({
+              id: note.id,
+              userId: '', // Will be set from user context
+              notebookId: notebook.id,
+              title: note.title,
+              content: '', // Content is in Firebase
+              pinned: note.pinned,
+              archived: note.archived,
+              trashed: false, // Already filtered by backend
+              tags: [],
+              createdAt: '', // Not included in lightweight response
+              updatedAt: note.updated_at
+            }))
+          )
+        );
+
+        // Combine notes from stacks with service notes (deduplicate by id)
+        const notesMap = new Map<string, Note>();
+        notes.forEach(note => notesMap.set(note.id, note));
+        notesFromStacks.forEach(note => {
+          if (!notesMap.has(note.id)) {
+            notesMap.set(note.id, note as Note);
+          }
+        });
+        this.allNotes = Array.from(notesMap.values());
+
+        // Build structure from nested API response
+        this.buildNotebooksStructureFromNested(stacksWithNestedData, allNotebooks);
+        // Populate notes for unstacked notebooks only (stacked notebooks already have notes from API)
+        this.populateNotesForUnstackedNotebooks();
         this.applySearchFilter('');
+        this.isLoading = false;
+        this.error = null;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.error = err.message || 'Failed to load stacks';
         this.cdr.markForCheck();
       }
     });
+  }
+
+  ngOnInit(): void {
+    this.loadData();
 
     // Setup search with debounce
     this.searchControl.valueChanges.pipe(
@@ -138,77 +147,97 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Build notebooks structure from service data
-   * Merges hardcoded stacks with dynamically loaded notebooks
+   * Build notebooks structure from nested API response
+   * Creates Stack → Notebook → Notes hierarchy from optimized API response
    */
-  private buildNotebooksStructure(allNotebooks: Notebook[]): void {
-    // Separate stacks from unstacked notebooks
-    const stacks: NotebookRow[] = [];
-    const unstacked: NotebookRow[] = [];
+  private buildNotebooksStructureFromNested(
+    stacksWithNestedData: any[],
+    allNotebooks: Notebook[]
+  ): void {
+    const stacksRows: NotebookRow[] = [];
+    const allNotebooksList: Notebook[] = [];
 
-    // Map of notebook IDs that are already in stacks (from hardcoded structure)
+    // Extract stacked notebook IDs to identify unstacked notebooks
     const stackedNotebookIds = new Set<string>();
     
-    // First, preserve existing stacks
-    this.notebooks.forEach(item => {
-      if (item.isStack) {
-        stacks.push(item);
-        // Collect notebook IDs from stacks
-        if (item.notebooks) {
-          item.notebooks.forEach(nb => {
-            if (nb.notebookId) {
-              stackedNotebookIds.add(nb.notebookId);
-            }
-          });
-        }
-      }
-    });
-
-    // Update existing stacked notebooks with latest data from service
-    this.updateStackedNotebooks(allNotebooks);
-
-    // Convert Notebook models to NotebookRow format for unstacked notebooks
-    const unstackedNotebookIds = new Set(allNotebooks
-      .filter(notebook => !stackedNotebookIds.has(notebook.id))
-      .map(nb => nb.id));
-
-    // Add or update unstacked notebooks
-    allNotebooks
-      .filter(notebook => unstackedNotebookIds.has(notebook.id))
-      .forEach(notebook => {
-        const existingIndex = unstacked.findIndex(nb => nb.notebookId === notebook.id);
-        if (existingIndex >= 0) {
-          // Update existing
-          unstacked[existingIndex] = this.notebookToRow(notebook);
-        } else {
-          // Add new
-          unstacked.push(this.notebookToRow(notebook));
-        }
+    // Build stack rows with their notebooks and notes from nested response
+    stacksWithNestedData.forEach((stackData) => {
+      // Map notebooks from nested response
+      const notebookRows: NotebookRow[] = stackData.notebooks.map((notebookData: any) => {
+        stackedNotebookIds.add(notebookData.id);
+        
+        // Create Notebook model for tracking
+        const notebook: Notebook = {
+          id: notebookData.id,
+          userId: '', // Will be set from user context
+          name: notebookData.name,
+          description: notebookData.description,
+          color: notebookData.color?.hex_code,
+          createdAt: notebookData.created_at,
+          updatedAt: notebookData.updated_at
+        };
+        allNotebooksList.push(notebook);
+        
+        // Map notes from nested response
+        const noteRows: NotebookRow[] = (notebookData.notes || []).map((noteData: any) => ({
+          title: noteData.title,
+          space: '—',
+          createdBy: 'You',
+          updated: this.formatDate(noteData.updated_at),
+          sharedWith: 'Only you',
+          rowType: 'note',
+          isNote: true,
+          noteId: noteData.id,
+          notebookId: notebookData.id,
+          pinned: noteData.pinned,
+          archived: noteData.archived,
+          level: 2
+        }));
+        
+        return {
+          title: notebookData.name,
+          space: '—',
+          createdBy: 'You',
+          updated: this.formatDate(notebookData.updated_at || notebookData.created_at),
+          sharedWith: 'Only you',
+          noteCount: notebookData.note_count || noteRows.length,
+          rowType: 'notebook',
+          isNotebook: true,
+          notebookId: notebookData.id,
+          level: 1,
+          expanded: false,
+          notes: noteRows
+        };
       });
-
-    // Rebuild notebooks array: stacks first, then unstacked notebooks
-    this.notebooks = [...stacks, ...unstacked];
-  }
-
-  /**
-   * Update stacked notebooks with latest data from service
-   */
-  private updateStackedNotebooks(allNotebooks: Notebook[]): void {
-    const notebookMap = new Map(allNotebooks.map(nb => [nb.id, nb]));
-    
-    this.notebooks.forEach(stack => {
-      if (stack.notebooks) {
-        stack.notebooks = stack.notebooks.map(nbRow => {
-          if (nbRow.notebookId) {
-            const updatedNotebook = notebookMap.get(nbRow.notebookId);
-            if (updatedNotebook) {
-              return this.notebookToRow(updatedNotebook, 1);
-            }
-          }
-          return nbRow;
-        });
-      }
+      
+      const stackRow: NotebookRow = {
+        title: stackData.name,
+        space: '—',
+        createdBy: 'You',
+        updated: this.formatDate(stackData.updated_at || stackData.created_at),
+        sharedWith: '—',
+        noteCount: stackData.notebook_count,
+        rowType: 'stack',
+        isStack: true,
+        stackName: stackData.name,
+        stackId: stackData.id,
+        expanded: false,
+        level: 0,
+        notebooks: notebookRows
+      };
+      stacksRows.push(stackRow);
     });
+
+    // Build unstacked notebooks rows
+    const unstackedNotebooks = allNotebooks.filter(nb => !stackedNotebookIds.has(nb.id));
+    const unstackedRows: NotebookRow[] = unstackedNotebooks.map(notebook => 
+      this.notebookToRow(notebook, 0)
+    );
+    allNotebooksList.push(...unstackedNotebooks);
+
+    // Combine: stacks first, then unstacked notebooks
+    this.notebooks = [...stacksRows, ...unstackedRows];
+    this.allNotebooksData = allNotebooksList;
   }
 
   ngOnDestroy(): void {
@@ -299,12 +328,13 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Populates notes array for each notebook based on notebookId
+   * Populates notes array for unstacked notebooks only
+   * Stacked notebooks already have notes from the nested API response
    */
-  private populateNotesInNotebooks(): void {
-    const populateNotes = (items: NotebookRow[]): void => {
-      items.forEach(item => {
-        if (item.isNotebook && item.notebookId) {
+  private populateNotesForUnstackedNotebooks(): void {
+    this.notebooks.forEach(item => {
+      // Only process unstacked notebooks (not inside a stack)
+      if (item.isNotebook && item.notebookId && !item.notes) {
           // Find notes for this notebook
           const notebookNotes = this.allNotes
             .filter(note => note.notebookId === item.notebookId && !note.trashed)
@@ -315,43 +345,21 @@ export class NotebooksComponent implements OnInit, OnDestroy {
           item.notes = notebookNotes.map(note => this.noteToRow(note));
           item.noteCount = notebookNotes.length;
         }
-
-        // Recursively process nested notebooks (if any)
-        if (item.notebooks) {
-          populateNotes(item.notebooks);
-        }
       });
-    };
-
-    populateNotes(this.notebooks);
   }
 
   /**
    * Converts a Notebook to a NotebookRow format
    */
-  private notebookToRow(notebook: Notebook, level: number = 0): NotebookRow {
-    const updatedDate = notebook.updatedAt ? new Date(notebook.updatedAt) : new Date(notebook.createdAt);
-    const now = new Date();
-    const diffHours = (now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60);
-    const diffDays = diffHours / 24;
-
-    let updatedStr = '';
-    if (diffHours < 24) {
-      updatedStr = `${Math.floor(diffHours)} hours ago`;
-    } else if (diffDays < 7) {
-      updatedStr = `${Math.floor(diffDays)} days ago`;
-    } else {
-      updatedStr = updatedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    }
-
+  private notebookToRow(notebook: Notebook, level = 0): NotebookRow {
     // Get note count for this notebook
     const noteCount = this.allNotes.filter(note => note.notebookId === notebook.id && !note.trashed).length;
 
     return {
       title: notebook.name,
       space: '—',
-      createdBy: 'thunder7805', // TODO: Get from user service
-      updated: updatedStr,
+      createdBy: 'You', // TODO: Get from user service
+      updated: this.formatDate(notebook.updatedAt || notebook.createdAt),
       sharedWith: 'Only you',
       noteCount: noteCount,
       rowType: 'notebook',
@@ -359,33 +367,37 @@ export class NotebooksComponent implements OnInit, OnDestroy {
       notebookId: notebook.id,
       level: level,
       expanded: false, // Default: collapsed
-      notes: [] // Will be populated by populateNotesInNotebooks
+      notes: [] // Will be populated for unstacked notebooks
     };
   }
+
+  /**
+   * Format date to relative time string
+   */
+  private formatDate(dateString: string): string {
+    const updatedDate = new Date(dateString);
+    const now = new Date();
+    const diffHours = (now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60);
+    const diffDays = diffHours / 24;
+
+    if (diffHours < 24) {
+      return `${Math.floor(diffHours)} hours ago`;
+    } else if (diffDays < 7) {
+      return `${Math.floor(diffDays)} days ago`;
+    } else {
+      return updatedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    }
+    }
 
   /**
    * Converts a Note to a NotebookRow format
    */
   private noteToRow(note: Note): NotebookRow {
-    const updatedDate = new Date(note.updatedAt);
-    const now = new Date();
-    const diffHours = (now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60);
-    const diffDays = diffHours / 24;
-
-    let updatedStr = '';
-    if (diffHours < 24) {
-      updatedStr = `${Math.floor(diffHours)} hours ago`;
-    } else if (diffDays < 7) {
-      updatedStr = `${Math.floor(diffDays)} days ago`;
-    } else {
-      updatedStr = updatedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    }
-
     return {
       title: note.title || 'Untitled',
       space: '—',
-      createdBy: 'thunder7805', // TODO: Get from user service
-      updated: updatedStr,
+      createdBy: 'You', // TODO: Get from user service
+      updated: this.formatDate(note.updatedAt),
       sharedWith: 'Only you',
       rowType: 'note',
       isNote: true,
@@ -444,17 +456,8 @@ export class NotebooksComponent implements OnInit, OnDestroy {
       )
       .subscribe(result => {
         if (result?.notebook) {
-          // Notebook was created successfully - refresh the notebooks list
-          // The service already has the new notebook in createdNotebooks array
-          // Just reload from service to update the UI
-          this.notebooksService.getAllNotebooks().pipe(
-            takeUntil(this.destroy$)
-          ).subscribe(allNotebooks => {
-            // Rebuild structure with new notebook
-            this.buildNotebooksStructure(allNotebooks);
-            this.populateNotesInNotebooks();
-            this.cdr.markForCheck();
-          });
+          // Notebook was created successfully - reload data
+          this.loadData();
         }
       });
   }
@@ -531,10 +534,38 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     // Update notebooks structure with filtered data
     filteredNotebooks$.pipe(
       takeUntil(this.destroy$)
-    ).subscribe(allNotebooks => {
-      this.buildNotebooksStructure(allNotebooks);
-      this.populateNotesInNotebooks();
+    ).subscribe({
+      next: (allNotebooks) => {
+        // For filtered notebooks, we need to rebuild structure
+        // But we'll keep the existing stack structure and filter notebooks within
+        // This is a simplified approach - in production, you might want more sophisticated filtering
+        const filteredRows: NotebookRow[] = [];
+        
+        this.notebooks.forEach(item => {
+          if (item.isStack && item.notebooks) {
+            const filteredStackNotebooks = item.notebooks.filter(nb => 
+              allNotebooks.some(fnb => fnb.id === nb.notebookId)
+            );
+            if (filteredStackNotebooks.length > 0) {
+              filteredRows.push({
+                ...item,
+                notebooks: filteredStackNotebooks,
+                noteCount: filteredStackNotebooks.length
+              });
+            }
+          } else if (item.isNotebook && allNotebooks.some(nb => nb.id === item.notebookId)) {
+            filteredRows.push(item);
+          }
+        });
+        
+        this.notebooks = filteredRows;
+        this.populateNotesForUnstackedNotebooks();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.error = err.message || 'Failed to filter notebooks';
       this.cdr.markForCheck();
+      }
     });
   }
 
@@ -546,14 +577,8 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     this.filterValue = null;
     this.filterSubject.next({ type: null, value: null });
     
-    // Reload all notebooks
-    this.notebooksService.getAllNotebooks().pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(allNotebooks => {
-      this.buildNotebooksStructure(allNotebooks);
-      this.populateNotesInNotebooks();
-      this.cdr.markForCheck();
-    });
+    // Reload all data
+    this.loadData();
   }
 
   onNotebookClick(notebook: NotebookRow): void {

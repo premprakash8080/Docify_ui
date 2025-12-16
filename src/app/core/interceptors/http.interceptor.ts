@@ -1,5 +1,4 @@
-import { NgxSpinnerService } from 'ngx-spinner';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   HttpRequest,
   HttpHandler,
@@ -8,41 +7,50 @@ import {
   HttpErrorResponse
 } from '@angular/common/http';
 import { catchError, finalize, Observable, retry, throwError } from 'rxjs';
-import { SnackBarService } from 'src/app/shared/services/snackbar.service';
-import { UserSessionService } from 'src/app/shared/services/user-session.service';
-import { AuthenticationService } from 'src/app/auth/service/auth.service';
+import { SnackBarService } from 'src/app/core/services/snackbar.service';
+import { UserSessionService } from 'src/app/core/services/user-session.service';
+import { AuthService } from '../../auth/service/auth.service';
 
-
-@Injectable()
-
+@Injectable({
+  providedIn: 'root'
+})
 export class HttpResponseInterceptor implements HttpInterceptor {
-
-  constructor(
-    private ngxService: NgxSpinnerService, 
-    private snackBarService: SnackBarService,
-    private userSessionService:UserSessionService,
-    private authenticationService: AuthenticationService,
-    ) { }
+  private userSessionService = inject(UserSessionService);
+  private authService = inject(AuthService);
+  private snackBarService = inject(SnackBarService);
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-
-    let requestWithToken;
-    if(this.userSessionService.accessToken!=undefined && this.userSessionService.accessToken!="")
-    {
+    // Get token from UserSessionService (which checks both ACCESS_TOKEN and auth_token)
+    let token = this.userSessionService.accessToken;
+    
+    // Fallback to direct localStorage check if UserSessionService returns empty
+    if (!token || token === '' || token === 'null') {
+      token = localStorage.getItem('auth_token');
+    }
+    
+    // Clean up token if it's a JSON string (legacy support)
+    if (token && typeof token === 'string' && token.startsWith('"') && token.endsWith('"')) {
+      try {
+        token = JSON.parse(token);
+      } catch {
+        // If parsing fails, use as-is
+      }
+    }
+    
+    // Clone request and add Authorization header if token exists
+    let requestWithToken = request;
+    if (token && token !== '' && token !== 'null' && token !== 'undefined') {
       requestWithToken = request.clone({
-        headers: request.headers.set('Authorization', `Bearer ${this.userSessionService.accessToken}`)
-        .set('x-company', `${this.userSessionService.selectedUserCompany?.id || 0}`),
+        setHeaders: {
+          'Authorization': `Bearer ${token}`
+        }
       });
     }
 
     // List of URLs to exclude from automatic spinner control
     
-    // Check if the current request URL should be excluded from spinner
-    // console.log('request.url',request.url);
-    // Only show spinner if URL is not excluded
-    if (request.reportProgress) {
-       this.ngxService.show();
-    }
+    // Note: Spinner logic removed - can be added back if ngx-spinner is installed
+    // Spinner functionality can be implemented separately if needed
     // Store the flag in a variable accessible to the finalize callback
     
     return next.handle(requestWithToken || request).pipe(retry(0), catchError((error: HttpErrorResponse) => {
@@ -65,23 +73,23 @@ export class HttpResponseInterceptor implements HttpInterceptor {
         } else if (error.status === 500) {
           message = 'Something went wrong. Please try again later.';
         }  else if (error.status === 401) {
-          this.authenticationService.logout();
-         }else {
+          // Handle 401 unauthorized - token expired or invalid
+          this.authService.logout();
+          message = 'Your session has expired. Please login again.';
+        } else {
           // handle server-side error
           message = `${error.status}: Something went wrong. Please report this issue.`;
         }
       } 
       if (error.status === 401) {
-        this.authenticationService.logout();
+        // Ensure logout is called for 401 errors
+        this.authService.logout();
        }      
       this.snackBarService.showError(message)
       return throwError(message);
     }),
       finalize(() => {
-        // Only hide spinner if it was shown (i.e., URL was not excluded)
-        if (request.reportProgress) {
-          this.ngxService.hide();
-        }
+        // Note: Spinner logic removed - can be added back if ngx-spinner is installed
       }))
   }
 }

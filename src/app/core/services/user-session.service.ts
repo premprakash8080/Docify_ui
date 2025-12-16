@@ -1,81 +1,87 @@
 import { Injectable } from "@angular/core";
-import { HttpService } from "./http.service";
-import { StorageService } from "./storage.service";
-import { SessionService } from "./session.service";
-import {  Company, User, UserCreds } from "src/app/core/models/core.models";
-import { ACCESS_TOKEN, USER_COMPANY_SESSION, USER_SELECTED_COMPANY_SESSION, USER_SESSION, User_Permissions } from "src/app/core/constants/global.constant";
+import { ACCESS_TOKEN } from "src/app/core/constants/global.constant";
+
+// Temporary types for backward compatibility
+interface UserCreds {
+  email?: string;
+  password?: string;
+  [key: string]: unknown;
+}
 
 @Injectable({
     providedIn: "root"
 })
-
 export class UserSessionService {
-
-    constructor(
-        private httpService: HttpService,
-        private storageService: StorageService,
-        private sessionService: SessionService,
-       
-    ) {
-       
-    }
-
-    set userPermissions(userPermissions: number[]) {
-        this.sessionService.setItem(User_Permissions, userPermissions);
-    }
-
-    get userPermissions(): number[] {
-        return this.sessionService.getItem(User_Permissions);
-    }
-
-    set userSession(userSession: User) {
-        this.sessionService.setItem(USER_SESSION, userSession);
-    }
-
-    get userSession(): User {
-        return this.sessionService.getItem(USER_SESSION);
-    }
-
-    set userCompanies(userCompanies: Company[]) {
-        this.sessionService.setItem(USER_COMPANY_SESSION, userCompanies);
-    }
-
-    get userCompanies(): Company[] {
-        return this.sessionService.getItem(USER_COMPANY_SESSION);
-    }
-
-     set selectedUserCompany(userCompany: Company) {
-        this.sessionService.setItem(USER_SELECTED_COMPANY_SESSION, userCompany);
-    }
-
-    get selectedUserCompany(): Company{
-        return this.sessionService.getItem(USER_SELECTED_COMPANY_SESSION);
-    }
-
     set accessToken(token: string) {
-        this.sessionService.setItem(ACCESS_TOKEN, token);
+        if (token) {
+            // Save to both locations for compatibility
+            localStorage.setItem(ACCESS_TOKEN, token);
+            localStorage.setItem('auth_token', token);
+        } else {
+            // Clear both locations
+            localStorage.removeItem(ACCESS_TOKEN);
+            localStorage.removeItem('auth_token');
+        }
     }
-
-    
 
     get accessToken(): string {
-        return this.sessionService.getItem(ACCESS_TOKEN);
+        // Check ACCESS_TOKEN first (set by UserSessionService)
+        let token = localStorage.getItem(ACCESS_TOKEN);
+        
+        // If not found, check auth_token (set by AuthService for backward compatibility)
+        if (!token || token === 'null' || token === 'undefined') {
+            token = localStorage.getItem('auth_token');
     }
 
+        if (token && token !== 'null' && token !== 'undefined') {
+            // If it's a JSON string (from old SessionService), parse it
+            if (token.startsWith('"') && token.endsWith('"')) {
+                try {
+                    return JSON.parse(token);
+                } catch {
+                    return token;
+                }
+            }
+            return token;
+    }
+
+        return '';
+    }
     
     set rememberMe(val: boolean) {
-        this.sessionService.setItem('rememberMe', val);
+        localStorage.setItem('rememberMe', JSON.stringify(val));
     }
 
-    get rememberMe() {
-        return this.sessionService.getItem('rememberMe');
+    get rememberMe(): boolean {
+        const val = localStorage.getItem('rememberMe');
+        if (val && val !== 'null') {
+            try {
+                return JSON.parse(val);
+            } catch {
+                return false;
+            }
+        }
+        return false;
     }
 
-    get userCredentials() {
-        return this.storageService.getItem("userCredentials");
+    get userCredentials(): UserCreds | null {
+        const val = localStorage.getItem("userCredentials");
+        if (val && val !== 'null') {
+            try {
+                return JSON.parse(val);
+            } catch {
+                return null;
+            }
+        }
+        return null;
     }
 
     set userCredentials(val: UserCreds) {
-        this.storageService.setItem("userCredentials", val);
+        if (val) {
+            localStorage.setItem("userCredentials", JSON.stringify(val));
+        } else {
+            localStorage.removeItem("userCredentials");
     }    
+    }
+
 }

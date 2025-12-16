@@ -41,42 +41,45 @@ export class FilesComponent implements OnInit, OnDestroy {
   // Search form control
   searchControl = new FormControl('');
 
-  // File list and selection
-  files$ = this.filesService.getAllFiles();
-  filteredFiles$: Observable<FileAttachment[]> = this.searchControl.valueChanges.pipe(
-    startWith(''),
-    debounceTime(300),
-    distinctUntilChanged(),
-    switchMap(query => {
+  // File list and selection - combine search with files
+  filteredFiles$: Observable<FileAttachment[]> = combineLatest([
+    this.filesService.getAllFiles(),
+    this.searchControl.valueChanges.pipe(
+      startWith(''),
+      debounceTime(300),
+      distinctUntilChanged()
+    )
+  ]).pipe(
+    switchMap(([files, query]) => {
       const q = (query || '').trim();
       if (!q) {
-        return this.filesService.getAllFiles();
+        return of(files);
       }
       return this.filesService.searchFiles(q);
-    })
+    }),
+    shareReplay(1)
   );
   
   selectedFile: FileAttachment | null = null;
 
-  // Items for item list panel component
-  get panelItems$(): Observable<ItemListPanelItem[]> {
-    return this.filteredFiles$.pipe(
-      map(files => files.map(file => ({
-        id: file.id,
-        title: file.filename || 'Unnamed file',
-        description: file.description || '',
-        meta: `${this.formatFileSize(file.size)} • ${this.getRelativeDate(file.createdAt)}`
-      } as ItemListPanelItem)))
-    );
-  }
+  // Items for item list panel component - convert to panel items
+  panelItems$: Observable<ItemListPanelItem[]> = this.filteredFiles$.pipe(
+    map(files => files.map(file => ({
+      id: file.id,
+      title: file.filename || 'Unnamed file',
+      description: file.description || '',
+      meta: `${this.formatFileSize(file.size)} • ${this.getRelativeDate(file.createdAt)}`
+    } as ItemListPanelItem))),
+    shareReplay(1)
+  );
 
   get selectedFileId(): string | null {
     return this.selectedFile?.id || null;
   }
 
   ngOnInit(): void {
-    // Trigger initial load and ensure change detection
-    this.filteredFiles$.pipe(
+    // Subscribe to ensure data loads and change detection triggers
+    this.panelItems$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(() => {
       this.cdr.markForCheck();

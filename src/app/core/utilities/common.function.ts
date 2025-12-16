@@ -1,5 +1,4 @@
 import { MatDateFormats, NativeDateAdapter } from "@angular/material/core";
-import moment from "moment";
 
 export function IsEmptyObject(obj: any) {
   if (typeof obj === "object") return Object.keys(obj).length === 0;
@@ -47,7 +46,19 @@ export function GetDate(
   let jsonDate;
   if (date) jsonDate = new Date(date);
   else jsonDate = new Date();
-  return moment(jsonDate).format(format);
+  
+  // Replace moment format with native Date formatting
+  const year = jsonDate.getFullYear();
+  const month = String(jsonDate.getMonth() + 1).padStart(2, '0');
+  const day = String(jsonDate.getDate()).padStart(2, '0');
+  const hours = String(jsonDate.getHours()).padStart(2, '0');
+  const minutes = String(jsonDate.getMinutes()).padStart(2, '0');
+  const seconds = String(jsonDate.getSeconds()).padStart(2, '0');
+  
+  if (format === "DD/MM/YYYY") {
+    return `${day}/${month}/${year}`;
+  }
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 export function GetDateOnly(
@@ -57,27 +68,66 @@ export function GetDateOnly(
   let jsonDate;
   if (date) jsonDate = new Date(date);
   else jsonDate = new Date();
-  return moment(jsonDate).format(format);
+  
+  const year = jsonDate.getFullYear();
+  const month = String(jsonDate.getMonth() + 1).padStart(2, '0');
+  const day = String(jsonDate.getDate()).padStart(2, '0');
+  
+  if (format === "DD/MM/YYYY") {
+    return `${day}/${month}/${year}`;
+  }
+  return `${year}-${month}-${day}`;
 }
 
 export function GetTime(
   date?: any,
   format: string = "HH:mm"
 ): string {
-  let jsonDate;
-  // if (date) jsonDate = new Date(date);
-  // else jsonDate = new Date();
-  return moment(date, 'hh:mm A').format(format);
+  if (!date) return '';
+  
+  // Parse time string like "12:30 PM" or "14:30"
+  const timeStr = String(date);
+  const is12Hour = timeStr.includes('AM') || timeStr.includes('PM');
+  
+  if (is12Hour) {
+    // Parse 12-hour format "hh:mm A"
+    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (match) {
+      let hours = parseInt(match[1]);
+      const minutes = match[2];
+      const ampm = match[3].toUpperCase();
+      
+      if (ampm === 'PM' && hours !== 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+      
+      return `${String(hours).padStart(2, '0')}:${minutes}`;
+    }
+  } else {
+    // Already in 24-hour format
+    return timeStr;
+  }
+  
+  return '';
 }
 
 export function GetTimeObject(
   date?: any,
   format: string = "HH:mm"
-): any {
-  let jsonDate;
-  // if (date) jsonDate = new Date(date);
-  // else jsonDate = new Date();
-  return moment(date, 'h:mm a');
+): Date | null {
+  if (!date) return null;
+  
+  // Parse time string and return Date object with today's date
+  const timeStr = String(date);
+  const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+  if (match) {
+    const hours = parseInt(match[1]);
+    const minutes = parseInt(match[2]);
+    const today = new Date();
+    today.setHours(hours, minutes, 0, 0);
+    return today;
+  }
+  
+  return null;
 }
 
 
@@ -85,10 +135,23 @@ export function GetTimeWithAM_PM(
   date?: any,
   format: string = "hh:mm A"
 ): string {
-  let jsonDate;
-  // if (date) jsonDate = new Date(date);
-  // else jsonDate = new Date();
-  return moment(date, 'HH:mm').format(format);
+  if (!date) return '';
+  
+  // Parse 24-hour format "HH:mm" and convert to 12-hour "hh:mm A"
+  const timeStr = String(date);
+  const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+  if (match) {
+    let hours = parseInt(match[1]);
+    const minutes = match[2];
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    
+    if (hours === 0) hours = 12;
+    else if (hours > 12) hours -= 12;
+    
+    return `${hours}:${minutes} ${ampm}`;
+  }
+  
+  return '';
 }
 
 export function b64toBlob(b64Data, contentType = '', sliceSize = 512) {

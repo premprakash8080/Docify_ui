@@ -2,8 +2,8 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { fadeInUp400ms } from '../../../../../@vex/animations/fade-in-up.animation';
-import { AuthService } from '../../../../core/services';
+import { fadeInUp400ms } from '../../../@vex/animations/fade-in-up.animation';
+import { AuthService } from '../service/auth.service';
 
 @Component({
   selector: 'vex-register',
@@ -74,9 +74,9 @@ export class RegisterComponent implements OnInit {
     this.authService.register({
       email,
       password,
-      displayName: name
+      display_name: name
     }).subscribe({
-      next: (response) => {
+      next: () => {
         this.isLoading = false;
         this.cd.markForCheck();
         
