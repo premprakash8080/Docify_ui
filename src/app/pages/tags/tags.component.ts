@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef, inject, OnInit }
 import { Router } from '@angular/router';
 import { Observable, combineLatest } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
-import { Tag, Note } from '../../core/models';
+import { Tag } from '../../core/models';
 import { TagsService } from './services/tags.service';
 import { NotesService } from '../notes/services/notes.service';
 import { MatDialog } from '@angular/material/dialog';

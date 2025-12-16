@@ -112,7 +112,7 @@ const routes: VexRoutes = [
       },
       {
         path: 'templates',
-        loadChildren: () => import('./pages/template/template.module').then(m => m.TemplatePageModule),
+        loadChildren: () => import('./pages/template/template-routing.module').then(m => m.TemplatePageModule),
       },
       // Calendar redirect - sidebar uses /calendar but route is at /apps/calendar
       {
