@@ -43,6 +43,10 @@ export class NotePageComponent implements OnInit, OnDestroy {
   isSaving = false;
   lastSaved: Date | null = null;
 
+  // Loading and error states
+  isLoading$ = this.notesService.isLoading$;
+  error$ = this.notesService.error$;
+
   private destroy$ = new Subject<void>();
   private notebooksMap = new Map<string, Notebook>();
 
@@ -52,7 +56,10 @@ export class NotePageComponent implements OnInit, OnDestroy {
   layoutService = inject(LayoutService);
 
   constructor() {
-    // Load notebooks for lookup
+    // Load notes from API on component initialization
+    this.notesService.loadNotes().subscribe();
+
+    // Load notebooks for lookup (TODO: Use NotebooksService)
     this.notesService.getNotebooks().pipe(
       takeUntil(this.destroy$)
     ).subscribe(notebooks => {
@@ -248,18 +255,50 @@ export class NotePageComponent implements OnInit, OnDestroy {
 
   onPin(): void {
     if (!this.note) return;
-    this.notesService.updateNote(this.note.id, { pinned: !this.note.pinned })
-      .then(updated => {
+    this.isSaving = true;
+    const pinAction = this.note.pinned
+      ? this.notesService.unpinNote(this.note.id)
+      : this.notesService.pinNote(this.note.id);
+    
+    pinAction.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updated) => {
         this.note = updated;
-      });
+        this.isSaving = false;
+        this.lastSaved = new Date();
+      },
+      error: (err) => {
+        console.error('Failed to pin/unpin note:', err);
+        this.isSaving = false;
+      }
+    });
   }
 
   onArchive(): void {
     if (!this.note) return;
-    this.notesService.updateNote(this.note.id, { archived: !this.note.archived })
-      .then(updated => {
+    this.isSaving = true;
+    const archiveAction = this.note.archived
+      ? this.notesService.unarchiveNote(this.note.id)
+      : this.notesService.archiveNote(this.note.id);
+    
+    archiveAction.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updated) => {
         this.note = updated;
-      });
+        this.isSaving = false;
+        this.lastSaved = new Date();
+        // Navigate away if archived
+        if (updated.archived) {
+          this.router.navigate(['/notes/dashboard']);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to archive/unarchive note:', err);
+        this.isSaving = false;
+      }
+    });
   }
 
   onExport(): void {
@@ -518,10 +557,19 @@ Note: Version history will be available when the API is implemented.
   onDelete(): void {
     if (!this.note) return;
     if (confirm('Are you sure you want to delete this note?')) {
-      this.notesService.deleteNote(this.note.id)
-        .then(() => {
+      this.isSaving = true;
+      this.notesService.deleteNote(this.note.id).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
+          this.isSaving = false;
           this.router.navigate(['/notes/dashboard']);
-        });
+        },
+        error: (err) => {
+          console.error('Failed to delete note:', err);
+          this.isSaving = false;
+        }
+      });
     }
   }
 
@@ -531,9 +579,17 @@ Note: Version history will be available when the API is implemented.
     const task = this.note.tasks.find(t => t.id === taskId);
     if (task) {
       task.completed = completed;
-      // Update note
-      this.notesService.updateNote(this.note.id, { tasks: this.note.tasks }).then(updated => {
-        this.note = updated;
+      // Update note - Note: Tasks are managed separately via /notes/:id/tasks endpoint
+      // For now, update metadata only
+      this.notesService.updateNote(this.note.id, {}).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (updated) => {
+          this.note = updated;
+        },
+        error: (err) => {
+          console.error('Failed to update task:', err);
+        }
       });
     }
   }
@@ -555,8 +611,16 @@ Note: Version history will be available when the API is implemented.
     const task = this.note.tasks.find(t => t.id === taskId);
     if (task) {
       task.priority = task.priority === 'high' ? undefined : 'high';
-      this.notesService.updateNote(this.note.id, { tasks: this.note.tasks }).then(updated => {
-        this.note = updated;
+      // Update note - Note: Tasks are managed separately via /notes/:id/tasks endpoint
+      this.notesService.updateNote(this.note.id, {}).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (updated) => {
+          this.note = updated;
+        },
+        error: (err) => {
+          console.error('Failed to flag task:', err);
+        }
       });
     }
   }
@@ -573,8 +637,16 @@ Note: Version history will be available when the API is implemented.
   deleteTask(taskId: string): void {
     if (!this.note || !this.note.tasks) return;
     this.note.tasks = this.note.tasks.filter(t => t.id !== taskId);
-    this.notesService.updateNote(this.note.id, { tasks: this.note.tasks }).then(updated => {
-      this.note = updated;
+    // Update note - Note: Tasks are managed separately via /notes/:id/tasks endpoint
+    this.notesService.updateNote(this.note.id, {}).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updated) => {
+        this.note = updated;
+      },
+      error: (err) => {
+        console.error('Failed to delete task:', err);
+      }
     });
   }
 

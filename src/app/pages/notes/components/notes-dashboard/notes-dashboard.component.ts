@@ -26,6 +26,10 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
   // Computed observables
   filteredNotes$: Observable<Note[]>;
   
+  // Loading and error states
+  isLoading$ = this.notesService.isLoading$;
+  error$ = this.notesService.error$;
+  
   // UI state
   isMobile = false;
   isSaving = false;
@@ -41,6 +45,9 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
   private layoutService: LayoutService = inject(LayoutService);
 
   constructor() {
+    // Load notes from API on component initialization
+    this.notesService.loadNotes().subscribe();
+
     // Build filtered notes stream that reacts to all filter changes
     this.filteredNotes$ = combineLatest([
       this.notesService.getNotes(),
@@ -437,16 +444,23 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     if (!currentNote) return;
     
     this.isSaving = true;
-    this.notesService.updateNote(currentNote.id, { pinned: !currentNote.pinned })
-      .then(updated => {
+    const pinAction = currentNote.pinned 
+      ? this.notesService.unpinNote(currentNote.id)
+      : this.notesService.pinNote(currentNote.id);
+    
+    pinAction.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updated) => {
         this.selectedNote$.next(updated);
         this.isSaving = false;
         this.lastSaved = new Date();
-      })
-      .catch(err => {
-        console.error('Failed to pin note:', err);
+      },
+      error: (err) => {
+        console.error('Failed to pin/unpin note:', err);
         this.isSaving = false;
-      });
+      }
+    });
   }
 
   onArchive(): void {
@@ -454,8 +468,14 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     if (!currentNote) return;
     
     this.isSaving = true;
-    this.notesService.updateNote(currentNote.id, { archived: !currentNote.archived })
-      .then(updated => {
+    const archiveAction = currentNote.archived
+      ? this.notesService.unarchiveNote(currentNote.id)
+      : this.notesService.archiveNote(currentNote.id);
+    
+    archiveAction.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updated) => {
         this.selectedNote$.next(updated);
         this.isSaving = false;
         this.lastSaved = new Date();
@@ -463,11 +483,12 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
         if (updated.archived) {
           this.router.navigate(['/notes/dashboard']);
         }
-      })
-      .catch(err => {
-        console.error('Failed to archive note:', err);
+      },
+      error: (err) => {
+        console.error('Failed to archive/unarchive note:', err);
         this.isSaving = false;
-      });
+      }
+    });
   }
 
   onExport(): void {
@@ -570,17 +591,20 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     
     if (confirm('Are you sure you want to delete this note?')) {
       this.isSaving = true;
-      this.notesService.deleteNote(currentNote.id)
-        .then(() => {
+      this.notesService.deleteNote(currentNote.id).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
           this.selectedNote$.next(null);
           this.isSaving = false;
           // Navigate to dashboard
           this.router.navigate(['/notes/dashboard']);
-        })
-        .catch(err => {
+        },
+        error: (err) => {
           console.error('Failed to delete note:', err);
           this.isSaving = false;
-        });
+        }
+      });
     }
   }
 

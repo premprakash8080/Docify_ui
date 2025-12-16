@@ -1,156 +1,245 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, delay, tap } from 'rxjs/operators';
-import { v4 as uuidv4 } from 'uuid';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { map, tap, catchError, finalize, switchMap } from 'rxjs/operators';
 import { Note, Notebook, Tag } from '../../../core/models';
-import {
-  notes,
-  notebooks,
-  tags
-} from '../../../core/data/sample-data';
-import { StorageService } from '../../../core/services/storage.service';
 import { ApiService } from '../../../core/services/api.service';
-import { SyncService } from '../../../core/services/sync.service';
 import { AuthService } from '../../../auth/service/auth.service';
+import { NOTES_ENDPOINTS } from './api.collection';
 
 /**
- * Service for managing notes, notebooks, and tags data.
+ * Backend API response interfaces
+ */
+interface BackendNoteResponse {
+  id: string;
+  user_id: number;
+  notebook_id?: string | null;
+  firebase_document_id: string;
+  title: string;
+  pinned: boolean;
+  archived: boolean;
+  trashed: boolean;
+  version: number;
+  synced: boolean;
+  created_at: string;
+  updated_at?: string;
+  last_modified?: string;
+  notebook_name?: string | null;
+  notebook_description?: string | null;
+  notebook_color_id?: number | null;
+  notebook_color_hex?: string | null;
+  notebook_color_name?: string | null;
+  stack_id?: string | null;
+  stack_name?: string | null;
+  tag_count?: number;
+  file_count?: number;
+  task_count?: number;
+  completed_task_count?: number;
+}
+
+interface BackendNotesResponse {
+  success: boolean;
+  data: {
+    notes: BackendNoteResponse[];
+    count: number;
+  };
+}
+
+interface BackendNoteDetailResponse {
+  success: boolean;
+  data: {
+    note: BackendNoteResponse;
+  };
+}
+
+/**
+ * Service for managing notes data with backend API integration
  * 
- * Read operations use sample-data.ts directly and return Observables.
- * Write operations update both in-memory state and storage (for persistence).
- * 
- * Can be easily switched to HTTP calls by replacing Observable implementations
- * with HttpClient calls in read methods.
+ * All operations now use the backend API endpoints.
+ * BehaviorSubjects maintain reactive state for UI components.
  */
 @Injectable({
   providedIn: 'root'
 })
 export class NotesService {
-  // In-memory state for write operations and real-time updates
+  // In-memory state for reactive updates
   private notesSubject = new BehaviorSubject<Note[]>([]);
   public notes$ = this.notesSubject.asObservable();
 
-  private notebooksSubject = new BehaviorSubject<Notebook[]>([]);
-  public notebooks$ = this.notebooksSubject.asObservable();
+  // Loading and error states
+  private isLoadingSubject = new BehaviorSubject<boolean>(false);
+  public isLoading$ = this.isLoadingSubject.asObservable();
 
-  private tagsSubject = new BehaviorSubject<Tag[]>([]);
-  public tags$ = this.tagsSubject.asObservable();
+  private errorSubject = new BehaviorSubject<string | null>(null);
+  public error$ = this.errorSubject.asObservable();
 
-  private storage = inject(StorageService);
   private apiService = inject(ApiService);
-  private syncService = inject(SyncService);
   private authService = inject(AuthService);
 
   constructor() {
-    // Initialize with sample data merged with any stored data
-    this.initializeData();
-  }
+    // Load notes on service initialization if user is authenticated
+    if (this.authService.isAuthenticated) {
+      this.loadNotes().subscribe();
+    }
 
-  private async initializeData(): Promise<void> {
-    // Merge sample data with any stored data (from previous sessions)
-    // This allows for persistence of user-created notes while using sample data as base
-    try {
-      const userId = this.authService.currentUserValue?.id;
-      if (userId) {
-        const storedNotes = await this.storage.getAllByIndex<Note>('notes', 'userId', userId);
-        const storedNotebooks = await this.storage.getAllByIndex<Notebook>('notebooks', 'userId', userId);
-        const storedTags = await this.storage.getAllByIndex<Tag>('tags', 'userId', userId);
-
-        // Merge: sample data + stored data (stored data takes precedence for matching IDs)
-        const mergedNotes = this.mergeData(notes, storedNotes || []);
-        const mergedNotebooks = this.mergeData(notebooks, storedNotebooks || []);
-        const mergedTags = this.mergeData(tags, storedTags || []);
-
-        this.notesSubject.next(mergedNotes);
-        this.notebooksSubject.next(mergedNotebooks);
-        this.tagsSubject.next(mergedTags);
+    // Reload notes when user logs in
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.loadNotes().subscribe();
       } else {
-        // No user, use sample data only
-        this.notesSubject.next([...notes]);
-        this.notebooksSubject.next([...notebooks]);
-        this.tagsSubject.next([...tags]);
+        // Clear notes when user logs out
+        this.notesSubject.next([]);
       }
-    } catch (error) {
-      console.warn('Failed to merge stored data, using sample data only:', error);
-      this.notesSubject.next([...notes]);
-      this.notebooksSubject.next([...notebooks]);
-      this.tagsSubject.next([...tags]);
+    });
+  }
+
+  /**
+   * Map backend note response to frontend Note model
+   */
+  private mapBackendNoteToFrontend(backendNote: BackendNoteResponse): Note {
+    return {
+      id: backendNote.id,
+      userId: backendNote.user_id.toString(),
+      title: backendNote.title,
+      content: '', // Content is stored in Firebase, not in MySQL
+      tags: [], // Tags are loaded separately via NoteTag relationships
+      notebookId: backendNote.notebook_id || undefined,
+      pinned: backendNote.pinned,
+      archived: backendNote.archived,
+      trashed: backendNote.trashed,
+      createdAt: backendNote.created_at,
+      updatedAt: backendNote.updated_at || backendNote.created_at,
+      version: backendNote.version,
+      synced: backendNote.synced,
+      lastModified: backendNote.last_modified || backendNote.updated_at || backendNote.created_at,
+      attachments: [], // Files are loaded separately
+      tasks: [] // Tasks are loaded separately
+    };
+  }
+
+  /**
+   * Load all notes from backend API
+   * @param filters - Optional filters for notes
+   */
+  loadNotes(filters?: {
+    notebookId?: string;
+    archived?: boolean;
+    trashed?: boolean;
+    pinned?: boolean;
+  }): Observable<Note[]> {
+    this.isLoadingSubject.next(true);
+    this.errorSubject.next(null);
+
+    // Backend expects filters in request body for GET request (unusual but working with existing API)
+    // Note: ApiService.get() uses query params, but backend expects body, so we'll use post for filtered requests
+    // For now, use query params and let backend handle it
+    const queryParams: any = {};
+    if (filters?.notebookId) {
+      queryParams.notebook_id = filters.notebookId;
     }
-  }
-
-  /**
-   * Merge sample data with stored data (stored data takes precedence)
-   */
-  private mergeData<T extends { id: string }>(sample: T[], stored: T[]): T[] {
-    const storedMap = new Map(stored.map(item => [item.id, item]));
-    const merged = [...sample];
-    
-    // Replace sample items with stored versions if they exist
-    for (let i = 0; i < merged.length; i++) {
-      if (storedMap.has(merged[i].id)) {
-        merged[i] = storedMap.get(merged[i].id)!;
-        storedMap.delete(merged[i].id);
-      }
+    if (filters?.archived !== undefined) {
+      queryParams.archived = filters.archived;
     }
-    
-    // Add any stored items that aren't in sample data
-    storedMap.forEach(item => merged.push(item));
-    
-    return merged;
-  }
+    if (filters?.trashed !== undefined) {
+      queryParams.trashed = filters.trashed;
+    }
+    if (filters?.pinned !== undefined) {
+      queryParams.pinned = filters.pinned;
+    }
 
-  /**
-   * Reload data from storage (useful after data initialization)
-   */
-  reloadData(): void {
-    this.initializeData();
-  }
+    return this.apiService.get<BackendNotesResponse>(NOTES_ENDPOINTS.getAllNotes, queryParams).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success || !backendResponse.data?.notes) {
+          throw new Error((backendResponse as any).msg || 'Failed to load notes');
+        }
 
-  // ============================================================================
-  // Write Operations (update both in-memory state and storage)
-  // ============================================================================
-
-  // ============================================================================
-  // Read Operations (using sample-data.ts)
-  // ============================================================================
-
-  /**
-   * Get all notes
-   * @returns Observable of all notes (sample data + stored data)
-   */
-  getNotes(): Observable<Note[]> {
-    // Return from BehaviorSubject (merged sample + stored data)
-    return this.notes$;
-  }
-
-  /**
-   * Get note by ID
-   * @param id - The UUID of the note
-   * @returns Observable of the note, or undefined if not found
-   */
-  getNoteById(id: string): Observable<Note | undefined> {
-    return this.notes$.pipe(
-      map(notes => notes.find(n => n.id === id))
+        const notes = backendResponse.data.notes.map(note => this.mapBackendNoteToFrontend(note));
+        
+        // Update BehaviorSubject for reactive components
+        this.notesSubject.next(notes);
+        
+        return notes;
+      }),
+      catchError(error => {
+        const errorMessage = error?.message || 'Failed to load notes';
+        this.errorSubject.next(errorMessage);
+        console.error('Error loading notes:', error);
+        return throwError(() => error);
+      }),
+      finalize(() => {
+        this.isLoadingSubject.next(false);
+      })
     );
   }
 
   /**
-   * Get notes by user ID
-   * @param userId - The UUID of the user
-   * @returns Observable of notes belonging to the user
+   * Get all notes (reactive observable)
+   * Returns cached notes from BehaviorSubject
    */
-  getNotesByUserId(userId: string): Observable<Note[]> {
-    return this.notes$.pipe(
-      map(allNotes => allNotes.filter(note => note.userId === userId)),
-      delay(0) // Simulate API delay when switching to HTTP
+  getNotes(): Observable<Note[]> {
+    return this.notes$;
+  }
+
+  /**
+   * Get note by ID from backend API
+   */
+  getNoteById(id: string): Observable<Note | undefined> {
+    if (!id) {
+      return of(undefined);
+    }
+
+    // First check cache
+    const cachedNote = this.notesSubject.value.find(n => n.id === id);
+    if (cachedNote) {
+      // Return cached but also refresh from API in background
+      this.refreshNoteById(id).subscribe();
+      return of(cachedNote);
+    }
+
+    // Load from API if not in cache
+    return this.refreshNoteById(id);
+  }
+
+  /**
+   * Refresh a single note from API and update cache
+   */
+  private refreshNoteById(id: string): Observable<Note | undefined> {
+    return this.apiService.get<BackendNoteDetailResponse>(NOTES_ENDPOINTS.getNoteById(id)).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success || !backendResponse.data?.note) {
+          return undefined;
+        }
+
+        const note = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        
+        // Update cache
+        const currentNotes = this.notesSubject.value;
+        const noteIndex = currentNotes.findIndex(n => n.id === id);
+        
+        if (noteIndex >= 0) {
+          // Update existing note
+          const updatedNotes = [...currentNotes];
+          updatedNotes[noteIndex] = note;
+          this.notesSubject.next(updatedNotes);
+        } else {
+          // Add new note
+          this.notesSubject.next([...currentNotes, note]);
+        }
+        
+        return note;
+      }),
+      catchError(error => {
+        console.error('Error loading note:', error);
+        return of(undefined);
+      })
     );
   }
 
   /**
    * Get notes by notebook ID
-   * @param notebookId - The UUID of the notebook
-   * @param options - Optional filters
-   * @returns Observable of notes in the notebook
    */
   getNotesByNotebook(
     notebookId: string,
@@ -161,9 +250,14 @@ export class NotesService {
   ): Observable<Note[]> {
     const { includeArchived = false, includeTrashed = false } = options || {};
     
-    return this.notes$.pipe(
-      map(allNotes => {
-        let filtered = allNotes.filter(note => note.notebookId === notebookId);
+    return this.loadNotes({
+      notebookId,
+      archived: includeArchived ? undefined : false,
+      trashed: includeTrashed ? undefined : false
+    }).pipe(
+      map(notes => {
+        // Additional client-side filtering if needed
+        let filtered = notes;
         
         if (!includeArchived) {
           filtered = filtered.filter(note => !note.archived);
@@ -172,311 +266,386 @@ export class NotesService {
           filtered = filtered.filter(note => !note.trashed);
         }
         
-        // Sort by updatedAt descending
-        return filtered.sort((a, b) => 
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
-      }),
-      delay(0) // Simulate API delay when switching to HTTP
+        // Sort by pinned first, then updatedAt descending
+        return filtered.sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        });
+      })
     );
   }
 
   /**
    * Get notes by tag ID
-   * @param tagId - The UUID of the tag
-   * @returns Observable of notes with the tag
+   * Note: Backend doesn't have direct tag filtering, so we filter client-side
+   * TODO: Add backend endpoint for tag filtering
    */
   getNotesByTag(tagId: string): Observable<Note[]> {
+    // For now, load all notes and filter client-side
+    // In future, add backend endpoint: GET /notes?tag_id=xxx
     return this.notes$.pipe(
-      map(allNotes => 
-        allNotes.filter(note => note.tags.includes(tagId))
-      ),
-      delay(0) // Simulate API delay when switching to HTTP
+      map(notes => notes.filter(note => note.tags.includes(tagId)))
     );
   }
 
   /**
-   * Get notebooks
-   * @returns Observable of all notebooks (sample data + stored data)
-   */
-  getNotebooks(): Observable<Notebook[]> {
-    return this.notebooks$;
-  }
-
-  /**
-   * Get notebook by ID
-   * @param id - The UUID of the notebook
-   * @returns Observable of the notebook, or undefined if not found
-   */
-  getNotebookById(id: string): Observable<Notebook | undefined> {
-    return this.notebooks$.pipe(
-      map(notebooks => notebooks.find(n => n.id === id))
-    );
-  }
-
-  /**
-   * Get notebooks by user ID
-   * @param userId - The UUID of the user
-   * @returns Observable of notebooks belonging to the user
-   */
-  getNotebooksByUserId(userId: string): Observable<Notebook[]> {
-    return this.notebooks$.pipe(
-      map(allNotebooks => allNotebooks.filter(nb => nb.userId === userId)),
-      delay(0) // Simulate API delay when switching to HTTP
-    );
-  }
-
-  /**
-   * Get tags
-   * @returns Observable of all tags (sample data + stored data)
-   */
-  getTags(): Observable<Tag[]> {
-    return this.tags$;
-  }
-
-  /**
-   * Get tag by ID
-   * @param id - The UUID of the tag
-   * @returns Observable of the tag, or undefined if not found
-   */
-  getTagById(id: string): Observable<Tag | undefined> {
-    return this.tags$.pipe(
-      map(tags => tags.find(t => t.id === id))
-    );
-  }
-
-  /**
-   * Get tags by user ID
-   * @param userId - The UUID of the user
-   * @returns Observable of tags belonging to the user
-   */
-  getTagsByUserId(userId: string): Observable<Tag[]> {
-    return this.tags$.pipe(
-      map(allTags => allTags.filter(tag => tag.userId === userId)),
-      delay(0) // Simulate API delay when switching to HTTP
-    );
-  }
-
-  /**
-   * Create a new note with API-ready architecture
-   * 
-   * This method supports optimistic UI updates and can be easily replaced
-   * with an HTTP POST request when the backend API is ready.
-   * 
-   * Current implementation:
-   * - Optimistically updates the UI immediately
-   * - Stores locally for persistence
-   * - Queues for sync
-   * 
-   * Future API implementation:
-   * - Replace the Observable.of() with this.apiService.post('/notes', noteData)
-   * - Handle API response and update BehaviorSubject
-   * - Rollback on error if needed
-   * 
-   * @param note - Partial note data (id will be generated if not provided)
-   * @returns Observable<Note> - The created note
+   * Create a new note
    */
   createNote(note: Partial<Note>): Observable<Note> {
     const userId = this.authService.currentUserValue?.id;
     if (!userId) {
-      return new Observable(observer => {
-        observer.error(new Error('User not authenticated'));
-      });
+      return throwError(() => new Error('User not authenticated'));
     }
 
-    const id = note.id || this.generateId();
-    const now = new Date().toISOString();
-
-    const newNote: Note = {
-      id,
-      userId,
+    const payload = {
       title: note.title || 'Untitled',
-      content: note.content || '',
-      tags: note.tags || [],
-      notebookId: note.notebookId,
-      pinned: note.pinned || false,
-      archived: note.archived || false,
-      trashed: note.trashed || false,
-      createdAt: now,
-      updatedAt: now,
-      version: 1,
-      attachments: note.attachments || [],
-      synced: false,
-      lastModified: now
+      notebook_id: note.notebookId || null,
+      firebase_document_id: note.id || null // Use note.id as firebase_document_id if provided
     };
 
-    // Optimistic UI update: immediately update the BehaviorSubject
-    // This ensures the UI updates instantly without waiting for API/Storage
-    const currentNotes = this.notesSubject.value;
-    this.notesSubject.next([newNote, ...currentNotes]);
-
-    // Simulate API call with local storage
-    // TODO: Replace with actual API call: return this.apiService.post<Note>('/notes', newNote)
-    return of(newNote).pipe(
-      delay(0), // Simulate API delay (remove when using real API)
-      tap(async (createdNote) => {
-        try {
-          // Store locally for persistence (remove when using API-only approach)
-          await this.storage.put('notes', createdNote);
-          // Queue for sync (remove when using API-only approach)
-          await this.syncService.addToSyncQueue('create', 'note', id, createdNote);
-        } catch (error) {
-          console.warn('Failed to store note locally:', error);
-          // Note: In API-only mode, you might want to rollback the optimistic update here
+    return this.apiService.post<BackendNoteDetailResponse>(NOTES_ENDPOINTS.createNote, payload).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success || !backendResponse.data?.note) {
+          throw new Error((backendResponse as any).msg || 'Failed to create note');
         }
+
+        const createdNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        
+        // Update cache - add to beginning of list
+        const currentNotes = this.notesSubject.value;
+        this.notesSubject.next([createdNote, ...currentNotes]);
+        
+        return createdNote;
+      }),
+      catchError(error => {
+        console.error('Error creating note:', error);
+        return throwError(() => error);
       })
     );
   }
 
-  async updateNote(id: string, patch: Partial<Note>): Promise<Note> {
-    const existing = await this.storage.get<Note>('notes', id);
-    if (!existing) throw new Error('Note not found');
+  /**
+   * Update note metadata
+   */
+  updateNote(id: string, patch: Partial<Note>): Observable<Note> {
+    const payload: any = {};
+    
+    if (patch.title !== undefined) {
+      payload.title = patch.title;
+    }
+    if (patch.notebookId !== undefined) {
+      payload.notebook_id = patch.notebookId;
+    }
+    if (patch.version !== undefined) {
+      payload.version = patch.version;
+    }
 
-    const updated: Note = {
-      ...existing,
-      ...patch,
-      updatedAt: new Date().toISOString(),
-      version: (existing.version || 1) + 1,
-      synced: false,
-      lastModified: new Date().toISOString()
-    };
+    return this.apiService.put<BackendNoteDetailResponse>(NOTES_ENDPOINTS.updateNote(id), payload).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success || !backendResponse.data?.note) {
+          throw new Error((backendResponse as any).msg || 'Failed to update note');
+        }
 
-    await this.storage.put('notes', updated);
-    const currentNotes = this.notesSubject.value;
-    this.notesSubject.next(
-      currentNotes.map(n => n.id === id ? updated : n)
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        
+        // Update cache
+        const currentNotes = this.notesSubject.value;
+        const noteIndex = currentNotes.findIndex(n => n.id === id);
+        
+        if (noteIndex >= 0) {
+          const updatedNotes = [...currentNotes];
+          updatedNotes[noteIndex] = updatedNote;
+          this.notesSubject.next(updatedNotes);
+        }
+        
+        return updatedNote;
+      }),
+      catchError(error => {
+        console.error('Error updating note:', error);
+        return throwError(() => error);
+      })
     );
-
-    await this.syncService.addToSyncQueue('update', 'note', id, updated);
-
-    return updated;
   }
 
-  async deleteNote(id: string): Promise<void> {
-    const existing = await this.storage.get<Note>('notes', id);
-    if (!existing) throw new Error('Note not found');
+  /**
+   * Delete a note
+   */
+  deleteNote(id: string): Observable<void> {
+    return this.apiService.delete<{ success: boolean; msg?: string }>(NOTES_ENDPOINTS.deleteNote(id)).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success) {
+          throw new Error(backendResponse.msg || 'Failed to delete note');
+        }
 
-    await this.storage.delete('notes', id);
+        // Remove from cache
+        const currentNotes = this.notesSubject.value;
+        this.notesSubject.next(currentNotes.filter(n => n.id !== id));
+      }),
+      catchError(error => {
+        console.error('Error deleting note:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Pin a note
+   */
+  pinNote(id: string): Observable<Note> {
+    return this.apiService.put<BackendNoteDetailResponse>(NOTES_ENDPOINTS.pinNote(id), {}).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success || !backendResponse.data?.note) {
+          throw new Error((backendResponse as any).msg || 'Failed to pin note');
+        }
+
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        this.updateNoteInCache(updatedNote);
+        return updatedNote;
+      }),
+      catchError(error => {
+        console.error('Error pinning note:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Unpin a note
+   */
+  unpinNote(id: string): Observable<Note> {
+    return this.apiService.put<BackendNoteDetailResponse>(NOTES_ENDPOINTS.unpinNote(id), {}).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success || !backendResponse.data?.note) {
+          throw new Error((backendResponse as any).msg || 'Failed to unpin note');
+        }
+
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        this.updateNoteInCache(updatedNote);
+        return updatedNote;
+      }),
+      catchError(error => {
+        console.error('Error unpinning note:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Archive a note
+   */
+  archiveNote(id: string): Observable<Note> {
+    return this.apiService.put<BackendNoteDetailResponse>(NOTES_ENDPOINTS.archiveNote(id), {}).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success || !backendResponse.data?.note) {
+          throw new Error((backendResponse as any).msg || 'Failed to archive note');
+        }
+
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        this.updateNoteInCache(updatedNote);
+        return updatedNote;
+      }),
+      catchError(error => {
+        console.error('Error archiving note:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Unarchive a note
+   */
+  unarchiveNote(id: string): Observable<Note> {
+    return this.apiService.put<BackendNoteDetailResponse>(NOTES_ENDPOINTS.unarchiveNote(id), {}).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success || !backendResponse.data?.note) {
+          throw new Error((backendResponse as any).msg || 'Failed to unarchive note');
+        }
+
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        this.updateNoteInCache(updatedNote);
+        return updatedNote;
+      }),
+      catchError(error => {
+        console.error('Error unarchiving note:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Trash a note
+   */
+  trashNote(id: string): Observable<Note> {
+    return this.apiService.put<BackendNoteDetailResponse>(NOTES_ENDPOINTS.trashNote(id), {}).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success || !backendResponse.data?.note) {
+          throw new Error((backendResponse as any).msg || 'Failed to trash note');
+        }
+
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        this.updateNoteInCache(updatedNote);
+        return updatedNote;
+      }),
+      catchError(error => {
+        console.error('Error trashing note:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Restore a note from trash
+   */
+  restoreNote(id: string): Observable<Note> {
+    return this.apiService.put<BackendNoteDetailResponse>(NOTES_ENDPOINTS.restoreNote(id), {}).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success || !backendResponse.data?.note) {
+          throw new Error((backendResponse as any).msg || 'Failed to restore note');
+        }
+
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        this.updateNoteInCache(updatedNote);
+        return updatedNote;
+      }),
+      catchError(error => {
+        console.error('Error restoring note:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Move note to a notebook
+   */
+  moveNoteToNotebook(noteId: string, notebookId: string): Observable<Note> {
+    return this.apiService.put<BackendNoteDetailResponse>(
+      NOTES_ENDPOINTS.moveNoteToNotebook(noteId, notebookId),
+      {}
+    ).pipe(
+      map(response => {
+        // ApiService wraps response in { data: {...} }
+        const backendResponse = response.data;
+        if (!backendResponse.success || !backendResponse.data?.note) {
+          throw new Error((backendResponse as any).msg || 'Failed to move note');
+        }
+
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        this.updateNoteInCache(updatedNote);
+        return updatedNote;
+      }),
+      catchError(error => {
+        console.error('Error moving note:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Helper to update note in cache
+   */
+  private updateNoteInCache(updatedNote: Note): void {
     const currentNotes = this.notesSubject.value;
-    this.notesSubject.next(currentNotes.filter(n => n.id !== id));
-
-    await this.syncService.addToSyncQueue('delete', 'note', id, {});
+    const noteIndex = currentNotes.findIndex(n => n.id === updatedNote.id);
+    
+    if (noteIndex >= 0) {
+      const updatedNotes = [...currentNotes];
+      updatedNotes[noteIndex] = updatedNote;
+      this.notesSubject.next(updatedNotes);
+    } else {
+      // Note not in cache, add it
+      this.notesSubject.next([...currentNotes, updatedNote]);
+    }
   }
 
+  /**
+   * Reload all notes from API
+   */
+  reloadData(): void {
+    this.loadNotes().subscribe();
+  }
+
+  // ============================================================================
+  // Notebook and Tag methods (keeping for compatibility, but these should use
+  // NotebooksService and TagsService respectively)
+  // ============================================================================
+
+  getNotebooks(): Observable<Notebook[]> {
+    // TODO: Use NotebooksService instead
+    return of([]);
+  }
+
+  getNotebookById(id: string): Observable<Notebook | undefined> {
+    // TODO: Use NotebooksService instead
+    return of(undefined);
+  }
+
+  getNotebooksByUserId(userId: string): Observable<Notebook[]> {
+    // TODO: Use NotebooksService instead
+    return of([]);
+  }
+
+  getTags(): Observable<Tag[]> {
+    // TODO: Use TagsService instead
+    return of([]);
+  }
+
+  getTagById(id: string): Observable<Tag | undefined> {
+    // TODO: Use TagsService instead
+    return of(undefined);
+  }
+
+  getTagsByUserId(userId: string): Observable<Tag[]> {
+    // TODO: Use TagsService instead
+    return of([]);
+  }
+
+  getNotesByUserId(userId: string): Observable<Note[]> {
+    return this.notes$.pipe(
+      map(notes => notes.filter(note => note.userId === userId))
+    );
+  }
+
+  // Legacy methods for compatibility (deprecated - use API methods instead)
   async createNotebook(notebook: Partial<Notebook>): Promise<Notebook> {
-    const userId = this.authService.currentUserValue?.id;
-    if (!userId) throw new Error('User not authenticated');
-
-    const id = notebook.id || this.generateId();
-    const now = new Date().toISOString();
-
-    const newNotebook: Notebook = {
-      id,
-      userId,
-      name: notebook.name || 'Untitled Notebook',
-      createdAt: now,
-      updatedAt: now,
-      description: notebook.description,
-      color: notebook.color
-    };
-
-    await this.storage.put('notebooks', newNotebook);
-    const currentNotebooks = this.notebooksSubject.value;
-    this.notebooksSubject.next([...currentNotebooks, newNotebook]);
-
-    await this.syncService.addToSyncQueue('create', 'notebook', id, newNotebook);
-
-    return newNotebook;
+    throw new Error('Use NotebooksService.createNotebook() instead');
   }
 
   async updateNotebook(id: string, patch: Partial<Notebook>): Promise<Notebook> {
-    const existing = await this.storage.get<Notebook>('notebooks', id);
-    if (!existing) throw new Error('Notebook not found');
-
-    const updated: Notebook = {
-      ...existing,
-      ...patch,
-      updatedAt: new Date().toISOString()
-    };
-
-    await this.storage.put('notebooks', updated);
-    const currentNotebooks = this.notebooksSubject.value;
-    this.notebooksSubject.next(
-      currentNotebooks.map(n => n.id === id ? updated : n)
-    );
-
-    await this.syncService.addToSyncQueue('update', 'notebook', id, updated);
-
-    return updated;
+    throw new Error('Use NotebooksService.updateNotebook() instead');
   }
 
   async deleteNotebook(id: string): Promise<void> {
-    await this.storage.delete('notebooks', id);
-    const currentNotebooks = this.notebooksSubject.value;
-    this.notebooksSubject.next(currentNotebooks.filter(n => n.id !== id));
-
-    await this.syncService.addToSyncQueue('delete', 'notebook', id, {});
+    throw new Error('Use NotebooksService.deleteNotebook() instead');
   }
 
   async createTag(tag: Partial<Tag>): Promise<Tag> {
-    const userId = this.authService.currentUserValue?.id;
-    if (!userId) throw new Error('User not authenticated');
-
-    const id = tag.id || this.generateId();
-    const now = new Date().toISOString();
-
-    const newTag: Tag = {
-      id,
-      name: tag.name || 'Untitled Tag',
-      color: tag.color,
-      userId,
-      createdAt: now
-    };
-
-    await this.storage.put('tags', newTag);
-    const currentTags = this.tagsSubject.value;
-    
-    // Check if tag with same name already exists
-    const existingTag = currentTags.find(t => t.name.toLowerCase() === newTag.name.toLowerCase());
-    if (!existingTag) {
-      this.tagsSubject.next([...currentTags, newTag]);
-      await this.syncService.addToSyncQueue('create', 'tag', id, newTag);
-    }
-
-    return newTag;
+    throw new Error('Use TagsService.createTag() instead');
   }
 
   async updateTag(id: string, patch: Partial<Tag>): Promise<Tag> {
-    const existing = await this.storage.get<Tag>('tags', id);
-    if (!existing) throw new Error('Tag not found');
-
-    const updated: Tag = {
-      ...existing,
-      ...patch
-    };
-
-    await this.storage.put('tags', updated);
-    const currentTags = this.tagsSubject.value;
-    this.tagsSubject.next(
-      currentTags.map(t => t.id === id ? updated : t)
-    );
-
-    await this.syncService.addToSyncQueue('update', 'tag', id, updated);
-
-    return updated;
+    throw new Error('Use TagsService.updateTag() instead');
   }
 
   async deleteTag(id: string): Promise<void> {
-    await this.storage.delete('tags', id);
-    const currentTags = this.tagsSubject.value;
-    this.tagsSubject.next(currentTags.filter(t => t.id !== id));
-
-    await this.syncService.addToSyncQueue('delete', 'tag', id, {});
-  }
-
-  private generateId(): string {
-    // Use UUID for new note IDs to match sample data format
-    return uuidv4();
+    throw new Error('Use TagsService.deleteTag() instead');
   }
 }
-
