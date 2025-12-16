@@ -11,36 +11,39 @@
     <div class="settings-container">
        <!-- Theme Base Section -->
        <div class="settings-section">
-         <h2 class="section-title">Theme Layout</h2>
-         <div class="section-content">
-           <div class="theme-layout-buttons">
-             <button
-               (click)="setConfig(ConfigName.apollo, ColorSchemeName.light)"
-               class="theme-button"
-               mat-raised-button
-               type="button"
-             >
-               Light
-             </button>
-             <button
-               (click)="setConfig(ConfigName.apollo, ColorSchemeName.dark)"
-               class="theme-button"
-               mat-raised-button
-               type="button"
-             >
-               Dark
-             </button>
-             <button
-               (click)="setConfig(ConfigName.apollo, ColorSchemeName.default)"
-               class="theme-button"
-               mat-raised-button
-               type="button"
-             >
-               Default
-             </button>
-           </div>
-         </div>
-       </div>
+        <h2 class="section-title">Theme Layout</h2>
+        <div class="section-content">
+          <div class="theme-layout-buttons">
+            <button
+              mat-raised-button
+              type="button"
+              class="theme-button"
+              (click)="setConfig(ConfigName.apollo, ColorSchemeName.default)"
+            >
+              Default
+            </button>
+      
+            <button
+              mat-raised-button
+              type="button"
+              class="theme-button"
+              (click)="setConfig(ConfigName.apollo, ColorSchemeName.light)"
+            >
+              Light
+            </button>
+      
+            <button
+              mat-raised-button
+              type="button"
+              class="theme-button"
+              (click)="setConfig(ConfigName.apollo, ColorSchemeName.dark)"
+            >
+              Dark
+            </button>
+          </div>
+        </div>
+      </div>
+      
 
       <!-- Theme Colors Section -->
       <div class="settings-section">

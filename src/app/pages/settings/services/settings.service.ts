@@ -1,47 +1,73 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { Observable, map } from 'rxjs';
 import { ENDPOINTS } from './api.collection';
 import { UserSetting } from '../../../core/models/userSetting.model';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class SettingsService {
-  private http = inject(HttpClient);
 
-  // Single settings object (one row per user)
-  private settingsSubject = new BehaviorSubject<UserSetting | null>(null);
-  settings$ = this.settingsSubject.asObservable();
+  constructor(private http: HttpClient) {}
 
-  /**
-   * Fetch user settings from API
-   */
-  loadSettings(): Observable<UserSetting> {
-    return this.http.get<UserSetting>(ENDPOINTS.userSettings).pipe(
-      tap((settings) => this.settingsSubject.next(settings)),
-      catchError((error) => {
-        this.settingsSubject.next(null);
-        return throwError(() => error);
+  // -----------------------------
+  // Get settings
+  // -----------------------------
+  loadSettings(): Observable<UserSetting | null> {
+    return this.http.get<any>(ENDPOINTS.getUserSettings).pipe(
+      map(res => {
+        if (!res?.success || !res?.data?.settings) {
+          return null;
+        }
+
+        const s = res.data.settings;
+
+        // Map API → UI
+        return {
+          themeLayout: s.theme_layout,
+          themeColor: s.theme_color,
+          corners: s.corners,
+          buttonStyle: s.button_style
+        } as UserSetting;
       })
     );
   }
 
-  /**
-   * Update user settings
-   */
+  // -----------------------------
+  // Update settings
+  // -----------------------------
   updateSettings(payload: Partial<UserSetting>): Observable<UserSetting> {
-    return this.http.put<UserSetting>(ENDPOINTS.userSettings, payload).pipe(
-      tap((settings) => this.settingsSubject.next(settings)),
-      catchError((error) => throwError(() => error))
-    );
-  }
 
-  /**
-   * Get current cached settings (sync)
-   */
-  getCurrentSettings(): UserSetting | null {
-    return this.settingsSubject.value;
+    // Map UI → API (VERY IMPORTANT)
+    const settings: any = {};
+
+    if (payload.themeLayout) {
+      settings.theme_layout = payload.themeLayout;
+    }
+
+    if (payload.themeColor) {
+      settings.theme_color = payload.themeColor;
+    }
+
+    if (payload.corners) {
+      settings.corners = payload.corners;
+    }
+
+    if (payload.buttonStyle) {
+      settings.button_style = payload.buttonStyle;
+    }
+
+    return this.http.put<any>(ENDPOINTS.updateUserSettings, { settings }).pipe(
+      map(res => {
+        const s = res.data.settings;
+        return {
+          themeLayout: s.theme_layout,
+          themeColor: s.theme_color,
+          corners: s.corners,
+          buttonStyle: s.button_style
+        } as UserSetting;
+      })
+    );
   }
 }

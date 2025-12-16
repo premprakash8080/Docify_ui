@@ -84,26 +84,6 @@ const routes: VexRoutes = [
             path: 'social',
             loadChildren: () => import('./pages/apps/social/social.module').then(m => m.SocialModule)
           },
-          // {
-          //   path: 'contacts',
-          //   loadChildren: () => import('./pages/apps/contacts/contacts.module').then(m => m.ContactsModule)
-          // },
-          // {
-          //   path: 'aio-table',
-          //   loadChildren: () => import('./pages/apps/aio-table/aio-table.module').then(m => m.AioTableModule),
-          // },
-          // {
-          //   path: 'help-center',
-          //   loadChildren: () => import('./pages/apps/help-center/help-center.module').then(m => m.HelpCenterModule),
-          // },
-          // {
-          //   path: 'scrumboard',
-          //   loadChildren: () => import('./pages/apps/scrumboard/scrumboard.module').then(m => m.ScrumboardModule),
-          // },
-          // {
-          //   path: 'editor',
-          //   loadChildren: () => import('./pages/apps/editor/editor.module').then(m => m.EditorModule),
-          // },
         ]
       },
       // Main routes - USED in sidebar
@@ -130,6 +110,10 @@ const routes: VexRoutes = [
         path: 'tags',
         loadChildren: () => import('./pages/tags/tags.module').then(m => m.TagsModule),
       },
+      {
+        path: 'templates',
+        loadChildren: () => import('./pages/template/template.module').then(m => m.TemplatePageModule),
+      },
       // Calendar redirect - sidebar uses /calendar but route is at /apps/calendar
       {
         path: 'calendar',
@@ -148,26 +132,8 @@ const routes: VexRoutes = [
             path: 'error-500',
             loadChildren: () => import('./pages/pages/errors/error-500/error-500.module').then(m => m.Error500Module)
           }
-          // Unused pages - commented out
-          // {
-          //   path: 'pricing',
-          //   loadChildren: () => import('./pages/pages/pricing/pricing.module').then(m => m.PricingModule)
-          // },
-          // {
-          //   path: 'faq',
-          //   loadChildren: () => import('./pages/pages/faq/faq.module').then(m => m.FaqModule)
-          // },
-          // {
-          //   path: 'guides',
-          //   loadChildren: () => import('./pages/pages/guides/guides.module').then(m => m.GuidesModule)
-          // },
-          // {
-          //   path: 'invoice',
-          //   loadChildren: () => import('./pages/pages/invoice/invoice.module').then(m => m.InvoiceModule)
-          // },
         ]
       },
-      // Settings - USED in sidebar
       {
         path: 'settings',
         loadChildren: () => import('./pages/settings/settings.module').then(m => m.SettingsModule),
@@ -175,42 +141,7 @@ const routes: VexRoutes = [
           toolbarShadowEnabled: true
         }
       },
-      // Unused UI routes - commented out
-      // {
-      //   path: 'ui',
-      //   children: [
-      //     {
-      //       path: 'components',
-      //       loadChildren: () => import('./pages/ui/components/components.module').then(m => m.ComponentsModule),
-      //     },
-      //     {
-      //       path: 'forms/form-elements',
-      //       loadChildren: () => import('./pages/ui/forms/form-elements/form-elements.module').then(m => m.FormElementsModule),
-      //       data: {
-      //         containerEnabled: true
-      //       }
-      //     },
-      //     {
-      //       path: 'forms/form-wizard',
-      //       loadChildren: () => import('./pages/ui/forms/form-wizard/form-wizard.module').then(m => m.FormWizardModule),
-      //       data: {
-      //         containerEnabled: true
-      //       }
-      //     },
-      //     {
-      //       path: 'icons',
-      //       loadChildren: () => import('./pages/ui/icons/icons.module').then(m => m.IconsModule)
-      //     },
-      //     {
-      //       path: 'page-layouts',
-      //       loadChildren: () => import('./pages/ui/page-layouts/page-layouts.module').then(m => m.PageLayoutsModule),
-      //     },
-      //   ]
-      // },
-      // {
-      //   path: 'documentation',
-      //   loadChildren: () => import('./pages/documentation/documentation.module').then(m => m.DocumentationModule),
-      // },
+     
       {
         path: '**',
         loadChildren: () => import('./pages/pages/errors/error-404/error-404.module').then(m => m.Error404Module)

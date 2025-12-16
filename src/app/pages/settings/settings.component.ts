@@ -85,6 +85,7 @@ export class SettingsComponent implements OnInit {
   // Init
   // -----------------------------
   ngOnInit(): void {
+    // Load settings from API and apply to UI on init
     this.settingsService.loadSettings()
       .pipe(take(1))
       .subscribe(settings => {
@@ -98,15 +99,17 @@ export class SettingsComponent implements OnInit {
   // Apply Backend → UI
   // -----------------------------
   private applyUserSettings(settings: UserSetting): void {
-
+    // Apply theme layout from DB
     if (settings.themeLayout) {
-      this.configService.setConfig(settings.themeLayout as any);
+      this.configService.setConfig(settings.themeLayout as VexConfigName);
     }
 
+    // Apply theme color from DB
     if (settings.themeColor && this.colorVariables[settings.themeColor]) {
       this.selectColor(this.colorVariables[settings.themeColor], false);
     }
 
+    // Apply border radius (corners) from DB
     if (settings.corners) {
       const radius = this.roundedCornerValues.find(
         r => `${r.value}${r.unit}` === settings.corners
@@ -116,11 +119,14 @@ export class SettingsComponent implements OnInit {
       }
     }
 
+    // Apply button border radius style from DB
     if (settings.buttonStyle) {
       const radius = this.roundedCornerValues.find(
         r => `${r.value}${r.unit}` === settings.buttonStyle
       );
-      this.selectButtonStyle(radius, false);
+      if (radius) {
+        this.selectButtonStyle(radius, false);
+      }
     }
   }
 
@@ -128,25 +134,46 @@ export class SettingsComponent implements OnInit {
   // Persist Settings
   // -----------------------------
   private saveSettings(payload: Partial<UserSetting>): void {
+    // Save all setting changes to the API (database)
     this.settingsService.updateSettings(payload)
       .pipe(take(1))
-      .subscribe();
+      .subscribe(updatedSettings => {
+        // Optionally re-apply updated settings if needed (e.g., id, timestamps)
+        if (updatedSettings) {
+          this.applyUserSettings(updatedSettings);
+        }
+      });
   }
 
+  private getLayoutKey(layout: VexConfigName): string {
+    // If enum already contains full key, return as is
+    if (layout.startsWith('vex-layout-')) {
+      return layout;
+    }
+  
+    // Otherwise normalize it
+    return `vex-layout-${layout}`;
+  }
+
+  
   // -----------------------------
   // Layout & Theme
   // -----------------------------
   setConfig(layout: VexConfigName, colorScheme: ColorSchemeName): void {
+    // Apply to UI
     this.configService.setConfig(layout);
     this.configService.updateConfig({
       style: { colorScheme }
     });
-
+  
+    // ✅ ALWAYS send correct backend value
     this.saveSettings({
-      themeLayout: layout,
-      themeColor: colorScheme
+      themeLayout: this.getLayoutKey(layout),
+      themeColor: `vex-style-${colorScheme}`
     });
   }
+  
+  
 
   selectColor(color: ColorVariable, persist = true): void {
     this.selectedColor = color;
@@ -180,15 +207,22 @@ export class SettingsComponent implements OnInit {
     this.configService.updateConfig({
       style: { colorScheme: ColorSchemeName.dark }
     });
-    this.saveSettings({ themeColor: 'dark' });
+  
+    this.saveSettings({
+      themeColor: 'vex-style-dark'
+    });
   }
-
+  
   disableDarkMode(): void {
     this.configService.updateConfig({
       style: { colorScheme: ColorSchemeName.default }
     });
-    this.saveSettings({ themeColor: 'light' });
+  
+    this.saveSettings({
+      themeColor: 'vex-style-default'
+    });
   }
+  
 
   // -----------------------------
   // Direction / Footer / Toolbar

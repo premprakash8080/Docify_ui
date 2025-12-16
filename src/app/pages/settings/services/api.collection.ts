@@ -1,5 +1,6 @@
 import { environment } from 'src/environments/environment';
 
 export const ENDPOINTS = {
-  userSettings: `${environment.apiUrl}/users/settings`,
+  getUserSettings: `${environment.apiUrl}/users/settings`,
+  updateUserSettings: `${environment.apiUrl}/users/settings`,
 };
