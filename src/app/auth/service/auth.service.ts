@@ -2,10 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, tap } from 'rxjs/operators';
 import { User } from '../../core/models';
 import { ENDPOINTS } from './api.collection';
 import { UserSessionService } from '../../core/services/user-session.service';
+import { UserSettingsInitService } from '../../core/services/user-settings-init.service';
 
 export interface LoginRequest {
   email: string;
@@ -73,12 +74,19 @@ export class AuthService {
   private userKey = 'current_user';
 
   private userSessionService = inject(UserSessionService);
+  private userSettingsInitService = inject(UserSettingsInitService);
 
   constructor(
     private router: Router,
     private http: HttpClient
   ) {
     this.loadUserFromStorage();
+    // Load settings if user is already authenticated (using setTimeout to defer execution)
+    setTimeout(() => {
+      if (this.isAuthenticated) {
+        this.userSettingsInitService.loadAndApplySettings();
+      }
+    }, 0);
   }
 
   get currentUserValue(): User | null {
@@ -126,6 +134,10 @@ export class AuthService {
           };
           
         this.setAuthData(authResponse);
+        // Load and apply user settings after login
+        setTimeout(() => {
+          this.userSettingsInitService.loadAndApplySettings();
+        }, 0);
         return authResponse;
       }),
       catchError((error) => {
@@ -154,6 +166,10 @@ export class AuthService {
         };
         
         this.setAuthData(authResponse);
+        // Load and apply user settings after registration
+        setTimeout(() => {
+          this.userSettingsInitService.loadAndApplySettings();
+        }, 0);
         return authResponse;
       }),
       catchError((error) => {

@@ -42,24 +42,27 @@ export class SettingsService {
     // Map UI → API (VERY IMPORTANT)
     const settings: any = {};
 
-    if (payload.themeLayout) {
-      settings.theme_layout = payload.themeLayout;
+    if (payload.themeLayout !== undefined) {
+      settings.themeLayout = payload.themeLayout;
     }
 
-    if (payload.themeColor) {
-      settings.theme_color = payload.themeColor;
+    if (payload.themeColor !== undefined) {
+      settings.themeColor = payload.themeColor;
     }
 
-    if (payload.corners) {
+    if (payload.corners !== undefined) {
       settings.corners = payload.corners;
     }
 
-    if (payload.buttonStyle) {
-      settings.button_style = payload.buttonStyle;
+    if (payload.buttonStyle !== undefined) {
+      settings.buttonStyle = payload.buttonStyle;
     }
 
     return this.http.put<any>(ENDPOINTS.updateUserSettings, { settings }).pipe(
       map(res => {
+        if (!res?.success || !res?.data?.settings) {
+          throw new Error('Invalid response format');
+        }
         const s = res.data.settings;
         return {
           themeLayout: s.theme_layout,

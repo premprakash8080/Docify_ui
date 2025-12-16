@@ -1,4 +1,4 @@
-import {Component,Inject,ChangeDetectionStrategy, OnInit} from '@angular/core';
+import {Component,Inject,ChangeDetectionStrategy, OnInit, ChangeDetectorRef} from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { Observable } from 'rxjs';
 import { map, shareReplay, take } from 'rxjs/operators';
@@ -78,6 +78,7 @@ export class SettingsComponent implements OnInit {
     private configService: ConfigService,
     private layoutService: LayoutService,
     private settingsService: SettingsService,
+    private cdr: ChangeDetectorRef,
     @Inject(DOCUMENT) private document: Document
   ) {}
 
@@ -99,14 +100,33 @@ export class SettingsComponent implements OnInit {
   // Apply Backend → UI
   // -----------------------------
   private applyUserSettings(settings: UserSetting): void {
-    // Apply theme layout from DB
+    // Apply theme layout (color scheme: dark/light/default) from DB
+    // theme_layout stores the color scheme (vex-style-default, vex-style-dark, etc.)
     if (settings.themeLayout) {
-      this.configService.setConfig(settings.themeLayout as VexConfigName);
+      if (settings.themeLayout.startsWith('vex-style-')) {
+        // It's a color scheme value (e.g. vex-style-default, vex-style-dark)
+        this.configService.updateConfig({
+          style: { colorScheme: settings.themeLayout as ColorSchemeName }
+        });
+      } else if (settings.themeLayout.startsWith('vex-layout-')) {
+        // Legacy: it's a layout name, apply it
+        this.configService.setConfig(settings.themeLayout as VexConfigName);
+      }
     }
 
-    // Apply theme color from DB
-    if (settings.themeColor && this.colorVariables[settings.themeColor]) {
-      this.selectColor(this.colorVariables[settings.themeColor], false);
+    // Apply theme color (primary color: blue, red, etc.) from DB
+    // theme_color stores the primary color key (blue, red, etc.)
+    if (settings.themeColor) {
+      if (this.colorVariables[settings.themeColor]) {
+        // It's a primary color key (blue, red, etc.)
+        this.selectedColor = this.colorVariables[settings.themeColor];
+        this.selectColor(this.colorVariables[settings.themeColor], false);
+      } else if (settings.themeColor.startsWith('vex-style-')) {
+        // Legacy: it's a color scheme, apply it
+        this.configService.updateConfig({
+          style: { colorScheme: settings.themeColor as ColorSchemeName }
+        });
+      }
     }
 
     // Apply border radius (corners) from DB
@@ -121,13 +141,21 @@ export class SettingsComponent implements OnInit {
 
     // Apply button border radius style from DB
     if (settings.buttonStyle) {
-      const radius = this.roundedCornerValues.find(
-        r => `${r.value}${r.unit}` === settings.buttonStyle
-      );
-      if (radius) {
-        this.selectButtonStyle(radius, false);
+      if (settings.buttonStyle === 'undefined' || settings.buttonStyle === 'null' || settings.buttonStyle === '') {
+        // Handle undefined button style (inherit)
+        this.selectButtonStyle(undefined, false);
+      } else {
+        const radius = this.roundedCornerValues.find(
+          r => `${r.value}${r.unit}` === settings.buttonStyle
+        );
+        if (radius) {
+          this.selectButtonStyle(radius, false);
+        }
       }
     }
+    
+    // Trigger change detection to update UI
+    this.cdr.markForCheck();
   }
 
   // -----------------------------
@@ -166,10 +194,11 @@ export class SettingsComponent implements OnInit {
       style: { colorScheme }
     });
   
-    // ✅ ALWAYS send correct backend value
+    // ✅ Save correct backend values
+    // theme_layout stores the color scheme (dark/light/default)
+    // theme_color stores the primary color (will be updated separately when color is selected)
     this.saveSettings({
-      themeLayout: this.getLayoutKey(layout),
-      themeColor: `vex-style-${colorScheme}`
+      themeLayout: colorScheme, // Store color scheme in theme_layout field
     });
   }
   
@@ -274,10 +303,20 @@ export class SettingsComponent implements OnInit {
   }
 
   isSelectedButtonStyle(buttonStyle: CSSValue | undefined, config: VexConfig): boolean {
-    if (isNil(config.style.button.borderRadius) && isNil(buttonStyle)) {
+    const configBorderRadius = config.style.button.borderRadius;
+    
+    // Both undefined/null means inherit - they match
+    if (isNil(configBorderRadius) && isNil(buttonStyle)) {
       return true;
     }
-    return buttonStyle?.value === config.style.button.borderRadius?.value;
+    
+    // Compare both value and unit for exact match
+    if (buttonStyle && configBorderRadius) {
+      return buttonStyle.value === configBorderRadius.value && 
+             buttonStyle.unit === configBorderRadius.unit;
+    }
+    
+    return false;
   }
 
   selectButtonStyle(borderRadius: CSSValue | undefined, persist = true): void {
@@ -287,11 +326,21 @@ export class SettingsComponent implements OnInit {
       }
     });
 
-    if (persist && borderRadius) {
-      this.saveSettings({
-        buttonStyle: `${borderRadius.value}${borderRadius.unit}`
-      });
+    if (persist) {
+      if (borderRadius) {
+        this.saveSettings({
+          buttonStyle: `${borderRadius.value}${borderRadius.unit}`
+        });
+      } else {
+        // Save 'undefined' as string to indicate inherit
+        this.saveSettings({
+          buttonStyle: 'undefined'
+        });
+      }
     }
+    
+    // Trigger change detection to update button selection UI
+    this.cdr.markForCheck();
   }
 
   // -----------------------------
