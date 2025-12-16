@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -44,8 +44,8 @@ export class NotePageComponent implements OnInit, OnDestroy {
   lastSaved: Date | null = null;
 
   // Loading and error states
-  isLoading$ = this.notesService.isLoading$;
-  error$ = this.notesService.error$;
+  get isLoading$(): Observable<boolean> { return this.notesService.isLoading$; }
+  get error$(): Observable<string | null> { return this.notesService.error$; }
 
   private destroy$ = new Subject<void>();
   private notebooksMap = new Map<string, Notebook>();
@@ -54,6 +54,7 @@ export class NotePageComponent implements OnInit, OnDestroy {
   router = inject(Router);
   notesService: NotesService = inject(NotesService);
   layoutService = inject(LayoutService);
+  cdr = inject(ChangeDetectorRef);
 
   constructor() {
     // Load notes from API on component initialization
@@ -202,6 +203,101 @@ export class NotePageComponent implements OnInit, OnDestroy {
       // No notebook context - navigate to simple note route
       this.router.navigate(['/notes', note.id]);
     }
+  }
+
+  /**
+   * Create a new note immediately when user clicks "New Note"
+   */
+  onNewNote(): void {
+    // Get current notebook context from route
+    const allParams = this.getAllParams(this.route);
+    const currentNotebookId = allParams['notebookId'];
+    
+    // Create note with default data
+    const newNoteData: Partial<Note> = {
+      title: 'Untitled',
+      content: '',
+      notebookId: currentNotebookId || undefined
+    };
+
+    // Create note through service (returns Observable)
+    this.isSaving = true;
+    this.notesService.createNote(newNoteData).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (createdNote) => {
+        // Note has been added to the list via BehaviorSubject update
+        // Now select it and navigate to it
+        this.note = createdNote;
+        this.noteId = createdNote.id;
+        this.isSaving = false;
+        this.lastSaved = new Date();
+        
+        // Build navigation path based on notebook context
+        let navigationPath: string[];
+        
+        if (currentNotebookId) {
+          // Check if we're in a stack context
+          const stackId = allParams['stackId'];
+          
+          if (stackId) {
+            // Navigate to stack notebook note route
+            navigationPath = ['/notes', 'stack', stackId, 'notebook', currentNotebookId, 'note', createdNote.id];
+          } else {
+            // Navigate to notebook note route
+            navigationPath = ['/notes', 'notebook', currentNotebookId, 'note', createdNote.id];
+          }
+        } else {
+          // Use the notebook_id from the created note (backend ensures every note has a notebook)
+          const noteNotebookId = createdNote.notebookId;
+          if (noteNotebookId) {
+            // Navigate to notebook note route using the note's notebook
+            navigationPath = ['/notes', 'notebook', noteNotebookId, 'note', createdNote.id];
+          } else {
+            // Fallback to general note route
+            navigationPath = ['/notes', createdNote.id];
+          }
+        }
+        
+        // Navigate to the new note route
+        this.router.navigate(navigationPath).then(() => {
+          // Ensure note is loaded after navigation
+          this.notesService.getNoteById(createdNote.id).pipe(
+            takeUntil(this.destroy$)
+          ).subscribe(loadedNote => {
+            if (loadedNote) {
+              this.note = loadedNote;
+              this.cdr.markForCheck();
+            }
+          });
+        });
+      },
+      error: (error) => {
+        console.error('Failed to create note:', error);
+        this.isSaving = false;
+        alert('Failed to create note: ' + (error.message || 'Unknown error'));
+      }
+    });
+  }
+
+  /**
+   * Helper to collect all params from route tree
+   */
+  private getAllParams(route: ActivatedRoute): { [key: string]: any } {
+    const params: { [key: string]: any } = {};
+    
+    // Collect all parent params
+    const parentParams: { [key: string]: any } = {};
+    let parent: ActivatedRoute | null = route.parent;
+    while (parent) {
+      Object.assign(parentParams, parent.snapshot.params);
+      parent = parent.parent;
+    }
+    
+    // Merge with current route params (child params override parent)
+    Object.assign(params, parentParams, route.snapshot.params);
+    
+    return params;
   }
 
   ngOnDestroy(): void {

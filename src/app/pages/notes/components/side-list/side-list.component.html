@@ -95,7 +95,12 @@
 
   <!-- List Content -->
   <div class="side-list-content" [class.with-virtual-scroll]="enableVirtualScroll">
-    @if (hasItems) {
+    <!-- Debug info (remove in production) -->
+    <!-- <div style="padding: 8px; font-size: 12px; background: #f0f0f0;">
+      Items: {{ items?.length || 0 }}, HasItems: {{ hasItems }}, ItemsCount: {{ itemsCount }}
+    </div> -->
+    
+    @if (items && items.length > 0) {
       @if (enableVirtualScroll) {
         <cdk-virtual-scroll-viewport 
           [itemSize]="itemHeight" 

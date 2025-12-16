@@ -5,6 +5,7 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { Note, Notebook } from '../../../../core/models';
 import { NotesService } from '../../services/notes.service';
 import { AuthService } from '../../../../auth/service/auth.service';
+import { FirebaseService } from '../../../../core/services/firebase.service';
 import { Editor } from '@tiptap/core';
 import { NoteEditorContentComponent } from '../note-editor-content/note-editor-content.component';
 
@@ -56,6 +57,8 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
   private fb = inject(FormBuilder);
   private notesService = inject(NotesService);
   private authService = inject(AuthService);
+  private firebaseService = inject(FirebaseService);
+  private firebaseUnsubscribe: (() => void) | null = null;
 
   constructor() {
     this.form = this.fb.group({
@@ -205,6 +208,12 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
 
 
   ngOnDestroy(): void {
+    // Unsubscribe from Firebase real-time updates
+    if (this.firebaseUnsubscribe) {
+      this.firebaseUnsubscribe();
+      this.firebaseUnsubscribe = null;
+    }
+    
     // Save on destroy if there are unsaved changes
     if (this.note && this.hasChanges()) {
       this.saveNote(true);
@@ -219,6 +228,12 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
    * @param note - Note to load
    */
   loadNote(note: Note): void {
+    // Unsubscribe from previous Firebase subscription
+    if (this.firebaseUnsubscribe) {
+      this.firebaseUnsubscribe();
+      this.firebaseUnsubscribe = null;
+    }
+
     this.note = note;
     const content = note.content || '';
     this.form.patchValue({
@@ -233,6 +248,25 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
         this.editorContentComponent.updateContent(content);
       }
     }, 0);
+    
+    // Subscribe to Firebase real-time updates if firebase_document_id exists
+    const firebaseDocumentId = (note as any)?.firebaseDocumentId;
+    if (firebaseDocumentId) {
+      this.firebaseUnsubscribe = this.firebaseService.subscribeToNoteContent(
+        firebaseDocumentId,
+        (updatedContent) => {
+          // Only update if content actually changed (avoid loops)
+          const currentContent = this.contentControl.value || '';
+          if (updatedContent !== currentContent && updatedContent !== note.content) {
+            this.contentControl.setValue(updatedContent, { emitEvent: false });
+            if (this.editorContentComponent) {
+              this.editorContentComponent.updateContent(updatedContent);
+            }
+            this.updateWordCount();
+          }
+        }
+      );
+    }
     
     this.updateWordCount();
   }
@@ -279,7 +313,9 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
         content: content,
         userId,
         notebookId: this.notebookId || undefined // Use notebookId from input (route) if available
-      }).subscribe({
+      }).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
         next: (newNote) => {
           this.note = newNote;
           this.lastSaved = new Date();
@@ -297,32 +333,39 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
           }
         }
       });
-    } else {
-      // Update existing note
-      try {
+      } else {
+        // Update existing note
+        // Content is saved to Firebase, metadata to MySQL
         if (showIndicator) {
           this.isSaving = true;
           this.savingStateChange.emit({ isSaving: true, lastSaved: this.lastSaved });
         }
-        const updated = await this.notesService.updateNote(this.note.id, {
+        
+        // Update note with content saved to Firebase
+        this.notesService.updateNote(this.note.id, {
           title: title,
-          content: content
+          content: content // This will be saved to Firebase
+        }).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe({
+          next: (updated) => {
+            this.note = updated;
+            this.lastSaved = new Date();
+            this.noteUpdated.emit(updated);
+            if (showIndicator) {
+              this.isSaving = false;
+              this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
+            }
+          },
+          error: (error) => {
+            console.error('Failed to update note:', error);
+            if (showIndicator) {
+              this.isSaving = false;
+              this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
+            }
+          }
         });
-        this.note = updated;
-        this.lastSaved = new Date();
-        this.noteUpdated.emit(updated);
-        if (showIndicator) {
-          this.isSaving = false;
-          this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
-        }
-      } catch (error) {
-        console.error('Failed to update note:', error);
-        if (showIndicator) {
-          this.isSaving = false;
-          this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
-        }
       }
-    }
   }
 
   /**
@@ -340,46 +383,68 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
   /**
    * Toggles the pinned state of the note
    */
-  async togglePin(): Promise<void> {
+  togglePin(): void {
     if (!this.note) return;
-    try {
-      await this.notesService.updateNote(this.note.id, { pinned: !this.note.pinned });
-      if (this.note) {
-        this.note.pinned = !this.note.pinned;
+    
+    const pinAction = this.note.pinned 
+      ? this.notesService.unpinNote(this.note.id)
+      : this.notesService.pinNote(this.note.id);
+
+    pinAction.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updatedNote) => {
+        this.note = updatedNote;
+        this.noteUpdated.emit(updatedNote);
+      },
+      error: (error) => {
+        console.error('Failed to toggle pin:', error);
       }
-    } catch (error) {
-      console.error('Failed to toggle pin:', error);
-    }
+    });
   }
 
   /**
    * Toggles the archived state of the note
    */
-  async toggleArchive(): Promise<void> {
+  toggleArchive(): void {
     if (!this.note) return;
-    try {
-      await this.notesService.updateNote(this.note.id, { archived: !this.note.archived });
-      if (this.note) {
-        this.note.archived = !this.note.archived;
+    
+    const archiveAction = this.note.archived
+      ? this.notesService.unarchiveNote(this.note.id)
+      : this.notesService.archiveNote(this.note.id);
+
+    archiveAction.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updatedNote) => {
+        this.note = updatedNote;
+        this.noteUpdated.emit(updatedNote);
+      },
+      error: (error) => {
+        console.error('Failed to toggle archive:', error);
       }
-    } catch (error) {
-      console.error('Failed to toggle archive:', error);
-    }
+    });
   }
 
   /**
    * Deletes the current note after confirmation
    */
-  async deleteNote(): Promise<void> {
+  deleteNote(): void {
     if (!this.note) return;
     if (confirm('Are you sure you want to delete this note?')) {
-      try {
-        await this.notesService.deleteNote(this.note.id);
-        this.note = null;
-        this.form.reset();
-      } catch (error) {
-        console.error('Failed to delete note:', error);
-      }
+      this.notesService.deleteNote(this.note.id).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
+          this.note = null;
+          this.form.reset();
+          // Optionally emit an event for parent component to handle navigation/UI update
+          this.noteUpdated.emit(this.note);
+        },
+        error: (error) => {
+          console.error('Failed to delete note:', error);
+        }
+      });
     }
   }
 

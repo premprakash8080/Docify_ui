@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError, combineLatest } from 'rxjs';
 import { map, tap, catchError, finalize, switchMap } from 'rxjs/operators';
 import { Note, Notebook, Tag } from '../../../core/models';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../auth/service/auth.service';
+import { FirebaseService } from '../../../core/services/firebase.service';
 import { NOTES_ENDPOINTS } from './api.collection';
 
 /**
@@ -37,18 +38,12 @@ interface BackendNoteResponse {
 }
 
 interface BackendNotesResponse {
-  success: boolean;
-  data: {
-    notes: BackendNoteResponse[];
-    count: number;
-  };
+  notes: BackendNoteResponse[];
+  count: number;
 }
 
 interface BackendNoteDetailResponse {
-  success: boolean;
-  data: {
-    note: BackendNoteResponse;
-  };
+  note: BackendNoteResponse;
 }
 
 /**
@@ -74,6 +69,7 @@ export class NotesService {
 
   private apiService = inject(ApiService);
   private authService = inject(AuthService);
+  private firebaseService = inject(FirebaseService);
 
   constructor() {
     // Load notes on service initialization if user is authenticated
@@ -94,13 +90,14 @@ export class NotesService {
 
   /**
    * Map backend note response to frontend Note model
+   * Note: Content is stored in Firebase and loaded separately
    */
   private mapBackendNoteToFrontend(backendNote: BackendNoteResponse): Note {
-    return {
+    const note: Note = {
       id: backendNote.id,
       userId: backendNote.user_id.toString(),
       title: backendNote.title,
-      content: '', // Content is stored in Firebase, not in MySQL
+      content: '', // Content is stored in Firebase, will be loaded separately
       tags: [], // Tags are loaded separately via NoteTag relationships
       notebookId: backendNote.notebook_id || undefined,
       pinned: backendNote.pinned,
@@ -114,6 +111,53 @@ export class NotesService {
       attachments: [], // Files are loaded separately
       tasks: [] // Tasks are loaded separately
     };
+    
+    // Store firebase_document_id for Firebase operations
+    (note as any).firebaseDocumentId = backendNote.firebase_document_id;
+    
+    return note;
+  }
+
+  /**
+   * Load note content from Firebase
+   * @param noteId - Note ID
+   * @param firebaseDocumentId - Firebase document ID
+   * @returns Observable with note content
+   */
+  loadNoteContent(noteId: string, firebaseDocumentId: string): Observable<string> {
+    return new Observable(observer => {
+      this.firebaseService.getNoteContent(firebaseDocumentId)
+        .then(content => {
+          observer.next(content);
+          observer.complete();
+        })
+        .catch(error => {
+          console.error('Error loading note content from Firebase:', error);
+          observer.next('');
+          observer.complete();
+        });
+    });
+  }
+
+  /**
+   * Save note content to Firebase
+   * @param noteId - Note ID
+   * @param firebaseDocumentId - Firebase document ID
+   * @param content - Note content (HTML)
+   * @returns Observable<void>
+   */
+  saveNoteContent(noteId: string, firebaseDocumentId: string, content: string): Observable<void> {
+    return new Observable(observer => {
+      this.firebaseService.saveNoteContent(firebaseDocumentId, content)
+        .then(() => {
+          observer.next();
+          observer.complete();
+        })
+        .catch(error => {
+          console.error('Error saving note content to Firebase:', error);
+          observer.error(error);
+        });
+    });
   }
 
   /**
@@ -149,23 +193,43 @@ export class NotesService {
     return this.apiService.get<BackendNotesResponse>(NOTES_ENDPOINTS.getAllNotes, queryParams).pipe(
       map(response => {
         // ApiService wraps response in { data: {...} }
+        // Backend response structure: { notes: [...], count: 15 }
+        // After ApiService wrapping: { data: { notes: [...], count: 15 } }
         const backendResponse = response.data;
-        if (!backendResponse.success || !backendResponse.data?.notes) {
-          throw new Error((backendResponse as any).msg || 'Failed to load notes');
+        
+        // Handle case where backend returns error response
+        if (!backendResponse) {
+          throw new Error('Invalid response from server');
         }
-
-        const notes = backendResponse.data.notes.map(note => this.mapBackendNoteToFrontend(note));
+        
+        // Check if notes array exists
+        const notesArray = backendResponse.notes || [];
+        const notes = notesArray.map(note => this.mapBackendNoteToFrontend(note));
         
         // Update BehaviorSubject for reactive components
         this.notesSubject.next(notes);
         
         return notes;
       }),
-      catchError(error => {
-        const errorMessage = error?.message || 'Failed to load notes';
+      catchError(httpError => {
+        // Extract error message from various possible error formats
+        let errorMessage = 'Failed to load notes';
+        
+        if (httpError.error) {
+          if (httpError.error.msg) {
+            errorMessage = httpError.error.msg;
+          } else if (httpError.error.message) {
+            errorMessage = httpError.error.message;
+          } else if (typeof httpError.error === 'string') {
+            errorMessage = httpError.error;
+          }
+        } else if (httpError.message) {
+          errorMessage = httpError.message;
+        }
+        
         this.errorSubject.next(errorMessage);
-        console.error('Error loading notes:', error);
-        return throwError(() => error);
+        console.error('Error loading notes:', httpError);
+        return throwError(() => new Error(errorMessage));
       }),
       finalize(() => {
         this.isLoadingSubject.next(false);
@@ -203,17 +267,41 @@ export class NotesService {
 
   /**
    * Refresh a single note from API and update cache
+   * Also loads content from Firebase
    */
   private refreshNoteById(id: string): Observable<Note | undefined> {
     return this.apiService.get<BackendNoteDetailResponse>(NOTES_ENDPOINTS.getNoteById(id)).pipe(
-      map(response => {
+      switchMap(response => {
         // ApiService wraps response in { data: {...} }
+        // Backend response structure: { note: {...} }
+        // After ApiService wrapping: { data: { note: {...} } }
         const backendResponse = response.data;
-        if (!backendResponse.success || !backendResponse.data?.note) {
-          return undefined;
+        if (!backendResponse || !backendResponse.note) {
+          return of(undefined);
         }
 
-        const note = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        const note = this.mapBackendNoteToFrontend(backendResponse.note);
+        const firebaseDocumentId = backendResponse.note.firebase_document_id;
+        
+        // Load content from Firebase
+        if (firebaseDocumentId) {
+          return this.loadNoteContent(id, firebaseDocumentId).pipe(
+            map(content => {
+              note.content = content;
+              return note;
+            }),
+            catchError(error => {
+              console.error('Error loading note content from Firebase:', error);
+              // Return note without content if Firebase fails
+              return of(note);
+            })
+          );
+        }
+        
+        return of(note);
+      }),
+      map(note => {
+        if (!note) return undefined;
         
         // Update cache
         const currentNotes = this.notesSubject.value;
@@ -291,6 +379,7 @@ export class NotesService {
 
   /**
    * Create a new note
+   * Saves content to Firebase if provided
    */
   createNote(note: Partial<Note>): Observable<Note> {
     const userId = this.authService.currentUserValue?.id;
@@ -298,37 +387,113 @@ export class NotesService {
       return throwError(() => new Error('User not authenticated'));
     }
 
-    const payload = {
-      title: note.title || 'Untitled',
-      notebook_id: note.notebookId || null,
-      firebase_document_id: note.id || null // Use note.id as firebase_document_id if provided
+    // Build payload - only include notebook_id if it has a value
+    const payload: any = {
+      title: note.title || 'Untitled'
+      // Do not send firebase_document_id from the UI; let the API generate a UUID
     };
+    
+    // Only include notebook_id if it's provided and not null/undefined
+    if (note.notebookId) {
+      payload.notebook_id = note.notebookId;
+    }
 
     return this.apiService.post<BackendNoteDetailResponse>(NOTES_ENDPOINTS.createNote, payload).pipe(
-      map(response => {
+      switchMap(response => {
         // ApiService wraps response in { data: {...} }
+        // Backend response structure: { note: {...} }
+        // After ApiService wrapping: { data: { note: {...} } }
         const backendResponse = response.data;
-        if (!backendResponse.success || !backendResponse.data?.note) {
-          throw new Error((backendResponse as any).msg || 'Failed to create note');
+        
+        // Check if response is valid
+        if (!backendResponse || !backendResponse.note) {
+          console.error('Invalid response structure:', backendResponse);
+          throw new Error('Failed to create note: Invalid response structure');
         }
 
-        const createdNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        const backendNote = backendResponse.note;
+        const createdNote = this.mapBackendNoteToFrontend(backendNote);
+        const firebaseDocumentId = backendNote.firebase_document_id;
+        const content = note.content || '';
         
-        // Update cache - add to beginning of list
+        // Save content to Firebase if provided, then load full note data
+        if (content && firebaseDocumentId) {
+          return this.saveNoteContent(createdNote.id, firebaseDocumentId, content).pipe(
+            switchMap(() => {
+              createdNote.content = content;
+              // Reload note to get full data with relationships
+              return this.refreshNoteById(createdNote.id);
+            }),
+            catchError(error => {
+              console.error('Error saving note content to Firebase:', error);
+              // Return note even if Firebase save fails, but still reload from API
+              return this.refreshNoteById(createdNote.id).pipe(
+                catchError(() => of(createdNote))
+              );
+            })
+          );
+        } else {
+          // No content to save, but reload note to get full data with relationships
+          return this.refreshNoteById(createdNote.id).pipe(
+            catchError(() => of(createdNote))
+          );
+        }
+      }),
+      map(createdNote => {
+        if (!createdNote) {
+          throw new Error('Failed to create note');
+        }
+        
+        // Update cache - add to beginning of list (avoid duplicates)
         const currentNotes = this.notesSubject.value;
-        this.notesSubject.next([createdNote, ...currentNotes]);
+        const existingIndex = currentNotes.findIndex(n => n.id === createdNote.id);
+        
+        if (existingIndex >= 0) {
+          // Update existing note in place
+          const updatedNotes = [...currentNotes];
+          updatedNotes[existingIndex] = createdNote;
+          this.notesSubject.next(updatedNotes);
+        } else {
+          // Add new note to beginning
+          this.notesSubject.next([createdNote, ...currentNotes]);
+        }
         
         return createdNote;
       }),
-      catchError(error => {
-        console.error('Error creating note:', error);
-        return throwError(() => error);
+      catchError(httpError => {
+        // Extract error message from various possible error formats
+        let errorMessage = 'Failed to create note';
+        
+        // HTTP interceptor may throw string messages
+        if (typeof httpError === 'string') {
+          errorMessage = httpError;
+        } else if (httpError?.error) {
+          if (typeof httpError.error === 'string') {
+            errorMessage = httpError.error;
+          } else if (httpError.error.msg) {
+            errorMessage = httpError.error.msg;
+          } else if (httpError.error.message) {
+            errorMessage = httpError.error.message;
+          }
+        } else if (httpError?.message) {
+          errorMessage = httpError.message;
+        }
+        
+        console.error('Error creating note:', {
+          error: httpError,
+          errorMessage,
+          fullError: JSON.stringify(httpError, null, 2)
+        });
+        
+        this.errorSubject.next(errorMessage);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
 
   /**
-   * Update note metadata
+   * Update note metadata and content
+   * Content is saved to Firebase, metadata is saved to MySQL via API
    */
   updateNote(id: string, patch: Partial<Note>): Observable<Note> {
     const payload: any = {};
@@ -343,15 +508,39 @@ export class NotesService {
       payload.version = patch.version;
     }
 
-    return this.apiService.put<BackendNoteDetailResponse>(NOTES_ENDPOINTS.updateNote(id), payload).pipe(
-      map(response => {
+    // Get current note to find firebase_document_id
+    const currentNote = this.notesSubject.value.find(n => n.id === id);
+    const firebaseDocumentId = (currentNote as any)?.firebaseDocumentId;
+    const content = patch.content;
+
+    // Update metadata via API
+    const updateMetadata$ = this.apiService.put<BackendNoteDetailResponse>(NOTES_ENDPOINTS.updateNote(id), payload);
+
+    // Save content to Firebase if provided
+    const updateContent$ = (content !== undefined && firebaseDocumentId) 
+      ? this.saveNoteContent(id, firebaseDocumentId, content)
+      : of(null);
+
+    // Execute both updates in parallel
+    return combineLatest([updateMetadata$, updateContent$]).pipe(
+      switchMap(([response]) => {
         // ApiService wraps response in { data: {...} }
+        // Backend response structure: { note: {...} }
+        // After ApiService wrapping: { data: { note: {...} } }
         const backendResponse = response.data;
-        if (!backendResponse.success || !backendResponse.data?.note) {
-          throw new Error((backendResponse as any).msg || 'Failed to update note');
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Failed to update note: Invalid response structure');
         }
 
-        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.note);
+        
+        // Update content if it was saved to Firebase
+        if (content !== undefined) {
+          updatedNote.content = content;
+        } else if (currentNote) {
+          // Preserve existing content if not updated
+          updatedNote.content = currentNote.content;
+        }
         
         // Update cache
         const currentNotes = this.notesSubject.value;
@@ -363,11 +552,12 @@ export class NotesService {
           this.notesSubject.next(updatedNotes);
         }
         
-        return updatedNote;
+        return of(updatedNote);
       }),
-      catchError(error => {
-        console.error('Error updating note:', error);
-        return throwError(() => error);
+      catchError(httpError => {
+        const errorMessage = httpError.error?.msg || httpError.message || 'Failed to update note';
+        console.error('Error updating note:', httpError);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -388,9 +578,10 @@ export class NotesService {
         const currentNotes = this.notesSubject.value;
         this.notesSubject.next(currentNotes.filter(n => n.id !== id));
       }),
-      catchError(error => {
-        console.error('Error deleting note:', error);
-        return throwError(() => error);
+      catchError(httpError => {
+        const errorMessage = httpError.error?.msg || httpError.message || 'Failed to delete note';
+        console.error('Error deleting note:', httpError);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -402,18 +593,21 @@ export class NotesService {
     return this.apiService.put<BackendNoteDetailResponse>(NOTES_ENDPOINTS.pinNote(id), {}).pipe(
       map(response => {
         // ApiService wraps response in { data: {...} }
+        // Backend response structure: { note: {...} }
+        // After ApiService wrapping: { data: { note: {...} } }
         const backendResponse = response.data;
-        if (!backendResponse.success || !backendResponse.data?.note) {
-          throw new Error((backendResponse as any).msg || 'Failed to pin note');
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Failed to pin note: Invalid response structure');
         }
 
-        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.note);
         this.updateNoteInCache(updatedNote);
         return updatedNote;
       }),
-      catchError(error => {
-        console.error('Error pinning note:', error);
-        return throwError(() => error);
+      catchError(httpError => {
+        const errorMessage = httpError.error?.msg || httpError.message || 'Failed to pin note';
+        console.error('Error pinning note:', httpError);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -426,17 +620,18 @@ export class NotesService {
       map(response => {
         // ApiService wraps response in { data: {...} }
         const backendResponse = response.data;
-        if (!backendResponse.success || !backendResponse.data?.note) {
-          throw new Error((backendResponse as any).msg || 'Failed to unpin note');
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Failed to unpin note: Invalid response structure');
         }
 
-        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.note);
         this.updateNoteInCache(updatedNote);
         return updatedNote;
       }),
-      catchError(error => {
-        console.error('Error unpinning note:', error);
-        return throwError(() => error);
+      catchError(httpError => {
+        const errorMessage = httpError.error?.msg || httpError.message || 'Failed to unpin note';
+        console.error('Error unpinning note:', httpError);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -449,17 +644,18 @@ export class NotesService {
       map(response => {
         // ApiService wraps response in { data: {...} }
         const backendResponse = response.data;
-        if (!backendResponse.success || !backendResponse.data?.note) {
-          throw new Error((backendResponse as any).msg || 'Failed to archive note');
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Failed to archive note: Invalid response structure');
         }
 
-        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.note);
         this.updateNoteInCache(updatedNote);
         return updatedNote;
       }),
-      catchError(error => {
-        console.error('Error archiving note:', error);
-        return throwError(() => error);
+      catchError(httpError => {
+        const errorMessage = httpError.error?.msg || httpError.message || 'Failed to archive note';
+        console.error('Error archiving note:', httpError);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -472,17 +668,18 @@ export class NotesService {
       map(response => {
         // ApiService wraps response in { data: {...} }
         const backendResponse = response.data;
-        if (!backendResponse.success || !backendResponse.data?.note) {
-          throw new Error((backendResponse as any).msg || 'Failed to unarchive note');
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Failed to unarchive note: Invalid response structure');
         }
 
-        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.note);
         this.updateNoteInCache(updatedNote);
         return updatedNote;
       }),
-      catchError(error => {
-        console.error('Error unarchiving note:', error);
-        return throwError(() => error);
+      catchError(httpError => {
+        const errorMessage = httpError.error?.msg || httpError.message || 'Failed to unarchive note';
+        console.error('Error unarchiving note:', httpError);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -495,17 +692,18 @@ export class NotesService {
       map(response => {
         // ApiService wraps response in { data: {...} }
         const backendResponse = response.data;
-        if (!backendResponse.success || !backendResponse.data?.note) {
-          throw new Error((backendResponse as any).msg || 'Failed to trash note');
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Failed to trash note: Invalid response structure');
         }
 
-        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.note);
         this.updateNoteInCache(updatedNote);
         return updatedNote;
       }),
-      catchError(error => {
-        console.error('Error trashing note:', error);
-        return throwError(() => error);
+      catchError(httpError => {
+        const errorMessage = httpError.error?.msg || httpError.message || 'Failed to trash note';
+        console.error('Error trashing note:', httpError);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -518,17 +716,18 @@ export class NotesService {
       map(response => {
         // ApiService wraps response in { data: {...} }
         const backendResponse = response.data;
-        if (!backendResponse.success || !backendResponse.data?.note) {
-          throw new Error((backendResponse as any).msg || 'Failed to restore note');
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Failed to restore note: Invalid response structure');
         }
 
-        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.note);
         this.updateNoteInCache(updatedNote);
         return updatedNote;
       }),
-      catchError(error => {
-        console.error('Error restoring note:', error);
-        return throwError(() => error);
+      catchError(httpError => {
+        const errorMessage = httpError.error?.msg || httpError.message || 'Failed to restore note';
+        console.error('Error restoring note:', httpError);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -544,17 +743,18 @@ export class NotesService {
       map(response => {
         // ApiService wraps response in { data: {...} }
         const backendResponse = response.data;
-        if (!backendResponse.success || !backendResponse.data?.note) {
-          throw new Error((backendResponse as any).msg || 'Failed to move note');
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Failed to move note: Invalid response structure');
         }
 
-        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.data.note);
+        const updatedNote = this.mapBackendNoteToFrontend(backendResponse.note);
         this.updateNoteInCache(updatedNote);
         return updatedNote;
       }),
-      catchError(error => {
-        console.error('Error moving note:', error);
-        return throwError(() => error);
+      catchError(httpError => {
+        const errorMessage = httpError.error?.msg || httpError.message || 'Failed to move note';
+        console.error('Error moving note:', httpError);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }

@@ -27,8 +27,8 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
   filteredNotes$: Observable<Note[]>;
   
   // Loading and error states
-  isLoading$ = this.notesService.isLoading$;
-  error$ = this.notesService.error$;
+  get isLoading$(): Observable<boolean> { return this.notesService.isLoading$; }
+  get error$(): Observable<string | null> { return this.notesService.error$; }
   
   // UI state
   isMobile = false;
@@ -308,43 +308,63 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     };
 
     // Create note through service (returns Observable)
+    this.isSaving = true;
     this.notesService.createNote(newNoteData).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: (createdNote) => {
-        // Note has been optimistically added to the list via BehaviorSubject update
-        // Now select it and navigate to it
-        this.selectedNote$.next(createdNote);
-        
-        // Navigate to the new note route
-        if (currentNotebookId) {
-          // Check if we're in a stack context
-          const route = this.route;
-          let stackId: string | null = null;
-          let parent = route.parent;
-          while (parent) {
-            if (parent.snapshot.params['stackId']) {
-              stackId = parent.snapshot.params['stackId'];
-              break;
+        // Note has been added to the list via BehaviorSubject update
+        // Reload the note to get full data including content from Firebase
+        this.notesService.getNoteById(createdNote.id).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(fullNote => {
+          if (fullNote) {
+            // Select the fully loaded note
+            this.selectedNote$.next(fullNote);
+            this.isSaving = false;
+            this.lastSaved = new Date();
+            
+            // Navigate to the new note route
+            // Use the notebook_id from the created note (backend ensures every note has a notebook)
+            const noteNotebookId = fullNote.notebookId || currentNotebookId;
+            
+            if (noteNotebookId) {
+              // Check if we're in a stack context
+              const route = this.route;
+              let stackId: string | null = null;
+              let parent = route.parent;
+              while (parent) {
+                if (parent.snapshot.params['stackId']) {
+                  stackId = parent.snapshot.params['stackId'];
+                  break;
+                }
+                parent = parent.parent;
+              }
+              
+              if (stackId) {
+                // Navigate to stack notebook note route
+                this.router.navigate(['/notes/stack', stackId, 'notebook', noteNotebookId, 'note', fullNote.id]);
+              } else {
+                // Navigate to notebook note route
+                this.router.navigate(['/notes/notebook', noteNotebookId, 'note', fullNote.id]);
+              }
+            } else {
+              // Fallback to general note route
+              this.router.navigate(['/notes', fullNote.id]);
             }
-            parent = parent.parent;
-          }
-          
-          if (stackId) {
-            // Navigate to stack notebook note route
-            this.router.navigate(['/notes/stack', stackId, 'notebook', currentNotebookId, 'note', createdNote.id]);
           } else {
-            // Navigate to notebook note route
-            this.router.navigate(['/notes/notebook', currentNotebookId, 'note', createdNote.id]);
+            // Fallback to created note if full load fails
+            this.selectedNote$.next(createdNote);
+            this.isSaving = false;
+            this.lastSaved = new Date();
           }
-        } else {
-          // Navigate to general note route
-          this.router.navigate(['/notes', createdNote.id]);
-        }
+        });
       },
       error: (error) => {
         console.error('Failed to create note:', error);
+        this.isSaving = false;
         // TODO: Show user-friendly error message (toast/snackbar)
+        alert('Failed to create note: ' + (error.message || 'Unknown error'));
       }
     });
   }

@@ -186,14 +186,17 @@ export class NotePageContentComponent implements OnInit, OnDestroy {
   onRemoveTag(tag: string): void {
     if (!this.note || !this.note.tags) return;
     const updatedTags = this.note.tags.filter(t => t !== tag);
-    this.notesService.updateNote(this.note.id, { tags: updatedTags })
-      .then(updated => {
+    this.notesService.updateNote(this.note.id, { tags: updatedTags }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updated) => {
         this.note = updated;
         this.noteUpdated.emit(updated);
-      })
-      .catch(error => {
+      },
+      error: (error) => {
         console.error('Failed to remove tag:', error);
-      });
+      }
+    });
   }
 
   /**
@@ -216,8 +219,15 @@ export class NotePageContentComponent implements OnInit, OnDestroy {
     if (task) {
       task.completed = completed;
       // Update note
-      this.notesService.updateNote(this.note.id, { tasks: this.note.tasks }).then(updated => {
-        this.note = updated;
+      this.notesService.updateNote(this.note.id, { tasks: this.note.tasks }).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (updated) => {
+          this.note = updated;
+        },
+        error: (err) => {
+          console.error('Failed to update task:', err);
+        }
       });
     }
   }
@@ -239,8 +249,15 @@ export class NotePageContentComponent implements OnInit, OnDestroy {
     const task = this.note.tasks.find(t => t.id === taskId);
     if (task) {
       task.priority = task.priority === 'high' ? undefined : 'high';
-      this.notesService.updateNote(this.note.id, { tasks: this.note.tasks }).then(updated => {
-        this.note = updated;
+      this.notesService.updateNote(this.note.id, { tasks: this.note.tasks }).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (updated) => {
+          this.note = updated;
+        },
+        error: (err) => {
+          console.error('Failed to flag task:', err);
+        }
       });
     }
   }
@@ -257,8 +274,15 @@ export class NotePageContentComponent implements OnInit, OnDestroy {
   deleteTask(taskId: string): void {
     if (!this.note || !this.note.tasks) return;
     this.note.tasks = this.note.tasks.filter(t => t.id !== taskId);
-    this.notesService.updateNote(this.note.id, { tasks: this.note.tasks }).then(updated => {
-      this.note = updated;
+    this.notesService.updateNote(this.note.id, { tasks: this.note.tasks }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updated) => {
+        this.note = updated;
+      },
+      error: (err) => {
+        console.error('Failed to delete task:', err);
+      }
     });
   }
 

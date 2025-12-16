@@ -4,9 +4,12 @@ import {
   Output, 
   EventEmitter, 
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   TrackByFunction,
   OnInit,
-  OnDestroy
+  OnDestroy,
+  OnChanges,
+  SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -31,7 +34,7 @@ import { SideListItem, SideListDisplayConfig, SideListAction, SideListBadgeConfi
   styleUrls: ['./side-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SideListComponent implements OnInit, OnDestroy {
+export class SideListComponent implements OnInit, OnDestroy, OnChanges {
   // Inputs
   @Input() items: SideListItem[] = [];
   @Input() selectedItemId: string | null = null;
@@ -53,18 +56,29 @@ export class SideListComponent implements OnInit, OnDestroy {
   // Internal state
   private defaultTrackBy: TrackByFunction<SideListItem> = (index: number, item: SideListItem) => item.id;
   
+  constructor(private cdr: ChangeDetectorRef) {}
+  
   // Computed properties
   get itemsCount(): number {
-    return this.items.length;
+    return Array.isArray(this.items) ? this.items.length : 0;
   }
   
   get hasItems(): boolean {
-    return this.items.length > 0;
+    return Array.isArray(this.items) && this.items.length > 0;
   }
 
   ngOnInit(): void {
     if (!this.displayConfig) {
       throw new Error('SideListComponent: displayConfig is required');
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['items']) {
+      this.cdr.detectChanges();
+    }
+    if (changes['selectedItemId'] || changes['title'] || changes['displayConfig']) {
+      this.cdr.markForCheck();
     }
   }
 
@@ -83,11 +97,23 @@ export class SideListComponent implements OnInit, OnDestroy {
    * Get the title for an item
    */
   getItemTitle(item: SideListItem): string {
+    if (!item) {
+      return 'Untitled';
+    }
+    if (!this.displayConfig || !this.displayConfig.titleField) {
+      return (item as any).title || 'Untitled';
+    }
     const config = this.displayConfig.titleField;
     if (typeof config === 'function') {
-      return config(item);
+      try {
+        const title = config(item);
+        return title || (item as any).title || 'Untitled';
+      } catch (error) {
+        return (item as any).title || 'Untitled';
+      }
     }
-    return this.getFieldValue(item, config) || 'Untitled';
+    const fieldValue = this.getFieldValue(item, config);
+    return fieldValue || (item as any).title || 'Untitled';
   }
 
   /**

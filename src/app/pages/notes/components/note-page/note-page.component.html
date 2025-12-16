@@ -13,6 +13,65 @@
 
       <!-- Right Column: Note Content Area (with unified header) -->
       <div class="note-page-content-area">
+        @if (note === null) {
+          <div class="editor-empty">
+            <div class="empty-content">
+              <mat-icon class="empty-icon" svgIcon="mat:note"></mat-icon>
+              <h3 class="empty-title">Select a note to view</h3>
+              <p class="empty-description">Choose a note from the list to start editing</p>
+              <button mat-raised-button color="primary" (click)="onNewNote()">
+                <mat-icon svgIcon="mat:add"></mat-icon>
+                New Note
+              </button>
+            </div>
+          </div>
+        }
+        
+        @if (note !== null) {
+          <vex-note-page-content
+            [note]="note"
+            [isSaving]="isSaving"
+            [lastSaved]="lastSaved"
+            (previous)="onPreviousNote()"
+            (next)="onNextNote()"
+            (fullscreen)="toggleFullscreen()"
+            (share)="onShare()"
+            (link)="onCopyLink()"
+            (pin)="onPin()"
+            (archive)="onArchive()"
+            (export)="onExport()"
+            (manageTags)="onManageTags()"
+            (duplicate)="onDuplicate()"
+            (find)="onFind()"
+            (info)="onInfo()"
+            (history)="onHistory()"
+            (print)="onPrint()"
+            (delete)="onDelete()"
+            (noteUpdated)="onNoteUpdated($event)">
+          </vex-note-page-content>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Mobile Layout: Full Screen Note Editor -->
+  @if (isMobile) {
+    <div class="note-page-mobile">
+      @if (note === null) {
+        <div class="editor-empty">
+          <div class="empty-content">
+            <mat-icon class="empty-icon" svgIcon="mat:note"></mat-icon>
+            <h3 class="empty-title">Select a note to view</h3>
+            <p class="empty-description">Choose a note from the list to start editing</p>
+            <button mat-raised-button color="primary" (click)="onNewNote()">
+              <mat-icon svgIcon="mat:add"></mat-icon>
+              New Note
+            </button>
+          </div>
+        </div>
+      }
+      
+      @if (note !== null) {
         <vex-note-page-content
           [note]="note"
           [isSaving]="isSaving"
@@ -34,34 +93,7 @@
           (delete)="onDelete()"
           (noteUpdated)="onNoteUpdated($event)">
         </vex-note-page-content>
-      </div>
-    </div>
-  }
-
-  <!-- Mobile Layout: Full Screen Note Editor -->
-  @if (isMobile) {
-    <div class="note-page-mobile">
-      <vex-note-page-content
-        [note]="note"
-        [isSaving]="isSaving"
-        [lastSaved]="lastSaved"
-        (previous)="onPreviousNote()"
-        (next)="onNextNote()"
-        (fullscreen)="toggleFullscreen()"
-        (share)="onShare()"
-        (link)="onCopyLink()"
-        (pin)="onPin()"
-        (archive)="onArchive()"
-        (export)="onExport()"
-        (manageTags)="onManageTags()"
-        (duplicate)="onDuplicate()"
-        (find)="onFind()"
-        (info)="onInfo()"
-        (history)="onHistory()"
-        (print)="onPrint()"
-        (delete)="onDelete()"
-        (noteUpdated)="onNoteUpdated($event)">
-      </vex-note-page-content>
+      }
     </div>
   }
 </div>

@@ -49,9 +49,24 @@ export class NotesListComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
-    this.setupNotesFilter();
-    this.subscribeToNotes();
-    this.setupDynamicTitle();
+    // Ensure notes are loaded from API first
+    this.notesService.loadNotes().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => {
+        // Notes loaded, now setup filter and subscribe
+        this.setupNotesFilter();
+        this.subscribeToNotes();
+        this.setupDynamicTitle();
+      },
+      error: (err) => {
+        console.error('Error loading notes:', err);
+        // Still setup filter and subscribe even if load fails
+        this.setupNotesFilter();
+        this.subscribeToNotes();
+        this.setupDynamicTitle();
+      }
+    });
   }
 
   private setupDynamicTitle(): void {
@@ -136,55 +151,104 @@ export class NotesListComponent implements OnInit, OnDestroy {
       } else if (this.filterBy) {
         notesStream = this.searchService.filterByStatus(this.filterBy);
       } else {
+        // Default: get all notes from service
         notesStream = this.notesService.getNotes();
       }
 
       // Sort notes: pinned first, then by updatedAt descending
       this.filteredNotes$ = notesStream.pipe(
         map(notes => {
-          return notes
-            .filter(note => !note.trashed || this.filterBy === 'trashed')
-            .sort((a, b) => {
-              // Pinned notes first
-              if (a.pinned && !b.pinned) return -1;
-              if (!a.pinned && b.pinned) return 1;
-              // Then by updatedAt descending
-              return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-            });
+          if (!notes || !Array.isArray(notes) || notes.length === 0) {
+            return [];
+          }
+          const filtered = notes.filter(note => {
+            if (this.filterBy === 'trashed') {
+              return note.trashed === true;
+            }
+            return !note.trashed;
+          });
+          
+          return filtered.sort((a, b) => {
+            // Pinned notes first
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            // Then by updatedAt descending
+            const aTime = new Date(a.updatedAt || a.createdAt).getTime();
+            const bTime = new Date(b.updatedAt || b.createdAt).getTime();
+            return bTime - aTime;
+          });
         })
       );
     }
   }
 
   private subscribeToNotes(): void {
+    if (!this.filteredNotes$) {
+      console.warn('filteredNotes$ not initialized yet');
+      return;
+    }
+    
     this.filteredNotes$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(notes => {
-      // Update items array for side list component
-      this.items = notes as SideListItem[];
+      if (!notes) {
+        this.items = [];
+        this.cdr.markForCheck();
+        return;
+      }
+      
+      // Create a new array reference to ensure change detection works
+      const newItems = Array.isArray(notes) ? [...notes] as SideListItem[] : [];
+      
+      // Only update if items actually changed
+      if (this.items.length !== newItems.length || 
+          this.items.some((item, index) => item.id !== newItems[index]?.id)) {
+        this.items = newItems;
+        this.cdr.detectChanges();
+      }
     });
   }
 
   onNotePin(note: Note): void {
-    this.notesService.updateNote(note.id, { pinned: !note.pinned }).catch(err => {
-      console.error('Failed to pin note:', err);
+    this.notesService.pinNote(note.id).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updatedNote) => {
+        // Note: The notes$ BehaviorSubject in NotesService will emit updated list
+        // No need to manually update here, just emit for parent dashboard if needed
+        this.notePinned.emit(updatedNote);
+      },
+      error: (err) => {
+        console.error('Failed to pin note:', err);
+      }
     });
-    this.notePinned.emit(note);
   }
 
   onNoteArchive(note: Note): void {
-    this.notesService.updateNote(note.id, { archived: !note.archived }).catch(err => {
-      console.error('Failed to archive note:', err);
+    this.notesService.archiveNote(note.id).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updatedNote) => {
+        this.noteArchived.emit(updatedNote);
+      },
+      error: (err) => {
+        console.error('Failed to archive note:', err);
+      }
     });
-    this.noteArchived.emit(note);
   }
 
   onNoteDelete(note: Note): void {
     if (confirm('Are you sure you want to delete this note?')) {
-      this.notesService.deleteNote(note.id).catch(err => {
-        console.error('Failed to delete note:', err);
+      this.notesService.deleteNote(note.id).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
+          this.noteDeleted.emit(note);
+        },
+        error: (err) => {
+          console.error('Failed to delete note:', err);
+        }
       });
-      this.noteDeleted.emit(note);
     }
   }
 
@@ -298,14 +362,100 @@ export class NotesListComponent implements OnInit, OnDestroy {
    * Handle header actions from side list component
    */
   onHeaderAction(action: string): void {
-    switch (action) {
-      case 'filter':
-        this.toggleFilter();
-        break;
-      case 'menu':
-        this.toggleMenu();
-        break;
+    // Handle action format: "menu:new", "filter:tag", "sort:title", etc.
+    if (action.startsWith('menu:')) {
+      const menuAction = action.split(':')[1];
+      switch (menuAction) {
+        case 'new':
+          this.onCreateNewNote();
+          break;
+        case 'share':
+          // TODO: Implement share notebook
+          break;
+        case 'rename':
+          // TODO: Implement rename notebook
+          break;
+        case 'shortcut':
+          // TODO: Implement add to shortcuts
+          break;
+        case 'remove':
+          // TODO: Implement remove from stack
+          break;
+      }
+    } else if (action.startsWith('filter:')) {
+      const filterType = action.split(':')[1];
+      this.toggleFilter();
+      // TODO: Implement specific filter logic
+    } else if (action.startsWith('sort:')) {
+      const sortType = action.split(':')[1];
+      // TODO: Implement sort logic
+    } else {
+      // Legacy action handling
+      switch (action) {
+        case 'filter':
+          this.toggleFilter();
+          break;
+        case 'menu':
+          this.toggleMenu();
+          break;
+      }
     }
+  }
+
+  /**
+   * Create a new note when "New Note" is clicked from side-list header menu
+   */
+  private onCreateNewNote(): void {
+    // Get current notebook context from route
+    const getAllParams = (route: ActivatedRoute): { [key: string]: any } => {
+      const params: { [key: string]: any } = {};
+      const parentParams: { [key: string]: any } = {};
+      let parent: ActivatedRoute | null = route.parent;
+      while (parent) {
+        Object.assign(parentParams, parent.snapshot.params);
+        parent = parent.parent;
+      }
+      Object.assign(params, parentParams, route.snapshot.params);
+      return params;
+    };
+
+    const allParams = getAllParams(this.route);
+    const currentNotebookId = allParams['notebookId'] || this.notebookId;
+    
+    const newNoteData: Partial<Note> = {
+      title: 'Untitled',
+      content: '',
+      notebookId: currentNotebookId || undefined
+    };
+
+    this.notesService.createNote(newNoteData).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (createdNote) => {
+        // Note is automatically added to the list via BehaviorSubject
+        // Navigate to the new note
+        if (currentNotebookId) {
+          const stackId = allParams['stackId'];
+          if (stackId) {
+            this.router.navigate(['/notes/stack', stackId, 'notebook', currentNotebookId, 'note', createdNote.id]);
+          } else {
+            this.router.navigate(['/notes/notebook', currentNotebookId, 'note', createdNote.id]);
+          }
+        } else {
+          // Use notebook from created note (backend ensures every note has a notebook)
+          const noteNotebookId = createdNote.notebookId;
+          if (noteNotebookId) {
+            this.router.navigate(['/notes/notebook', noteNotebookId, 'note', createdNote.id]);
+          } else {
+            this.router.navigate(['/notes', createdNote.id]);
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Failed to create note:', error);
+        alert('Failed to create note: ' + (error.message || 'Unknown error'));
+      }
+    });
   }
 }
 

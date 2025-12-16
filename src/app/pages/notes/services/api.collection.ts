@@ -1,6 +1,7 @@
 import { environment } from '../../../../environments/environment';
 
-const API_BASE = `${environment.apiUrl}/notes`;
+// API_BASE should be relative to the apiUrl configured in environment.ts
+const API_BASE = `/notes`;
 
 export const NOTES_ENDPOINTS = {
   // CRUD
@@ -32,6 +33,3 @@ export const NOTES_ENDPOINTS = {
   getNoteFiles: (id: string) => `${API_BASE}/${id}/files`,
   getNoteTasks: (id: string) => `${API_BASE}/${id}/tasks`,
 };
-
-// Re-export services for convenience
-
