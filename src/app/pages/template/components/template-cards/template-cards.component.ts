@@ -4,6 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { TemplateHtmlPreviewComponent } from '../template-html-preview/template-html-preview.component';
 
 /**
  * Template model (frontend)
@@ -30,6 +31,7 @@ const defaultThumbnail = 'assets/images/template/default-thumbnail.png';
     MatDividerModule,
     MatButtonModule,
     MatIconModule,
+    TemplateHtmlPreviewComponent
   ],
   templateUrl: './template-cards.component.html',
   styleUrls: ['./template-cards.component.scss'],

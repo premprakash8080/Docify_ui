@@ -1,10 +1,14 @@
 <mat-card class="template-card">
   <!-- Template Image -->
   <div class="template-image">
-    <img
+    <!-- <img
       [src]="template.thumbnail || defaultThumbnail"
       alt="{{ template.name }}"
-    />
+    /> -->
+    <vex-template-html-preview
+    [content]="template?.content || ''"
+    [title]="'Template Preview'">
+  </vex-template-html-preview>
   </div>
 
   <!-- Template Info -->
