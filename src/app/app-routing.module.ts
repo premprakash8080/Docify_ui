@@ -19,11 +19,6 @@ const routes: VexRoutes = [
     path: 'forgot-password',
     loadChildren: () => import('./auth/forgot-password/forgot-password.module').then(m => m.ForgotPasswordModule),
   },
-  // Coming soon - NOT USED in sidebar (commented out)
-  // {
-  //   path: 'coming-soon',
-  //   loadChildren: () => import('./pages/pages/coming-soon/coming-soon.module').then(m => m.ComingSoonModule),
-  // },
   {
     path: '',
     component: CustomLayoutComponent,
@@ -112,7 +107,7 @@ const routes: VexRoutes = [
       },
       {
         path: 'templates',
-        loadChildren: () => import('./pages/template/template-routing.module').then(m => m.TemplatePageModule),
+        loadChildren: () => import('./pages/template/template.module').then(m => m.TemplatePageModule),
       },
       // Calendar redirect - sidebar uses /calendar but route is at /apps/calendar
       {

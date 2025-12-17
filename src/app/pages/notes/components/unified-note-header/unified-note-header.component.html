@@ -102,7 +102,9 @@
         </button>
         <!-- Pin button -->
         <button mat-menu-item (click)="onPin()">
-          <mat-icon [svgIcon]="note?.pinned ? 'mat:push_pin' : 'mat:push_pin_outlined'"></mat-icon>
+          <mat-icon
+            [svgIcon]="note?.pinned ? 'mat:push_pin' : 'mat:push_pin'">
+          </mat-icon>
           <span>{{ note?.pinned ? 'Unpin' : 'Pin' }}</span>
         </button>
         <button mat-menu-item (click)="onArchive()">

@@ -1,29 +1,41 @@
-<vex-page-layout>
+<vex-page-layout mode="card">
+  <vex-page-layout-header class="flex flex-col items-start justify-center">
+    <div class="container">
+      <h2 class="title m-0">Templates</h2>
+      <vex-breadcrumbs
+        [crumbs]="['Templates', 'Built-in Templates', 'My Templates']"
+      ></vex-breadcrumbs>
+    </div>
+  </vex-page-layout-header>
 
-  <vex-secondary-toolbar current="Simple - Tabbed">
-    <vex-breadcrumbs [crumbs]="['Page Layouts', 'Simple', 'Tabbed']" class="flex-auto"></vex-breadcrumbs>
-
-    <button class="ml-2" color="primary" mat-icon-button type="button">
-      <mat-icon svgIcon="mat:more_vert"></mat-icon>
-    </button>
-  </vex-secondary-toolbar>
-
-  <vex-page-layout-content class="p-0 container">
-    <mat-tab-group>
-      <mat-tab label="Main Tab">
-        <div class="p-6">
-
-        </div>
-      </mat-tab>
-      <mat-tab label="Side Tab">
-        <div class="p-6">
-        </div>
-      </mat-tab>
-      <mat-tab label="Extra Tab">
-        <div class="p-6">
-        </div>
-      </mat-tab>
-    </mat-tab-group>
+  <vex-page-layout-content class="container">
+    <div class="card">
+      <mat-tab-group>
+        <mat-tab label="Built-in Templates">
+          <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @for (template of systemTemplates; track template.id) {
+            <vex-template-cards
+              [template]="template"
+              (preview)="onPreview($event)"
+              (clone)="onClone($event)"
+              (delete)="onDelete($event)"
+            />
+            }
+          </div>
+        </mat-tab>
+        <mat-tab label="My Templates">
+          <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @for (template of userTemplates; track template.id) {
+              <vex-template-cards
+                [template]="template"
+                (preview)="onPreview($event)"
+                (clone)="onClone($event)"
+                (delete)="onDelete($event)"
+              />
+            }
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
   </vex-page-layout-content>
-
 </vex-page-layout>

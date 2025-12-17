@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
-import { PageLayoutSimpleTabbedComponent } from './template.component';
+import { TemplateComponent } from './template.component';
 
-describe('PageLayoutSimpleTabbedComponent', () => {
-  let component: PageLayoutSimpleTabbedComponent;
-  let fixture: ComponentFixture<PageLayoutSimpleTabbedComponent>;
+describe('TemplateComponent', () => {
+  let component: TemplateComponent;
+  let fixture: ComponentFixture<TemplateComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [PageLayoutSimpleTabbedComponent]
+      declarations: [TemplateComponent]
     })
       .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PageLayoutSimpleTabbedComponent);
+    fixture = TestBed.createComponent(TemplateComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

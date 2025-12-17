@@ -1,0 +1,64 @@
+<div class="template-overview">
+
+  <!-- Header -->
+  <div class="overview-header">
+    <button mat-icon-button routerLink="/templates">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <div class="header-info">
+      <h1>{{ template.name }}</h1>
+      <span class="badge" [class.system]="template.is_system">
+        {{ template.is_system ? 'Prebuilt Template' : 'My Template' }}
+      </span>
+    </div>
+
+    <button
+      mat-flat-button
+      color="primary"
+      class="use-btn"
+      (click)="onUseTemplate()"
+    >
+      <mat-icon>content_copy</mat-icon>
+      Use Template
+    </button>
+  </div>
+
+  <!-- Preview -->
+  <mat-card class="preview-card">
+    <img
+      [src]="template.thumbnail || defaultThumbnail"
+      alt="Template Preview"
+    />
+  </mat-card>
+
+  <!-- Info -->
+  <div class="overview-content">
+
+    <mat-card>
+      <h3>Description</h3>
+      <p>{{ template.description || 'No description available.' }}</p>
+    </mat-card>
+
+    <mat-card>
+      <h3>Template Details</h3>
+
+      <div class="details-row">
+        <span>Type</span>
+        <span>{{ template.type || 'Notes' }}</span>
+      </div>
+
+      <div class="details-row">
+        <span>Created By</span>
+        <span>{{ template.is_system ? 'System' : 'You' }}</span>
+      </div>
+
+      <div class="details-row">
+        <span>Last Updated</span>
+        <span>{{ template.updatedAt | date }}</span>
+      </div>
+    </mat-card>
+
+  </div>
+
+</div>

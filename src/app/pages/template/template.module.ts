@@ -19,7 +19,6 @@ import { MatIconModule } from '@angular/material/icon';
     MatTabsModule,
     BreadcrumbsModule,
     MatButtonModule,
-
     MatIconModule,
   ]
 })
