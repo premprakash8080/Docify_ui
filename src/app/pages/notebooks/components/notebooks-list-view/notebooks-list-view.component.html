@@ -19,7 +19,7 @@
         class="cursor-pointer hover:bg-hover"
         (click)="isNoteRow(row) ? onNoteClick(row) : (isNotebookRow(row) ? onNotebookClick(row) : null)"
         (keydown)="onRowKeydown($event, row)">
-      <div class="flex items-center gap-3 py-2 row-content" 
+      <div class="flex items-center py-2 row-content" 
            [class.level-0]="row.level === 0"
            [class.level-1]="row.level === 1"
            [class.level-2]="row.level === 2">
@@ -71,6 +71,7 @@
           </div>
         } @else if (isNoteRow(row)) {
           <!-- Note Row -->
+          <div class="chevron-spacer"></div>
           <mat-icon class="text-secondary note-icon" svgIcon="mat:description"></mat-icon>
           <span class="font-normal note-name">{{ row.title }}</span>
         }
