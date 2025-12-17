@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { ENDPOINTS } from './api.collection';
 import { HttpService } from '../../../core/services/http.service';
-import { Template } from '../template.component'; // TODO: move to shared models
 
 @Injectable({
   providedIn: 'root'

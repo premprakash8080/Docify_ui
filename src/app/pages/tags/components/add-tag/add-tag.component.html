@@ -1,5 +1,5 @@
 <div class="add-tag-dialog">
-  <h2 mat-dialog-title>Create new tag</h2>
+  <h2 mat-dialog-title>{{ title }}</h2>
 
   <mat-dialog-content>
     <form [formGroup]="form">
@@ -10,7 +10,7 @@
           formControlName="name" 
           placeholder="Enter tag name"
           maxlength="50"
-          (keydown.enter)="onCreate()"
+          (keydown.enter)="onSubmit()"
           autocomplete="off">
         <mat-error *ngIf="nameControl?.hasError('required')">
           Tag name is required
@@ -26,22 +26,24 @@
     <button 
       mat-button 
       (click)="onCancel()"
-      [disabled]="isCreating"
+      [disabled]="isSubmitting"
       type="button">
       Cancel
     </button>
     <button 
       mat-raised-button 
       color="primary"
-      (click)="onCreate()"
-      [disabled]="form.invalid || isCreating"
+      (click)="onSubmit()"
+      [disabled]="form.invalid || isSubmitting"
       type="button">
-      @if (isCreating) {
+      @if (isSubmitting) {
         <mat-icon class="spinning" svgIcon="mat:refresh"></mat-icon>
+      } @else if (isEditMode) {
+        <mat-icon svgIcon="mat:edit"></mat-icon>
       } @else {
         <mat-icon svgIcon="mat:add"></mat-icon>
       }
-      Create
+      {{ submitButtonText }}
     </button>
   </mat-dialog-actions>
 </div>
