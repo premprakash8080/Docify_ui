@@ -83,6 +83,9 @@
           width: 32px;
           height: 32px;
           line-height: 32px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
 
           mat-icon {
             font-size: 1.125rem;

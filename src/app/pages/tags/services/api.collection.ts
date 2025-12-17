@@ -12,5 +12,5 @@ export const ENDPOINTS = {
     // Tag ↔ Note Relations
     attachTagToNote: environment.apiUrl + '/tags',
     detachTagFromNote: environment.apiUrl + '/tags',
-   
+    getColors: environment.apiUrl + '/tags/colors',
 }

@@ -37,4 +37,7 @@ export class TagsService {
   detachTagFromNote(tagId: string, noteId: string) {
     return this.httpService.delete(ENDPOINTS.detachTagFromNote + '/' + tagId + '/notes/' + noteId);
   }
+  getColors() {
+    return this.httpService.get(ENDPOINTS.getColors);
+  }
 }

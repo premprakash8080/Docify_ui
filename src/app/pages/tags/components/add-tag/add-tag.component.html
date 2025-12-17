@@ -19,6 +19,39 @@
           Tag name must be less than 50 characters
         </mat-error>
       </mat-form-field>
+
+      <!-- Color picker -->
+      <div class="color-picker-section">
+        <label class="color-picker-label">Tag color (optional)</label>
+        @if (isLoadingColors) {
+          <div class="color-picker-loading">Loading colors...</div>
+        } @else {
+          <div class="color-picker-grid">
+            <button
+              type="button"
+              class="color-option"
+              [class.selected]="getSelectedColorId() === null"
+              (click)="onColorSelect(null)"
+              [attr.aria-label]="'No color'">
+              <div class="color-swatch no-color">
+                <mat-icon svgIcon="mat:close"></mat-icon>
+              </div>
+              <span class="color-name">No color</span>
+            </button>
+            @for (color of colors; track color.id) {
+              <button
+                type="button"
+                class="color-option"
+                [class.selected]="getSelectedColorId() === color.id"
+                (click)="onColorSelect(color.id)"
+                [attr.aria-label]="color.name">
+                <div class="color-swatch" [style.background-color]="color.hex_code"></div>
+                <span class="color-name">{{ color.name }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
     </form>
   </mat-dialog-content>
 
@@ -38,10 +71,8 @@
       type="button">
       @if (isSubmitting) {
         <mat-icon class="spinning" svgIcon="mat:refresh"></mat-icon>
-      } @else if (isEditMode) {
-        <mat-icon svgIcon="mat:edit"></mat-icon>
       } @else {
-        <mat-icon svgIcon="mat:add"></mat-icon>
+        <mat-icon [svgIcon]="submitIcon"></mat-icon>
       }
       {{ submitButtonText }}
     </button>
