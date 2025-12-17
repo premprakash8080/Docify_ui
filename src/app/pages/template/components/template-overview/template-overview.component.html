@@ -1,0 +1,75 @@
+<vex-page-layout mode="card" *ngIf="template; else loadingTpl">
+  <vex-page-layout-header class="flex flex-col items-start justify-center">
+    <div class="container">
+      <div class="header-content">
+        <button mat-icon-button (click)="goBack()" class="back-btn">
+          <mat-icon svgIcon="mat:arrow_back"></mat-icon>
+        </button>
+        <div class="header-info">
+          <h2 class="title m-0">{{ template?.name }}</h2>
+          <vex-breadcrumbs
+            [crumbs]="['Templates', template?.name || 'Template']"
+          ></vex-breadcrumbs>
+          <span class="badge" [class.system]="template?.is_system">
+            {{ template?.is_system ? 'Prebuilt Template' : 'My Template' }}
+          </span>
+        </div>
+        <button
+          mat-flat-button
+          color="primary"
+          class="use-btn"
+          (click)="onUseTemplate()"
+        >
+          <mat-icon svgIcon="mat:content_copy"></mat-icon>
+          Clone to Note
+        </button>
+      </div>
+    </div>
+  </vex-page-layout-header>
+
+  <vex-page-layout-content class="container">
+    <div class="card">
+      <!-- HTML Preview -->
+      <vex-template-html-preview
+        [content]="template?.content || ''"
+        [title]="'Template Preview'">
+      </vex-template-html-preview>
+
+      <!-- Content Grid -->
+      <div class="overview-content">
+        <!-- Description Card -->
+        <mat-card>
+          <h3>Description</h3>
+          <p>{{ template?.description || 'No description available.' }}</p>
+        </mat-card>
+
+        <!-- Details Card -->
+        <mat-card>
+          <h3>Template Details</h3>
+          <div class="details-row">
+            <span>Type</span>
+            <span>{{ template?.is_system ? 'Prebuilt' : 'User' }}</span>
+          </div>
+          <div class="details-row">
+            <span>Created By</span>
+            <span>{{ template?.is_system ? 'System' : 'You' }}</span>
+          </div>
+          <div class="details-row">
+            <span>Last Updated</span>
+            <span>{{ template?.updated_at || template?.created_at | date }}</span>
+          </div>
+        </mat-card>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>
+
+<ng-template #loadingTpl>
+  <vex-page-layout mode="card">
+    <vex-page-layout-content class="container">
+      <div class="card">
+        <div class="loading">Loading template...</div>
+      </div>
+    </vex-page-layout-content>
+  </vex-page-layout>
+</ng-template>

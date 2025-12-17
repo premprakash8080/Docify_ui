@@ -1,24 +1,15 @@
-.template-overview {
-  padding: 24px;
-  max-width: 1200px;
-  margin: auto;
-}
-
-/* Header */
-.overview-header {
+.header-content {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 24px;
+  width: 100%;
+
+  .back-btn {
+    margin-right: 8px;
+  }
 
   .header-info {
     flex: 1;
-
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 600;
-    }
 
     .badge {
       font-size: 12px;
@@ -42,24 +33,13 @@
   }
 }
 
-/* Preview */
-.preview-card {
-  margin-bottom: 24px;
-  border-radius: 16px;
-  overflow: hidden;
-
-  img {
-    width: 100%;
-    max-height: 420px;
-    object-fit: cover;
-  }
-}
 
 /* Content */
 .overview-content {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 24px;
+  margin-bottom: 24px;
 
   mat-card {
     padding: 20px;
