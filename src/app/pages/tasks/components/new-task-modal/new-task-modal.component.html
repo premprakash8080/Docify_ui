@@ -8,28 +8,17 @@
 
     <!-- Modal Content -->
     <form [formGroup]="taskForm" class="modal-content">
-      <!-- Notebook Dropdown -->
-      <!-- <div class="form-group">
-        <label class="form-label">Notebook</label>
-        <div class="select-icon-container">
-          <select formControlName="notebook" class="form-select">
-            <option value="Things to do">Things to do</option>
-          </select>
-          <svg
-            class="select-icon"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            ></path>
-          </svg>
-        </div>
-      </div> -->
+      <!-- Note Selection -->
+      <div class="form-group">
+        <label class="form-label">Note</label>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-select formControlName="note_id" required>
+            @for (note of notes; track note.id) {
+              <mat-option [value]="note.id">{{ note.title }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
 
       <!-- Title Input -->
       <div class="form-group">
@@ -79,15 +68,15 @@
           >
             Custom
           </button>
-          <button
-            type="button"
-            (click)="setDueDate('repeat')"
-            [class.active]="selectedDueDate === 'repeat'"
-            class="option-button"
-          >
-            Repeat
-          </button>
         </div>
+        @if (selectedDueDate === 'custom') {
+          <input
+            type="date"
+            formControlName="dueDate"
+            class="form-input"
+            style="margin-top: 8px;"
+          />
+        }
       </div>
 
       <!-- Reminder Row -->
@@ -124,7 +113,12 @@
       <!-- Assigned to Row -->
       <div class="form-group">
         <label class="form-label">Assigned to</label>
-        <button type="button" class="link-button">Assign</button>
+        <input
+          type="text"
+          formControlName="assignedTo"
+          placeholder="Enter assignee name or email"
+          class="form-input"
+        />
       </div>
 
       <!-- Priority Row -->

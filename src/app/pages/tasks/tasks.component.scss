@@ -1,3 +1,39 @@
+// Completed task styling
+.table-row.completed {
+  opacity: 0.6;
+  
+  .completed-text {
+    text-decoration: line-through;
+    color: #9ca3af;
+  }
+}
+
+// Error styling
+.error {
+  color: #ef4444;
+  padding: 16px;
+}
+
+// Delete button
+.delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #6b7280;
+  transition: color 0.2s;
+  
+  &:hover {
+    color: #ef4444;
+  }
+  
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
 .tasks-container {
   min-height: 100vh;
   background: var(--background-foreground);

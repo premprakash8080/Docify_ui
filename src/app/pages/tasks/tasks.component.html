@@ -59,7 +59,10 @@
           <input 
             type="text" 
             placeholder="Find tasks…" 
-            class="search-input">
+            class="search-input"
+            [value]="searchQuery"
+            (input)="onSearchChange($any($event.target).value)"
+          >
           <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
@@ -81,35 +84,65 @@
             <th class="table-header-cell">Due date</th>
             <th class="table-header-cell">Assigned note</th>
             <th class="table-header-cell">Assigned to</th>
+            <th class="table-header-cell">Actions</th>
           </tr>
         </thead>
         <tbody>
-          @for (task of tasks; track task.id) {
-            <tr class="table-row">
-              <td class="table-cell">
-                <input 
-                  type="checkbox" 
-                  [checked]="task.completed"
-                  class="task-checkbox">
-              </td>
-              <td class="table-cell task-title">
-                {{ task.title }}
-              </td>
-              <td class="table-cell" [class.overdue]="task.isOverdue">
-                {{ task.dueDate }}
-              </td>
-              <td class="table-cell">
-                <div class="flex items-center gap-2">
-                  <svg class="task-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                  <span>{{ task.assignedNote }}</span>
-                </div>
-              </td>
-              <td class="table-cell">
-                {{ task.assignedTo }}
+          @if (loading) {
+            <tr>
+              <td colspan="6" class="table-cell text-center">
+                Loading tasks...
               </td>
             </tr>
+          } @else if (error) {
+            <tr>
+              <td colspan="6" class="table-cell text-center error">
+                {{ error }}
+              </td>
+            </tr>
+          } @else if (filteredTasks.length === 0) {
+            <tr>
+              <td colspan="6" class="table-cell text-center">
+                No tasks found
+              </td>
+            </tr>
+          } @else {
+            @for (task of filteredTasks; track task.id) {
+              <tr class="table-row" [class.completed]="task.completed">
+                <td class="table-cell">
+                  <mat-checkbox 
+                    [checked]="task.completed"
+                    (change)="onTaskToggle(task, $event.checked)">
+                  </mat-checkbox>
+                </td>
+                <td class="table-cell task-title" [class.completed-text]="task.completed">
+                  {{ task.title }}
+                </td>
+                <td class="table-cell" [class.overdue]="task.isOverdue">
+                  {{ task.dueDate || '-' }}
+                </td>
+                <td class="table-cell">
+                  <div class="flex items-center gap-2">
+                    <svg class="task-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span>{{ task.assignedNote }}</span>
+                  </div>
+                </td>
+                <td class="table-cell">
+                  {{ task.assignedTo }}
+                </td>
+                <td class="table-cell">
+                  <button 
+                    type="button"
+                    (click)="onTaskDelete(task)"
+                    class="delete-button"
+                    [attr.aria-label]="'Delete task ' + task.title">
+                    <mat-icon svgIcon="mat:delete"></mat-icon>
+                  </button>
+                </td>
+              </tr>
+            }
           }
         </tbody>
       </table>

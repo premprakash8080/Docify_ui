@@ -1,17 +1,23 @@
-import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Output, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { NotesService } from '../../../notes/services/notes.service';
+import { Note } from '../../../../core/models';
 
 export interface NewTaskData {
-  notebook: string;
+  note_id: string;
   title: string;
-  description: string;
-  dueDate: string;
-  reminder: string;
-  assignedTo: string;
-  priority: string;
-  flagged: boolean;
+  description?: string;
+  dueDate?: string;
+  reminder?: string;
+  assignedTo?: string;
+  priority?: string;
+  flagged?: boolean;
 }
 
 @Component({
@@ -22,26 +28,48 @@ export interface NewTaskData {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatIconModule
+    MatIconModule,
+    MatSelectModule,
+    MatFormFieldModule
   ]
 })
-export class NewTaskModalComponent {
+export class NewTaskModalComponent implements OnInit, OnDestroy {
   fb = inject(FormBuilder);
+  private notesService = inject(NotesService);
+  private destroy$ = new Subject<void>();
 
   @Output() closed = new EventEmitter<void>();
   @Output() created = new EventEmitter<NewTaskData>();
 
   taskForm: FormGroup;
+  notes: Note[] = [];
 
-  selectedNotebook = 'Things to do';
   selectedDueDate = '';
   selectedReminder = '';
   selectedPriority = '';
   isFlagged = false;
 
+  ngOnInit(): void {
+    // Load notes for dropdown
+    this.notesService.getNotes().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(notes => {
+      this.notes = notes.filter(n => !n.trashed && !n.archived);
+      // Set default note if available
+      if (this.notes.length > 0 && !this.taskForm.get('note_id')?.value) {
+        this.taskForm.patchValue({ note_id: this.notes[0].id });
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   constructor() {
     this.taskForm = this.fb.group({
-      notebook: ['Things to do'],
+      note_id: ['', Validators.required],
       title: ['', Validators.required],
       description: [''],
       dueDate: [''],
@@ -58,8 +86,9 @@ export class NewTaskModalComponent {
   }
 
   resetForm(): void {
+    const defaultNoteId = this.notes.length > 0 ? this.notes[0].id : '';
     this.taskForm.reset({
-      notebook: 'Things to do',
+      note_id: defaultNoteId,
       flagged: false
     });
     this.selectedDueDate = '';
@@ -70,7 +99,21 @@ export class NewTaskModalComponent {
 
   setDueDate(option: string): void {
     this.selectedDueDate = option;
-    this.taskForm.patchValue({ dueDate: option });
+    if (option === 'today') {
+      const today = new Date().toISOString().split('T')[0];
+      this.taskForm.patchValue({ dueDate: today });
+    } else if (option === 'tomorrow') {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      this.taskForm.patchValue({ dueDate: tomorrow.toISOString().split('T')[0] });
+    } else if (option === 'custom') {
+      // Keep current value or empty
+      if (!this.taskForm.get('dueDate')?.value) {
+        this.taskForm.patchValue({ dueDate: '' });
+      }
+    } else {
+      this.taskForm.patchValue({ dueDate: option });
+    }
   }
 
   setReminder(option: string): void {
