@@ -19,8 +19,8 @@ export const ENDPOINTS = {
     reorderNotebooks: `${environment.apiUrl}/notebooks/reorder`,
     
     // Notebook ↔ Stack
-    moveNotebookToStack: (id: string, stackId: string) => `${environment.apiUrl}/notebooks/${id}/stack/${stackId}`,
-    removeNotebookFromStack: (id: string) => `${environment.apiUrl}/notebooks/${id}/stack`,
+    moveNotebookToStack: environment.apiUrl + '/notebooks/stack/updateNotebookStack',
+    removeNotebookFromStack: environment.apiUrl+ '/notebooks/stack/removeNotebookFromStack',
     
     // Notebook ↔ Notes
     getNotebookNotes: (id: string) => `${environment.apiUrl}/notebooks/${id}/notes`,

@@ -169,4 +169,41 @@ export class NotebooksService {
   getNotebooksWithCounts(userId?: string) {
     return this.getAllNotebooks();
   }
+
+  moveNotebookToStack(notebookId: string, stackId: string) {
+    return this.httpService.put(ENDPOINTS.moveNotebookToStack, { id: notebookId, stack_id: stackId });
+  }
+
+  removeNotebookFromStack(notebookId: string) {
+    return this.httpService.delete(ENDPOINTS.removeNotebookFromStack, { id: notebookId });
+  }
+
+  createStack(stackData: {
+    name: string;
+    description?: string;
+    color_id?: number | null;
+  }) {
+    return this.httpService.post(ENDPOINTS.createStack, stackData);
+  }
+
+  updateStack(stackId: string, updates: {
+    name?: string;
+    description?: string;
+    color_id?: number | null;
+  }) {
+    return this.httpService.put(ENDPOINTS.updateStack(stackId), updates);
+  }
+
+  deleteStack(stackId: string) {
+    return this.httpService.delete(ENDPOINTS.deleteStack(stackId), { id: stackId });
+  }
+
+  reorderStacks(stacks: Stack[]) {
+    return this.httpService.put(ENDPOINTS.reorderStacks, stacks);
+  }
+
+  getStackById(stackId: string) {
+    return this.httpService.post(ENDPOINTS.getStackById(stackId), { id: stackId });
+  }
+
 }

@@ -212,6 +212,20 @@
             <mat-icon svgIcon="mat:delete"></mat-icon>
             <span>Delete</span>
           </button>
+
+          <!-- add to stack -->
+          @if (isNotebookRow(row)) {
+            <button
+              mat-menu-item
+              (click)="onToggleStack(row)"
+            >
+              <mat-icon svgIcon="mat:{{ row.stackId ? 'remove_circle_outline' : 'add_circle_outline' }}"></mat-icon>
+              <span>
+                {{ row.stackId ? 'Remove from Stack' : 'Add to Stack' }}
+              </span>
+            </button>
+          }
+        
         </mat-menu>
       </div>
     </td>

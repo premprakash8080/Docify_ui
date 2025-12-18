@@ -34,6 +34,7 @@ export class NotebooksListViewComponent {
   @Output() noteClick = new EventEmitter<NotebookRow>();
   @Output() rowKeydown = new EventEmitter<{ event: KeyboardEvent; row: NotebookRow }>();
   @Output() menuClick = new EventEmitter<Event>();
+  @Output() toggleStack = new EventEmitter<NotebookRow>();
 
   displayedColumns: string[] = ['title', 'space', 'createdBy', 'updated', 'sharedWith'];
 
@@ -83,5 +84,10 @@ export class NotebooksListViewComponent {
 
   onMenuClick(event: Event): void {
     this.menuClick.emit(event);
+  }
+
+  onToggleStack(row: NotebookRow): void {
+    console.log(row);
+    this.toggleStack.emit(row);
   }
 }

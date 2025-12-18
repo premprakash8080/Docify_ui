@@ -97,7 +97,8 @@
           (notebookClick)="onNotebookClick($event)"
           (noteClick)="onNoteClick($event)"
           (rowKeydown)="onRowKeydown($event.event, $event.row)"
-          (menuClick)="onMenuClick($event)">
+          (menuClick)="onMenuClick($event)"
+          (toggleStack)="onToggleStack($event)">
         </vex-notebooks-list-view>
       } @else {
         <vex-notebooks-grid-view

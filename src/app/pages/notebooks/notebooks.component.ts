@@ -8,7 +8,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatSelectModule } from '@angular/material/select';
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Subject, combineLatest } from 'rxjs';
@@ -19,6 +20,7 @@ import { Note, Notebook } from '../../core/models';
 import { AddNotebookComponent, AddNotebookDialogResult } from './components/add-notebook/add-notebook.component';
 import { NotebooksListViewComponent } from './components/notebooks-list-view/notebooks-list-view.component';
 import { NotebooksGridViewComponent } from './components/notebooks-grid-view/notebooks-grid-view.component';
+import { StackSelectionDialogComponent } from './components/stack-selection-dialog/stack-selection-dialog.component';
 import { NotebookRow } from '../../core/models/notebook.model';
 
 @Component({
@@ -34,6 +36,7 @@ import { NotebookRow } from '../../core/models/notebook.model';
     MatInputModule,
     MatTooltipModule,
     MatDialogModule,
+    MatSelectModule,
     PageLayoutModule,
     NotebooksListViewComponent,
     NotebooksGridViewComponent,
@@ -114,6 +117,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
             notebook.notes.map((note: any) => ({
               id: note.id,
               userId: '',
+              stackId: notebook.stack_id,
               notebookId: notebook.id,
               title: note.title,
               content: '',
@@ -205,6 +209,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
           rowType: 'note',
           isNote: true,
           noteId: noteData.id,
+          stackId: notebookData.stack?.id || null,
           notebookId: notebookData.id,
           pinned: noteData.pinned,
           archived: noteData.archived,
@@ -219,6 +224,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
           sharedWith: 'Only you',
           noteCount: notebookData.note_count || noteRows.length,
           rowType: 'notebook',
+          stackId: stackData.id,
           isNotebook: true,
           notebookId: notebookData.id,
           level: 1,
@@ -236,8 +242,8 @@ export class NotebooksComponent implements OnInit, OnDestroy {
         noteCount: stackData.notebook_count,
         rowType: 'stack',
         isStack: true,
-        stackName: stackData.name,
         stackId: stackData.id,
+        stackName: stackData.name,
         expanded: false,
         level: 0,
         notebooks: notebookRows
@@ -256,7 +262,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
         color: notebook.color?.hex_code,
         createdAt: notebook.created_at,
         updatedAt: notebook.updated_at
-      }, 0)
+      }, 0, notebook.stack_id || null)
     );
     allNotebooksList.push(...unstackedNotebooks.map((nb: any) => ({
       id: nb.id,
@@ -362,7 +368,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
       });
   }
 
-  private notebookToRow(notebook: Notebook, level = 0): NotebookRow {
+  private notebookToRow(notebook: Notebook, level = 0, stackId: string | null = null): NotebookRow {
     // Get note count for this notebook
     const noteCount = this.allNotes.filter(note => note.notebookId === notebook.id && !note.trashed).length;
 
@@ -376,6 +382,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
       rowType: 'notebook',
       isNotebook: true,
       notebookId: notebook.id,
+      stackId: stackId || undefined,
       level: level,
       expanded: false, // Default: collapsed
       notes: [] // Will be populated for unstacked notebooks
@@ -560,6 +567,58 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     this.activeFilter = null;
     this.filterValue = null;
     this.getAllStacks();
+  }
+
+  onToggleStack(notebook: NotebookRow): void {
+    if (!notebook.notebookId) return;
+
+    if (notebook.stackId) {
+      // Remove from stack
+      if (!confirm(`Remove "${notebook.title}" from stack?`)) return;
+
+      this.notebooksService.removeNotebookFromStack(notebook.notebookId).subscribe({
+        next: (res: any) => {
+          if (!res?.success) return;
+          this.getAllStacks();
+        },
+        error: () => {
+          this.error = 'Failed to remove notebook from stack';
+          this.cdr.markForCheck();
+        }
+      });
+    } else {
+      // Add to stack - show selection dialog
+      this.openStackSelectionDialog(notebook);
+    }
+  }
+
+  private openStackSelectionDialog(notebook: NotebookRow): void {
+    const stacks = this.notebooks.filter(item => item.isStack && item.stackId);
+    
+    if (stacks.length === 0) {
+      alert('No stacks available. Please create a stack first.');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(StackSelectionDialogComponent, {
+      width: '400px',
+      data: { stacks, notebookTitle: notebook.title }
+    });
+
+    dialogRef.afterClosed().subscribe((selectedStackId: string | undefined) => {
+      if (selectedStackId && notebook.notebookId) {
+        this.notebooksService.moveNotebookToStack(notebook.notebookId, selectedStackId).subscribe({
+          next: (res: any) => {
+            if (!res?.success) return;
+            this.getAllStacks();
+          },
+          error: () => {
+            this.error = 'Failed to add notebook to stack';
+            this.cdr.markForCheck();
+          }
+        });
+      }
+    });
   }
 
   onNotebookClick(notebook: NotebookRow): void {
