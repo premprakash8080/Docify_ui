@@ -11,10 +11,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject, combineLatest, BehaviorSubject } from 'rxjs';
-import { takeUntil, filter, debounceTime, distinctUntilChanged, startWith, map } from 'rxjs/operators';
+import { Subject, combineLatest } from 'rxjs';
+import { takeUntil, filter, debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 import { NotesService } from '../notes/services/notes.service';
-import { NotebooksService, Stack } from './services/notebooks.service';
+import { NotebooksService } from './services/notebooks.service';
 import { Note, Notebook } from '../../core/models';
 import { AddNotebookComponent, AddNotebookDialogResult } from './components/add-notebook/add-notebook.component';
 import { NotebooksListViewComponent } from './components/notebooks-list-view/notebooks-list-view.component';
@@ -44,67 +44,89 @@ import { NotebookRow } from '../../core/models/notebook.model';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NotebooksComponent implements OnInit, OnDestroy {
-  router = inject(Router);
-  private cdr = inject(ChangeDetectorRef);
-  private notesService = inject(NotesService);
-  private notebooksService = inject(NotebooksService);
-  private dialog = inject(MatDialog);
-  private destroy$ = new Subject<void>();
 
-  displayedColumns: string[] = ['title', 'space', 'createdBy', 'updated', 'sharedWith'];
-
+  /** -------------------------
+   * Notebooks data
+   * ------------------------ */
+  notebooks: NotebookRow[] = [];
   allNotes: Note[] = [];
   filteredNotebooks: NotebookRow[] = [];
   allNotebooksData: Notebook[] = [];
-  
-  // Loading and error states
+
+  /** -------------------------
+   * UI state
+   * ------------------------ */
+  displayedColumns: string[] = ['title', 'space', 'createdBy', 'updated', 'sharedWith'];
   isLoading = false;
   error: string | null = null;
-  
-  // Search form control
   searchControl = new FormControl('');
+  sortDirection: 'asc' | 'desc' | '' = '';
+  sortColumn = '';
+  viewMode: 'list' | 'grid' = 'list';
+  activeFilter: 'tag' | 'notebook' | 'created' | 'updated' | null = null;
+  filterValue: string | null = null;
 
-  // Stacks and notebooks structure
-  notebooks: NotebookRow[] = [];
+  private notebooksService = inject(NotebooksService);
+  private notesService = inject(NotesService);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private cdr = inject(ChangeDetectorRef);
+  private destroy$ = new Subject<void>();
 
-  /**
-   * Load stacks and notebooks data from API
-   * Uses the optimized getAllStacks endpoint that returns nested structure
-   */
-  loadData(): void {
+  ngOnInit(): void {
+    this.getAllStacks();
+    this.setupSearch();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /** -------------------------
+   * API calls (clean style)
+   * ------------------------ */
+  getAllStacks(): void {
     this.isLoading = true;
     this.error = null;
     this.cdr.markForCheck();
 
-    // Fetch all stacks with nested notebooks and notes in a single optimized call
     combineLatest([
       this.notebooksService.getAllStacks(),
-      this.notebooksService.getAllNotebooks(), // For unstacked notebooks
-      this.notesService.getNotes() // Fallback for notes if needed
+      this.notebooksService.getAllNotebooks(),
+      this.notesService.getNotes()
     ]).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
-      next: ([stacksWithNestedData, allNotebooks, notes]) => {
-        // Extract notes from nested structure and combine with service notes
-        const notesFromStacks = stacksWithNestedData.flatMap(stack =>
-          stack.notebooks.flatMap(notebook =>
-            notebook.notes.map(note => ({
+      next: ([stacksResponse, notebooksResponse, notes]) => {
+        if (!stacksResponse?.success || !notebooksResponse?.success) {
+          this.isLoading = false;
+          this.error = 'Failed to load notebooks';
+          this.cdr.markForCheck();
+          return;
+        }
+
+        const stacksData = stacksResponse.data?.stacks || [];
+        const notebooksData = notebooksResponse.data?.notebooks || [];
+
+        const notesFromStacks = stacksData.flatMap((stack: any) =>
+          stack.notebooks.flatMap((notebook: any) =>
+            notebook.notes.map((note: any) => ({
               id: note.id,
-              userId: '', // Will be set from user context
+              userId: '',
               notebookId: notebook.id,
               title: note.title,
-              content: '', // Content is in Firebase
+              content: '',
               pinned: note.pinned,
               archived: note.archived,
-              trashed: false, // Already filtered by backend
+              trashed: false,
               tags: [],
-              createdAt: '', // Not included in lightweight response
+              createdAt: '',
               updatedAt: note.updated_at
             }))
           )
         );
 
-        // Combine notes from stacks with service notes (deduplicate by id)
         const notesMap = new Map<string, Note>();
         notes.forEach(note => notesMap.set(note.id, note));
         notesFromStacks.forEach(note => {
@@ -114,9 +136,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
         });
         this.allNotes = Array.from(notesMap.values());
 
-        // Build structure from nested API response
-        this.buildNotebooksStructureFromNested(stacksWithNestedData, allNotebooks);
-        // Populate notes for unstacked notebooks only (stacked notebooks already have notes from API)
+        this.buildNotebooksStructureFromNested(stacksData, notebooksData);
         this.populateNotesForUnstackedNotebooks();
         this.applySearchFilter('');
         this.isLoading = false;
@@ -125,16 +145,13 @@ export class NotebooksComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isLoading = false;
-        this.error = err.message || 'Failed to load stacks';
+        this.error = err.message || 'Failed to load notebooks';
         this.cdr.markForCheck();
       }
     });
   }
 
-  ngOnInit(): void {
-    this.loadData();
-
-    // Setup search with debounce
+  private setupSearch(): void {
     this.searchControl.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -152,7 +169,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
    */
   private buildNotebooksStructureFromNested(
     stacksWithNestedData: any[],
-    allNotebooks: Notebook[]
+    allNotebooks: any[]
   ): void {
     const stacksRows: NotebookRow[] = [];
     const allNotebooksList: Notebook[] = [];
@@ -229,26 +246,33 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     });
 
     // Build unstacked notebooks rows
-    const unstackedNotebooks = allNotebooks.filter(nb => !stackedNotebookIds.has(nb.id));
-    const unstackedRows: NotebookRow[] = unstackedNotebooks.map(notebook => 
-      this.notebookToRow(notebook, 0)
+    const unstackedNotebooks = allNotebooks.filter((nb: any) => !stackedNotebookIds.has(nb.id));
+    const unstackedRows: NotebookRow[] = unstackedNotebooks.map((notebook: any) => 
+      this.notebookToRow({
+        id: notebook.id,
+        userId: '',
+        name: notebook.name,
+        description: notebook.description,
+        color: notebook.color?.hex_code,
+        createdAt: notebook.created_at,
+        updatedAt: notebook.updated_at
+      }, 0)
     );
-    allNotebooksList.push(...unstackedNotebooks);
+    allNotebooksList.push(...unstackedNotebooks.map((nb: any) => ({
+      id: nb.id,
+      userId: '',
+      name: nb.name,
+      description: nb.description,
+      color: nb.color?.hex_code,
+      createdAt: nb.created_at,
+      updatedAt: nb.updated_at
+    })));
 
     // Combine: stacks first, then unstacked notebooks
     this.notebooks = [...stacksRows, ...unstackedRows];
     this.allNotebooksData = allNotebooksList;
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  /**
-   * Apply search filter to notebooks
-   * Searches through stacks, notebooks, and notes recursively
-   */
   private applySearchFilter(query: string): void {
     if (!query || query.trim().length === 0) {
       // No filter - show all notebooks
@@ -260,9 +284,6 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     this.filteredNotebooks = this.filterNotebooksRecursive(this.notebooks, searchTerm);
   }
 
-  /**
-   * Recursively filter notebooks, stacks, and notes based on search query
-   */
   private filterNotebooksRecursive(items: NotebookRow[], searchTerm: string): NotebookRow[] {
     const filtered: NotebookRow[] = [];
 
@@ -307,9 +328,6 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     return filtered;
   }
 
-  /**
-   * Check if a NotebookRow item matches the search query
-   */
   private itemMatchesSearch(item: NotebookRow, searchTerm: string): boolean {
     // Search in title (works for stacks, notebooks, and notes)
     const titleMatch = item.title.toLowerCase().includes(searchTerm);
@@ -327,10 +345,6 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     return titleMatch;
   }
 
-  /**
-   * Populates notes array for unstacked notebooks only
-   * Stacked notebooks already have notes from the nested API response
-   */
   private populateNotesForUnstackedNotebooks(): void {
     this.notebooks.forEach(item => {
       // Only process unstacked notebooks (not inside a stack)
@@ -348,9 +362,6 @@ export class NotebooksComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Converts a Notebook to a NotebookRow format
-   */
   private notebookToRow(notebook: Notebook, level = 0): NotebookRow {
     // Get note count for this notebook
     const noteCount = this.allNotes.filter(note => note.notebookId === notebook.id && !note.trashed).length;
@@ -371,9 +382,6 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     };
   }
 
-  /**
-   * Format date to relative time string
-   */
   private formatDate(dateString: string): string {
     const updatedDate = new Date(dateString);
     const now = new Date();
@@ -389,9 +397,6 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     }
     }
 
-  /**
-   * Converts a Note to a NotebookRow format
-   */
   private noteToRow(note: Note): NotebookRow {
     return {
       title: note.title || 'Untitled',
@@ -407,8 +412,9 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     };
   }
 
-  // Flattened view for table rendering (includes stacks, notebooks, and notes)
-  // Uses filtered notebooks if search is active
+  /** -------------------------
+   * Computed properties
+   * ------------------------ */
   get flattenedRows(): NotebookRow[] {
     const rows: NotebookRow[] = [];
     
@@ -432,15 +438,21 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     return rows;
   }
 
-  sortDirection: 'asc' | 'desc' | '' = '';
-  sortColumn = '';
-  viewMode: 'list' | 'grid' = 'list';
+  get totalNotebookCount(): number {
+    let count = 0;
+    this.notebooks.forEach(item => {
+      if (item.isStack && item.notebooks) {
+        count += item.notebooks.length;
+      } else if (!item.isStack) {
+        count += 1;
+      }
+    });
+    return count;
+  }
 
-  // Filter state
-  activeFilter: 'tag' | 'notebook' | 'created' | 'updated' | null = null;
-  filterValue: string | null = null;
-  private filterSubject = new BehaviorSubject<{ type: string | null; value: string | null }>({ type: null, value: null });
-
+  /** -------------------------
+   * Actions
+   * ------------------------ */
   onCreateNotebook(): void {
     const dialogRef = this.dialog.open(AddNotebookComponent, {
       width: '500px',
@@ -454,11 +466,8 @@ export class NotebooksComponent implements OnInit, OnDestroy {
         filter<AddNotebookDialogResult>(result => result !== undefined && !result.cancelled),
         takeUntil(this.destroy$)
       )
-      .subscribe(result => {
-        if (result?.notebook) {
-          // Notebook was created successfully - reload data
-          this.loadData();
-        }
+      .subscribe(() => {
+        this.getAllStacks();
       });
   }
 
@@ -476,33 +485,13 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  /**
-   * Handle filter option click from the filter menu
-   */
   onFilterOptionClick(filterType: 'tag' | 'notebook' | 'created' | 'updated'): void {
     this.activeFilter = filterType;
-    // TODO: Open filter dialog/modal for selecting filter value
-    // For now, we'll apply a default filter to demonstrate the functionality
-    console.log('Filter selected:', filterType);
-    
-    // In a real implementation, you would open a dialog to select:
-    // - Tag: show list of available tags
-    // - Notebook: show list of parent notebooks (for nested notebooks)
-    // - Created Date: show date picker
-    // - Updated Date: show date picker
-    
-    // Example: Apply a mock filter
     this.applyFilter(filterType, 'default-value');
   }
 
-  /**
-   * Apply filter using the notebooks service
-   */
   private applyFilter(filterType: string, filterValue: string): void {
-    this.filterSubject.next({ type: filterType, value: filterValue });
     this.filterValue = filterValue;
-
-    // Load filtered notebooks based on filter type
     let filteredNotebooks$ = this.notebooksService.getAllNotebooks();
 
     switch (filterType) {
@@ -518,7 +507,6 @@ export class NotebooksComponent implements OnInit, OnDestroy {
         break;
       case 'created':
         if (filterValue) {
-          // filterValue should be a date range string, e.g., "2024-01-01,2024-12-31"
           const [startDate, endDate] = filterValue.split(',');
           filteredNotebooks$ = this.notebooksService.filterNotebooksByCreatedDate(startDate, endDate);
         }
@@ -531,20 +519,19 @@ export class NotebooksComponent implements OnInit, OnDestroy {
         break;
     }
 
-    // Update notebooks structure with filtered data
     filteredNotebooks$.pipe(
       takeUntil(this.destroy$)
     ).subscribe({
-      next: (allNotebooks) => {
-        // For filtered notebooks, we need to rebuild structure
-        // But we'll keep the existing stack structure and filter notebooks within
-        // This is a simplified approach - in production, you might want more sophisticated filtering
+      next: (response: any) => {
+        if (!response?.success) return;
+
+        const allNotebooks = response.data?.notebooks || [];
         const filteredRows: NotebookRow[] = [];
         
         this.notebooks.forEach(item => {
           if (item.isStack && item.notebooks) {
-            const filteredStackNotebooks = item.notebooks.filter(nb => 
-              allNotebooks.some(fnb => fnb.id === nb.notebookId)
+            const filteredStackNotebooks = item.notebooks.filter((nb: any) => 
+              allNotebooks.some((fnb: any) => fnb.id === nb.notebookId)
             );
             if (filteredStackNotebooks.length > 0) {
               filteredRows.push({
@@ -553,7 +540,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
                 noteCount: filteredStackNotebooks.length
               });
             }
-          } else if (item.isNotebook && allNotebooks.some(nb => nb.id === item.notebookId)) {
+          } else if (item.isNotebook && allNotebooks.some((nb: any) => nb.id === item.notebookId)) {
             filteredRows.push(item);
           }
         });
@@ -564,104 +551,114 @@ export class NotebooksComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.error = err.message || 'Failed to filter notebooks';
-      this.cdr.markForCheck();
+        this.cdr.markForCheck();
       }
     });
   }
 
-  /**
-   * Clear active filter and reload all notebooks
-   */
   clearFilter(): void {
     this.activeFilter = null;
     this.filterValue = null;
-    this.filterSubject.next({ type: null, value: null });
-    
-    // Reload all data
-    this.loadData();
+    this.getAllStacks();
   }
 
   onNotebookClick(notebook: NotebookRow): void {
-    if (!notebook.notebookId) {
-      console.warn('Notebook ID not found for:', notebook.title);
-      return;
-    }
-    
-    // Navigate to notes filtered by notebook
+    if (!notebook.notebookId) return;
     this.router.navigate(['/notes/notebook', notebook.notebookId, 'notes']);
+  }
+
+  onNoteClick(note: NotebookRow): void {
+    if (!note.noteId) return;
+    
+    const stackId = this.findStackIdForNotebook(note.notebookId || '');
+    if (stackId) {
+      this.router.navigate(['/notes/stack', stackId, 'notebook', note.notebookId, 'note', note.noteId]);
+    } else if (note.notebookId) {
+      this.router.navigate(['/notes/notebook', note.notebookId, 'note', note.noteId]);
+    } else {
+      this.router.navigate(['/notes', note.noteId]);
+    }
+  }
+
+  onStackNameClick(event: Event, stack: NotebookRow): void {
+    event.stopPropagation();
+    if (!stack.isStack || !stack.stackId) return;
+    
+    if (!stack.expanded) {
+      stack.expanded = true;
+      this.cdr.markForCheck();
+    }
+    this.router.navigate(['/notes/stack', stack.stackId, 'notebooks']);
+  }
+
+  onChevronClick(event: Event, stack: NotebookRow): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.toggleStack(stack);
+  }
+
+  onNotebookChevronClick(event: Event, notebook: NotebookRow): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.toggleNotebook(notebook);
   }
 
   onMenuClick(event: Event): void {
     event.stopPropagation();
   }
 
-  /**
-   * Handle stack click from grid view
-   * Only called when stack has no children (shouldn't happen with new nested view)
-   */
   onGridStackClick(stack: NotebookRow): void {
     if (stack.isStack && stack.stackId) {
       this.router.navigate(['/notes/stack', stack.stackId, 'notebooks']);
     }
   }
 
-  /**
-   * Handle notebook or note click from grid view
-   * Notes will navigate to note detail, notebooks will be handled by grid view internally
-   */
   onGridNotebookOrNoteClick(row: NotebookRow): void {
     if (row.isNote && row.noteId) {
-      // Navigate to note detail
       this.router.navigate(['/notes', row.noteId]);
     } else if (row.isNotebook && row.notebookId) {
-      // Navigate to notebook notes list (only if grid view didn't handle it)
       this.router.navigate(['/notes/notebook', row.notebookId, 'notes']);
     }
   }
 
-  /**
-   * Handle menu click from grid view
-   */
   onGridMenuClick(event: { event: Event; row: NotebookRow }): void {
     event.event.stopPropagation();
   }
 
-  toggleStack(stack: NotebookRow): void {
-    if (stack.isStack && stack.expanded !== undefined) {
-      // Toggle the expanded state
-      stack.expanded = !stack.expanded;
-      // Trigger change detection for OnPush strategy
-      this.cdr.markForCheck();
-    }
-  }
-
-  /**
-   * Handles chevron button click - only expands/collapses the stack
-   * Does NOT trigger navigation
-   */
-  onChevronClick(event: Event, stack: NotebookRow): void {
-    event.stopPropagation(); // Prevent row click from firing
-    event.preventDefault(); // Prevent default button behavior
-    this.toggleStack(stack);
-  }
-
-  /**
-   * Handles stack name/content click - navigates to stack notes view
-   * Does NOT expand/collapse the stack
-   */
-  onStackNameClick(event: Event, stack: NotebookRow): void {
-    event.stopPropagation(); // Prevent row click from firing
-    if (stack.isStack && stack.stackId) {
-      // If stack is collapsed, expand it when navigating
-      if (!stack.expanded) {
-        stack.expanded = true;
-        this.cdr.markForCheck();
+  onRowKeydown(event: KeyboardEvent, row: NotebookRow): void {
+    if (this.isStackRow(row)) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        this.onStackNameClick(event, row);
+      } else if (event.key === 'ArrowRight' && !row.expanded) {
+        event.preventDefault();
+        this.toggleStack(row);
+      } else if (event.key === 'ArrowLeft' && row.expanded) {
+        event.preventDefault();
+        this.toggleStack(row);
       }
-      // Navigate to stack notebooks view
-      this.router.navigate(['/notes/stack', stack.stackId, 'notebooks']);
+    } else if (this.isNotebookRow(row)) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        this.onNotebookClick(row);
+      } else if (event.key === 'ArrowRight' && !row.expanded) {
+        event.preventDefault();
+        this.toggleNotebook(row);
+      } else if (event.key === 'ArrowLeft' && row.expanded) {
+        event.preventDefault();
+        this.toggleNotebook(row);
+      }
+    } else if (this.isNoteRow(row)) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        this.onNoteClick(row);
+      }
     }
   }
 
+  /** -------------------------
+   * Helper methods
+   * ------------------------ */
   isStackRow(row: NotebookRow): boolean {
     return row.rowType === 'stack';
   }
@@ -674,6 +671,13 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     return row.rowType === 'note';
   }
 
+  toggleStack(stack: NotebookRow): void {
+    if (stack.isStack && stack.expanded !== undefined) {
+      stack.expanded = !stack.expanded;
+      this.cdr.markForCheck();
+    }
+  }
+
   toggleNotebook(notebook: NotebookRow): void {
     if (notebook.isNotebook && notebook.expanded !== undefined) {
       notebook.expanded = !notebook.expanded;
@@ -681,32 +685,6 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Handles chevron button click for notebooks - only expands/collapses the notebook
-   */
-  onNotebookChevronClick(event: Event, notebook: NotebookRow): void {
-    event.stopPropagation();
-    event.preventDefault();
-    this.toggleNotebook(notebook);
-  }
-
-  onNoteClick(note: NotebookRow): void {
-    if (note.noteId) {
-      // Check if we're in a stack context
-      const stackId = this.findStackIdForNotebook(note.notebookId || '');
-      if (stackId) {
-        this.router.navigate(['/notes/stack', stackId, 'notebook', note.notebookId, 'note', note.noteId]);
-      } else if (note.notebookId) {
-        this.router.navigate(['/notes/notebook', note.notebookId, 'note', note.noteId]);
-      } else {
-        this.router.navigate(['/notes', note.noteId]);
-      }
-    }
-  }
-
-  /**
-   * Finds the stack ID for a given notebook ID
-   */
   private findStackIdForNotebook(notebookId: string): string | null {
     for (const item of this.notebooks) {
       if (item.isStack && item.notebooks) {
@@ -717,52 +695,5 @@ export class NotebooksComponent implements OnInit, OnDestroy {
       }
     }
     return null;
-  }
-
-  onRowKeydown(event: KeyboardEvent, row: NotebookRow): void {
-    if (this.isStackRow(row)) {
-      // For stack rows, Enter/Space should navigate (like clicking the stack name)
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        this.onStackNameClick(event, row);
-      } else if (event.key === 'ArrowRight' && !row.expanded) {
-        event.preventDefault();
-        this.toggleStack(row);
-      } else if (event.key === 'ArrowLeft' && row.expanded) {
-        event.preventDefault();
-        this.toggleStack(row);
-      }
-    } else if (this.isNotebookRow(row)) {
-      // For notebook rows, Enter/Space should navigate
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        this.onNotebookClick(row);
-      } else if (event.key === 'ArrowRight' && !row.expanded) {
-        event.preventDefault();
-        this.toggleNotebook(row);
-      } else if (event.key === 'ArrowLeft' && row.expanded) {
-        event.preventDefault();
-        this.toggleNotebook(row);
-      }
-    } else if (this.isNoteRow(row)) {
-      // For note rows, Enter/Space should navigate
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        this.onNoteClick(row);
-      }
-    }
-  }
-
-  // Calculate total count (excluding stack rows from the count, only count actual notebooks)
-  get totalNotebookCount(): number {
-    let count = 0;
-    this.notebooks.forEach(item => {
-      if (item.isStack && item.notebooks) {
-        count += item.notebooks.length;
-      } else if (!item.isStack) {
-        count += 1;
-      }
-    });
-    return count;
   }
 }

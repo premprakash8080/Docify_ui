@@ -80,7 +80,7 @@
         <div class="flex flex-col items-center justify-center p-8 text-center">
           <mat-icon class="text-error mb-2" svgIcon="mat:error_outline"></mat-icon>
           <p class="text-error mb-4">{{ error }}</p>
-          <button mat-raised-button color="primary" (click)="loadData()">
+          <button mat-raised-button color="primary" (click)="this.getAllStacks()">
             <mat-icon svgIcon="mat:refresh"></mat-icon>
             Retry
           </button>
