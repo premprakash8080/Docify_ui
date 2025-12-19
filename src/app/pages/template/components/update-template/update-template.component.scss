@@ -31,6 +31,37 @@
   margin-top: 16px;
 }
 
+// Ensure buttons use theme colors
+::ng-deep {
+  .actions {
+    .mat-mdc-button.mat-primary {
+      --mdc-text-button-label-text-color: var(--color-primary-rgb);
+      
+      &:hover {
+        background-color: rgba(var(--color-primary), 0.1);
+      }
+    }
+
+    .mat-mdc-raised-button.mat-primary,
+    .mat-mdc-flat-button.mat-primary {
+      --mdc-protected-button-container-color: var(--color-primary-rgb);
+      --mdc-protected-button-label-text-color: var(--color-primary-contrast-rgb);
+      
+      &:hover {
+        background-color: rgba(var(--color-primary), 0.9);
+      }
+    }
+
+    .mat-mdc-button.mat-warn {
+      --mdc-text-button-label-text-color: var(--color-warn-rgb);
+      
+      &:hover {
+        background-color: rgba(var(--color-warn), 0.1);
+      }
+    }
+  }
+}
+
 @media (max-width: 1024px) {
   .form-grid {
     grid-template-columns: 1fr;

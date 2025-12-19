@@ -1,35 +1,35 @@
-.header-content {
+.header-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
-  width: 100%;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
 
-  .back-btn {
-    margin-right: 8px;
+.back-btn {
+  color: var(--text-secondary);
+  
+  &:hover {
+    background-color: var(--background-hover);
   }
+}
 
-  .header-info {
-    flex: 1;
+.use-btn {
+  white-space: nowrap;
+  
+  mat-icon {
+    margin-right: 0.5rem;
+  }
+}
 
-    .badge {
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: #eef2ff;
-      color: #4338ca;
-      margin-top: 6px;
-      display: inline-block;
-
-      &.system {
-        background: #ecfeff;
-        color: #0369a1;
-      }
+// Ensure buttons use theme colors
+::ng-deep {
+  .use-btn.mat-mdc-flat-button.mat-primary {
+    --mdc-text-button-container-color: var(--color-primary-rgb);
+    --mdc-text-button-label-text-color: var(--color-primary-contrast-rgb);
+    
+    &:hover {
+      background-color: rgba(var(--color-primary), 0.9) !important;
     }
-  }
-
-  .use-btn {
-    border-radius: 12px;
-    padding: 0 20px;
   }
 }
 

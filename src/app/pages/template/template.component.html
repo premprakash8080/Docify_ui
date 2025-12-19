@@ -1,41 +1,128 @@
 <vex-page-layout mode="card">
-  <vex-page-layout-header class="flex flex-col items-start justify-center">
-    <div class="container">
-      <h2 class="title m-0">Templates</h2>
-      <vex-breadcrumbs
-        [crumbs]="['Templates', 'Built-in Templates', 'My Templates']"
-      ></vex-breadcrumbs>
+  <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
+    <div [class.container]="layoutCtrl.value === 'boxed'" [class.px-gutter]="layoutCtrl.value === 'fullwidth'"
+      class="w-full flex flex-col sm:flex-row justify-between">
+      <div>
+        <h1 class="title mt-0 mb-1">Templates</h1>
+        <vex-breadcrumbs [crumbs]="['Apps', 'Templates']"></vex-breadcrumbs>
+      </div>
+
+      <div class="header-actions">
+        <mat-button-toggle-group
+          [formControl]="layoutCtrl"
+          appearance="legacy"
+          aria-label="Layout type"
+          class="layout-toggle-group"
+        >
+          <mat-button-toggle value="boxed">
+            <mat-icon svgIcon="mat:grid_view" class="mr-1"></mat-icon>
+            Boxed
+          </mat-button-toggle>
+          <mat-button-toggle value="fullwidth">
+            <mat-icon svgIcon="mat:crop_16_9" class="mr-1"></mat-icon>
+            Full-Width
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
     </div>
   </vex-page-layout-header>
 
-  <vex-page-layout-content class="container">
-    <div class="card">
-      <mat-tab-group>
-        <mat-tab label="Built-in Templates">
-          <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            @for (template of systemTemplates; track template.id) {
-            <vex-template-cards
-              [template]="template"
-              (preview)="onPreview($event)"
-              (clone)="onClone($event)"
-              (delete)="onDelete($event)"
-            />
-            }
-          </div>
-        </mat-tab>
-        <mat-tab label="My Templates">
-          <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            @for (template of userTemplates; track template.id) {
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-gutter]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="card overflow-auto -mt-16">
+      <div class="bg-app-bar px-6 h-16 border-b sticky left-0 flex items-center">
+        <h2 class="title my-0 ltr:pr-4 rtl:pl-4 ltr:mr-4 rtl:ml-4 ltr:border-r rtl:border-l hidden sm:block flex-none">
+          <span>Templates</span>
+        </h2>
+
+        <div
+          class="bg-foreground rounded-full border px-4 max-w-[300px] flex-auto flex items-center border border-gray-300">
+          <mat-icon class="icon-sm text-secondary" svgIcon="mat:search"></mat-icon>
+          <input
+            [formControl]="searchControl"
+            class="px-4 py-2 border-0 outline-none w-full bg-transparent"
+            placeholder="Search templates..."
+            type="search"
+          />
+        </div>
+
+        <span class="flex-1"></span>
+
+        <button
+          [matMenuTriggerFor]="filterMenu"
+          class="ml-4 flex-none"
+          mat-icon-button
+          matTooltip="Filter"
+          type="button"
+        >
+          <mat-icon svgIcon="mat:filter_list"></mat-icon>
+        </button>
+
+        <button
+          (click)="onCreateTemplate()"
+          class="ml-4 flex-none"
+          color="primary"
+          mat-mini-fab
+          matTooltip="Create Template"
+          type="button"
+        >
+          <mat-icon svgIcon="mat:add"></mat-icon>
+        </button>
+      </div>
+
+      <mat-menu #filterMenu="matMenu" xPosition="before" yPosition="below">
+        <button (click)="onFilterClick('system')" mat-menu-item>
+          <mat-icon svgIcon="mat:build"></mat-icon>
+          <span>System Templates</span>
+        </button>
+        <button (click)="onFilterClick('user')" mat-menu-item>
+          <mat-icon svgIcon="mat:person"></mat-icon>
+          <span>My Templates</span>
+        </button>
+        <button (click)="onFilterClick('all')" mat-menu-item>
+          <mat-icon svgIcon="mat:apps"></mat-icon>
+          <span>All Templates</span>
+        </button>
+      </mat-menu>
+
+      <div class="p-6">
+        <mat-tab-group>
+          <mat-tab label="Built-in Templates">
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              @for (template of filteredSystemTemplates; track template.id) {
               <vex-template-cards
                 [template]="template"
                 (preview)="onPreview($event)"
                 (clone)="onClone($event)"
                 (delete)="onDelete($event)"
               />
-            }
-          </div>
-        </mat-tab>
-      </mat-tab-group>
+              }
+              @empty {
+                <div class="col-span-full text-center py-8 text-secondary">
+                  No built-in templates found
+                </div>
+              }
+            </div>
+          </mat-tab>
+          <mat-tab label="My Templates">
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              @for (template of filteredUserTemplates; track template.id) {
+                <vex-template-cards
+                  [template]="template"
+                  (preview)="onPreview($event)"
+                  (clone)="onClone($event)"
+                  (delete)="onDelete($event)"
+                />
+              }
+              @empty {
+                <div class="col-span-full text-center py-8 text-secondary">
+                  No templates found. Create your first template!
+                </div>
+              }
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
     </div>
   </vex-page-layout-content>
 </vex-page-layout>

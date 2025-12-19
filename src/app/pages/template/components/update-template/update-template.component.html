@@ -1,14 +1,14 @@
 <vex-page-layout mode="card" *ngIf="templateId">
-  <vex-page-layout-header class="flex flex-col items-start justify-center">
+  <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
     <div class="container">
-      <h2 class="title m-0">Edit Template</h2>
+      <h1 class="title mt-0 mb-1">Edit Template</h1>
       <vex-breadcrumbs
-        [crumbs]="['Templates', 'Edit Template']"
+        [crumbs]="['Apps', 'Templates', 'Edit Template']"
       ></vex-breadcrumbs>
     </div>
   </vex-page-layout-header>
 
-  <vex-page-layout-content class="container">
+  <vex-page-layout-content class="container -mt-6">
     <div class="card">
       <div class="template-form">
         <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -39,9 +39,11 @@
                   Cancel
                 </button>
                 <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || isSystem">
+                  <mat-icon svgIcon="mat:save" class="mr-1"></mat-icon>
                   Update Template
                 </button>
                 <button mat-stroked-button color="warn" type="button" (click)="onDelete()" *ngIf="!isSystem">
+                  <mat-icon svgIcon="mat:delete" class="mr-1"></mat-icon>
                   Delete Template
                 </button>
               </div>

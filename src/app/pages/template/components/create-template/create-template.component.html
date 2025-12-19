@@ -1,14 +1,14 @@
 <vex-page-layout mode="card">
-  <vex-page-layout-header class="flex flex-col items-start justify-center">
+  <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
     <div class="container">
-      <h2 class="title m-0">Create Template</h2>
+      <h1 class="title mt-0 mb-1">Create Template</h1>
       <vex-breadcrumbs
-        [crumbs]="['Templates', 'Create Template']"
+        [crumbs]="['Apps', 'Templates', 'Create Template']"
       ></vex-breadcrumbs>
     </div>
   </vex-page-layout-header>
 
-  <vex-page-layout-content class="container">
+  <vex-page-layout-content class="container -mt-6">
     <div class="card">
       <div class="template-form">
         <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -39,6 +39,7 @@
                   Cancel
                 </button>
                 <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">
+                  <mat-icon svgIcon="mat:add" class="mr-1"></mat-icon>
                   Create Template
                 </button>
               </div>

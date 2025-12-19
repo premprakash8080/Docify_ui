@@ -1,19 +1,20 @@
 .mat-mdc-card {
   max-width: 500px;
 }
+
 .template-card {
   border-radius: 14px;
   overflow: hidden;
   padding: 0;
   box-shadow: none;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--foreground-divider);
   transition: box-shadow 0.2s ease;
+  background-color: var(--background-card);
 }
 
 .template-card:hover {
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--elevation-z4);
 }
-
 
 .template-info {
   padding: 12px 16px;
@@ -23,15 +24,39 @@
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 4px;
+  color: var(--text-color);
 }
 
 .template-badge {
   font-size: 12px;
-  color: #777;
+  color: var(--text-secondary);
 }
 
 .template-actions {
   padding: 8px 12px 12px;
   display: flex;
   gap: 8px;
+}
+
+// Ensure buttons use theme colors
+::ng-deep {
+  .template-actions {
+    .mat-mdc-button.mat-primary {
+      --mdc-text-button-label-text-color: var(--color-primary-rgb);
+      
+      &:hover {
+        background-color: rgba(var(--color-primary), 0.1);
+      }
+    }
+
+    .mat-mdc-raised-button.mat-primary,
+    .mat-mdc-flat-button.mat-primary {
+      --mdc-protected-button-container-color: var(--color-primary-rgb);
+      --mdc-protected-button-label-text-color: var(--color-primary-contrast-rgb);
+      
+      &:hover {
+        background-color: rgba(var(--color-primary), 0.9);
+      }
+    }
+  }
 }

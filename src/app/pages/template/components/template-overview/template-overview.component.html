@@ -1,34 +1,34 @@
 <vex-page-layout mode="card" *ngIf="template; else loadingTpl">
-  <vex-page-layout-header class="flex flex-col items-start justify-center">
-    <div class="container">
-      <div class="header-content">
+  <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
+    <div class="container w-full flex flex-col sm:flex-row justify-between">
+      <div class="flex items-center gap-3">
         <button mat-icon-button (click)="goBack()" class="back-btn">
           <mat-icon svgIcon="mat:arrow_back"></mat-icon>
         </button>
-        <div class="header-info">
-          <h2 class="title m-0">{{ template?.name }}</h2>
+        <div>
+          <h1 class="title mt-0 mb-1">{{ template?.name }}</h1>
           <vex-breadcrumbs
-            [crumbs]="['Templates', template?.name || 'Template']"
+            [crumbs]="['Apps', 'Templates', template?.name || 'Template']"
           ></vex-breadcrumbs>
-          <span class="badge" [class.system]="template?.is_system">
-            {{ template?.is_system ? 'Prebuilt Template' : 'My Template' }}
-          </span>
         </div>
+      </div>
+
+      <div class="header-actions mt-4 sm:mt-0">
         <button
           mat-flat-button
           color="primary"
           class="use-btn"
           (click)="onUseTemplate()"
         >
-          <mat-icon svgIcon="mat:content_copy"></mat-icon>
+          <mat-icon svgIcon="mat:content_copy" class="mr-1"></mat-icon>
           Clone to Note
         </button>
       </div>
     </div>
   </vex-page-layout-header>
 
-  <vex-page-layout-content class="container">
-    <div class="card">
+  <vex-page-layout-content class="container -mt-6">
+    <div class="card -mt-16">
       <!-- HTML Preview -->
       <vex-template-html-preview
         [content]="template?.content || ''"

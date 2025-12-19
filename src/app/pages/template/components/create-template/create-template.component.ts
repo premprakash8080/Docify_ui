@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
 import { TemplatesService } from '../../services/template.service';
 import { PageLayoutModule } from '../../../../../@vex/components/page-layout/page-layout.module';
 import { SecondaryToolbarModule } from '../../../../../@vex/components/secondary-toolbar/secondary-toolbar.module';
@@ -23,6 +24,7 @@ import { TemplateHtmlPreviewComponent } from '../template-html-preview/template-
     MatFormFieldModule,
     MatInputModule,
     MatCardModule,
+    MatIconModule,
     PageLayoutModule,
     SecondaryToolbarModule,
     BreadcrumbsModule,

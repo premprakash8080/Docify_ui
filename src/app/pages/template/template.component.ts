@@ -1,9 +1,17 @@
-import { Component, ChangeDetectionStrategy, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
 import { SecondaryToolbarModule } from 'src/@vex/components/secondary-toolbar/secondary-toolbar.module';
@@ -36,6 +44,12 @@ export interface Template {
     MatButtonModule,
     MatIconModule,
     MatTabsModule,
+    MatButtonToggleModule,
+    MatMenuModule,
+    MatTooltipModule,
+    MatFormFieldModule,
+    MatInputModule,
+    ReactiveFormsModule,
     PageLayoutModule,
     SecondaryToolbarModule,
     BreadcrumbsModule,
@@ -45,21 +59,68 @@ export interface Template {
   styleUrls: ['./template.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TemplateComponent implements OnInit {
+export class TemplateComponent implements OnInit, OnDestroy {
 
   /** -------------------------
    * Templates data
    * ------------------------ */
   systemTemplates: Template[] = [];
   userTemplates: Template[] = [];
+  filteredSystemTemplates: Template[] = [];
+  filteredUserTemplates: Template[] = [];
+
+  /** -------------------------
+   * UI state
+   * ------------------------ */
+  layoutCtrl = new FormControl('boxed');
+  searchControl = new FormControl('');
+  activeFilter: 'system' | 'user' | 'all' = 'all';
 
   private templateService = inject(TemplatesService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private destroy$ = new Subject<void>();
 
   ngOnInit(): void {
     this.getSystemTemplates();
     this.getUserTemplates();
+    this.setupSearch();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private setupSearch(): void {
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.applySearchFilter(query || '');
+      this.cdr.markForCheck();
+    });
+  }
+
+  private applySearchFilter(query: string): void {
+    const searchTerm = query.toLowerCase().trim();
+    
+    if (!searchTerm) {
+      this.filteredSystemTemplates = [...this.systemTemplates];
+      this.filteredUserTemplates = [...this.userTemplates];
+      return;
+    }
+
+    this.filteredSystemTemplates = this.systemTemplates.filter(template =>
+      template.name.toLowerCase().includes(searchTerm) ||
+      (template.description || '').toLowerCase().includes(searchTerm)
+    );
+
+    this.filteredUserTemplates = this.userTemplates.filter(template =>
+      template.name.toLowerCase().includes(searchTerm) ||
+      (template.description || '').toLowerCase().includes(searchTerm)
+    );
   }
 
   /** -------------------------
@@ -70,6 +131,7 @@ export class TemplateComponent implements OnInit {
       if (!res.success) return;
 
       this.systemTemplates = res.data.templates;
+      this.applySearchFilter(this.searchControl.value || '');
       this.cdr.markForCheck();
     });
   }
@@ -78,6 +140,7 @@ export class TemplateComponent implements OnInit {
     this.templateService.getUserTemplates().subscribe(res => {
       if (!res.success) return;
       this.userTemplates = res.data.templates;
+      this.applySearchFilter(this.searchControl.value || '');
       this.cdr.markForCheck();
     });
   }
@@ -106,5 +169,15 @@ export class TemplateComponent implements OnInit {
       this.getUserTemplates();
       this.getSystemTemplates();
     });
+  }
+
+  onCreateTemplate(): void {
+    this.router.navigate(['/templates/create']);
+  }
+
+  onFilterClick(filterType: 'system' | 'user' | 'all'): void {
+    this.activeFilter = filterType;
+    // Filter logic can be added here if needed
+    this.cdr.markForCheck();
   }
 }
