@@ -128,31 +128,39 @@
       <!-- Form Actions -->
       <div class="form-actions px-gutter py-4 border-t">
         <div class="flex justify-end gap-3">
-          <button 
-            mat-button 
+      
+          <!-- Reset -->
+          <button
+            mat-mini-fab
+            color="primary"
             type="button"
-            (click)="profileForm.reset(); selectedAvatarFile = null; avatarPreview = user?.avatarUrl || null">
-            Reset
+            class="flex-none"
+            matTooltip="Reset Profile"
+            (click)="profileForm.reset(); selectedAvatarFile = null; avatarPreview = user?.avatarUrl || null"
+          >
+            <mat-icon svgIcon="mat:refresh"></mat-icon>
           </button>
-          <button 
-            mat-flat-button 
+      
+          <!-- Save -->
+          <button
+            mat-mini-fab
             color="primary"
             type="submit"
-            [disabled]="profileForm.invalid || isUpdating">
+            class="flex-none"
+            matTooltip="Save Changes"
+            [disabled]="profileForm.invalid || isUpdating"
+          >
             @if (isUpdating) {
-              <ng-container>
-                <mat-icon class="animate-spin mr-2" svgIcon="mat:refresh"></mat-icon>
-                Updating...
-              </ng-container>
+              <mat-icon class="animate-spin" svgIcon="mat:refresh"></mat-icon>
             } @else {
-              <ng-container>
-                <mat-icon class="mr-2" svgIcon="mat:save"></mat-icon>
-                Save Changes
-              </ng-container>
+              <mat-icon svgIcon="mat:save"></mat-icon>
             }
           </button>
+      
         </div>
       </div>
+
+      
     </form>
   </div>
 </div>
