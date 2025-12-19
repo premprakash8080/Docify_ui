@@ -1,3 +1,25 @@
+// Notebooks List View Container
+.notebooks-list-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+// Header bar matching task-new design
+.bg-app-bar {
+  background-color: var(--background-app-bar, var(--background-card));
+  border-bottom: 1px solid var(--foreground-divider);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  height: 4rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  left: 0;
+  right: 0;
+}
+
 // Notebooks List View Styles
 ::ng-deep {
   // Ensure table has proper spacing

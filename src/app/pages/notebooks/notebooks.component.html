@@ -1,76 +1,44 @@
-<vex-page-layout mode="simple">
-  <vex-page-layout-header>
-    <div class="flex items-center justify-between w-full">
-      <!-- Left: Title with count badge -->
-      <div class="flex items-center gap-3">
-        <h1 class="title m-0 text-3xl font-semibold">Notebooks</h1>
-        <span class="bg-base text-hint rounded-full px-2 py-0.5 text-sm font-medium">
-          {{ totalNotebookCount }}
-        </span>
+<vex-page-layout mode="card">
+  <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
+    <div [class.container]="layoutCtrl.value === 'boxed'" [class.px-gutter]="layoutCtrl.value === 'fullwidth'"
+      class="w-full flex flex-col sm:flex-row justify-between">
+      <div>
+        <h1 class="title mt-0 mb-1">Notebooks</h1>
+        <vex-breadcrumbs [crumbs]="['Apps', 'Notebooks']"></vex-breadcrumbs>
       </div>
 
-      <!-- Right: Actions -->
-      <div class="flex items-center gap-3">
-        <!-- New Notebook Button -->
-        <button 
-          mat-raised-button 
-          (click)="onCreateNotebook()"
-          class="new-notebook-btn">
-          <mat-icon svgIcon="mat:add"></mat-icon>
-          New Notebook
-        </button>
-
-        <!-- Sort Icon -->
-        <button 
-            mat-icon-button 
-            [matMenuTriggerFor]="filterMenu"
-            aria-label="Filter" 
-            type="button">
-            <mat-icon svgIcon="mat:filter_list"></mat-icon>
-          </button>
-          <mat-menu #filterMenu="matMenu" xPosition="before">
-            <button mat-menu-item (click)="onFilterOptionClick('tag')">
-              <mat-icon svgIcon="mat:label"></mat-icon>
-              <span>By Tag</span>
-            </button>
-            <button mat-menu-item (click)="onFilterOptionClick('notebook')">
-              <mat-icon svgIcon="mat:folder"></mat-icon>
-              <span>Located In</span>
-            </button>
-            <button mat-menu-item (click)="onFilterOptionClick('created')">
-              <mat-icon svgIcon="mat:schedule"></mat-icon>
-              <span>Created Date</span>
-            </button>
-            <button mat-menu-item (click)="onFilterOptionClick('updated')">
-              <mat-icon svgIcon="mat:update"></mat-icon>
-              <span>Updated Date</span>
-            </button>
-          </mat-menu>
-
+      <div class="header-actions">
+        <mat-button-toggle-group
+          [formControl]="layoutCtrl"
+          appearance="legacy"
+          aria-label="Layout type"
+          class="layout-toggle-group"
+        >
+          <mat-button-toggle value="boxed">
+            <mat-icon svgIcon="mat:grid_view" class="mr-1"></mat-icon>
+            Boxed
+          </mat-button-toggle>
+          <mat-button-toggle value="fullwidth">
+            <mat-icon svgIcon="mat:crop_16_9" class="mr-1"></mat-icon>
+            Full-Width
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+        
         <!-- View Toggle -->
         <button 
           mat-icon-button 
-          (click)="toggleView()">
+          (click)="toggleView()"
+          matTooltip="{{ viewMode === 'list' ? 'Switch to Grid View' : 'Switch to List View' }}"
+          class="ml-2">
           <mat-icon [svgIcon]="viewMode === 'list' ? 'mat:grid_view' : 'mat:view_list'"></mat-icon>
         </button>
-
-        <!-- Search -->
-        <mat-form-field appearance="outline" class="w-64">
-          <mat-label>Find Notebooks...</mat-label>
-          <input matInput type="text" [formControl]="searchControl" placeholder="Search notebooks, stacks, notes...">
-          <mat-icon matPrefix svgIcon="mat:search"></mat-icon>
-          @if (searchControl.value) {
-            <button mat-icon-button matSuffix (click)="searchControl.setValue('')" type="button" aria-label="Clear search">
-              <mat-icon svgIcon="mat:close"></mat-icon>
-            </button>
-          }
-        </mat-form-field>
       </div>
     </div>
   </vex-page-layout-header>
 
-  <vex-page-layout-content>
-    <div class="card overflow-hidden">
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-gutter]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="card overflow-hidden -mt-16">
       @if (isLoading) {
         <div class="flex items-center justify-center p-8">
           <mat-icon class="animate-spin" svgIcon="mat:refresh"></mat-icon>
@@ -90,6 +58,7 @@
           [flattenedRows]="flattenedRows"
           [sortColumn]="sortColumn"
           [sortDirection]="sortDirection"
+          [searchControl]="searchControl"
           (sort)="onSort($event)"
           (chevronClick)="onChevronClick($event.event, $event.row)"
           (notebookChevronClick)="onNotebookChevronClick($event.event, $event.row)"
@@ -98,14 +67,21 @@
           (noteClick)="onNoteClick($event)"
           (rowKeydown)="onRowKeydown($event.event, $event.row)"
           (menuClick)="onMenuClick($event)"
-          (toggleStack)="onToggleStack($event)">
+          (toggleStack)="onToggleStack($event)"
+          (searchChange)="onSearchChange($event)"
+          (filterClick)="onFilterOptionClick($event)"
+          (addNotebook)="onCreateNotebook()">
         </vex-notebooks-list-view>
       } @else {
         <vex-notebooks-grid-view
           [notebooks]="filteredNotebooks.length > 0 ? filteredNotebooks : notebooks"
+          [searchControl]="searchControl"
           (notebookClick)="onGridNotebookOrNoteClick($event)"
           (stackClick)="onGridStackClick($event)"
-          (menuClick)="onGridMenuClick($event)">
+          (menuClick)="onGridMenuClick($event)"
+          (searchChange)="onSearchChange($event)"
+          (filterClick)="onFilterOptionClick($event)"
+          (addNotebook)="onCreateNotebook()">
         </vex-notebooks-grid-view>
       }
     </div>

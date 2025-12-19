@@ -11,9 +11,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, UntypedFormControl } from '@angular/forms';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, filter, debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { BreadcrumbsModule } from '../../../@vex/components/breadcrumbs/breadcrumbs.module';
 import { NotesService } from '../notes/services/notes.service';
 import { NotebooksService } from './services/notebooks.service';
 import { Note, Notebook } from '../../core/models';
@@ -37,7 +39,9 @@ import { NotebookRow } from '../../core/models/notebook.model';
     MatTooltipModule,
     MatDialogModule,
     MatSelectModule,
+    MatButtonToggleModule,
     PageLayoutModule,
+    BreadcrumbsModule,
     NotebooksListViewComponent,
     NotebooksGridViewComponent,
     ReactiveFormsModule
@@ -68,6 +72,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   viewMode: 'list' | 'grid' = 'list';
   activeFilter: 'tag' | 'notebook' | 'created' | 'updated' | null = null;
   filterValue: string | null = null;
+  layoutCtrl = new UntypedFormControl('boxed');
 
   private notebooksService = inject(NotebooksService);
   private notesService = inject(NotesService);
@@ -490,6 +495,12 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   toggleView(): void {
     this.viewMode = this.viewMode === 'list' ? 'grid' : 'list';
     this.cdr.markForCheck();
+  }
+
+  onSearchChange(value: string): void {
+    // Search is already handled reactively via searchControl.valueChanges
+    // This method is here for consistency with the component interface
+    this.searchControl.setValue(value, { emitEvent: true });
   }
 
   onFilterOptionClick(filterType: 'tag' | 'notebook' | 'created' | 'updated'): void {

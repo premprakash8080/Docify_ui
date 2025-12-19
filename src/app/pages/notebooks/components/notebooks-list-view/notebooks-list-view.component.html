@@ -1,4 +1,65 @@
-<table mat-table [dataSource]="flattenedRows" class="w-full notebooks-table">
+<div class="notebooks-list-container">
+  <div class="bg-app-bar px-6 h-16 border-b sticky left-0 flex items-center">
+    <h2 class="title my-0 ltr:pr-4 rtl:pl-4 ltr:mr-4 rtl:ml-4 ltr:border-r rtl:border-l hidden sm:block flex-none">
+      <span>Notebooks</span>
+    </h2>
+
+    <div
+      class="bg-foreground rounded-full border px-4 max-w-[300px] flex-auto flex items-center border border-gray-300">
+      <mat-icon class="icon-sm text-secondary" svgIcon="mat:search"></mat-icon>
+      <input
+        [formControl]="searchControl"
+        class="px-4 py-2 border-0 outline-none w-full bg-transparent"
+        placeholder="Search..."
+        type="search"
+        (input)="onSearchInput($event)"
+      />
+    </div>
+
+    <span class="flex-1"></span>
+
+    <button
+      [matMenuTriggerFor]="filterMenu"
+      class="ml-4 flex-none"
+      mat-icon-button
+      matTooltip="Filter"
+      type="button"
+    >
+      <mat-icon svgIcon="mat:filter_list"></mat-icon>
+    </button>
+
+    <button
+      (click)="onAddNotebook()"
+      class="ml-4 flex-none"
+      color="primary"
+      mat-mini-fab
+      matTooltip="Add Notebook"
+      type="button"
+    >
+      <mat-icon svgIcon="mat:add"></mat-icon>
+    </button>
+  </div>
+
+  <mat-menu #filterMenu="matMenu" xPosition="before" yPosition="below">
+    <button (click)="onFilterClick('tag')" mat-menu-item>
+      <mat-icon svgIcon="mat:label"></mat-icon>
+      <span>By Tag</span>
+    </button>
+    <button (click)="onFilterClick('notebook')" mat-menu-item>
+      <mat-icon svgIcon="mat:folder"></mat-icon>
+      <span>Located In</span>
+    </button>
+    <button (click)="onFilterClick('created')" mat-menu-item>
+      <mat-icon svgIcon="mat:schedule"></mat-icon>
+      <span>Created Date</span>
+    </button>
+    <button (click)="onFilterClick('updated')" mat-menu-item>
+      <mat-icon svgIcon="mat:update"></mat-icon>
+      <span>Updated Date</span>
+    </button>
+  </mat-menu>
+
+  <table mat-table [dataSource]="flattenedRows" class="w-full notebooks-table">
   <!-- Title Column -->
   <ng-container matColumnDef="title">
     <th
@@ -234,3 +295,4 @@
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 </table>
+</div>
