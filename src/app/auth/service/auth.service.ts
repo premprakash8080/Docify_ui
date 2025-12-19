@@ -310,6 +310,42 @@ export class AuthService {
   }
 
   /**
+   * Update user profile with file upload (avatar)
+   */
+  updateProfileWithFile(displayName: string | undefined, avatarFile: File | null, imageUpdated: boolean = true): Observable<User> {
+    const formData = new FormData();
+    
+    if (displayName !== undefined) {
+      formData.append('display_name', displayName);
+    }
+    
+    if (avatarFile) {
+      formData.append('avatar', avatarFile);
+    }
+    
+    if (!imageUpdated) {
+      formData.append('image_updated', 'false');
+    }
+
+    return this.http.put<BackendProfileResponse>(ENDPOINTS.updateProfile, formData).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Failed to update profile');
+        }
+        
+        const user = this.mapBackendUserToFrontendUser(response.data.user);
+        this.currentUserSubject.next(user);
+        localStorage.setItem(this.userKey, JSON.stringify(user));
+        return user;
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to update profile';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
+    );
+  }
+
+  /**
    * Change user password
    */
   changePassword(currentPassword: string, newPassword: string): Observable<void> {

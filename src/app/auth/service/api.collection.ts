@@ -12,8 +12,8 @@ export const ENDPOINTS = {
     resetPassword: `${environment.apiUrl}/users/reset-password`,
     
     // Profile
-    getProfile: `${environment.apiUrl}/users/me`,
-    updateProfile: `${environment.apiUrl}/users/me`,
+    getProfile: `${environment.apiUrl}/users/profile`,
+    updateProfile: `${environment.apiUrl}/users/profile`,
     
     // Security
     changePassword: `${environment.apiUrl}/users/change-password`,

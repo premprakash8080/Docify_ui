@@ -87,6 +87,10 @@ const routes: VexRoutes = [
       },
       // Main routes - USED in sidebar
       {
+        path: 'profile',
+        loadChildren: () => import('./pages/profile/profile.module').then(m => m.ProfileModule),
+      },
+      {
         path: 'notes',
         loadChildren: () => import('./pages/notes/notes-page.module').then(m => m.NotesPageModule),
         data: {
