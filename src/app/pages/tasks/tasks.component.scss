@@ -1,39 +1,3 @@
-// Completed task styling
-.table-row.completed {
-  opacity: 0.6;
-  
-  .completed-text {
-    text-decoration: line-through;
-    color: #9ca3af;
-  }
-}
-
-// Error styling
-.error {
-  color: #ef4444;
-  padding: 16px;
-}
-
-// Delete button
-.delete-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  color: #6b7280;
-  transition: color 0.2s;
-  
-  &:hover {
-    color: #ef4444;
-  }
-  
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
-}
-
 .tasks-container {
   min-height: 100vh;
   background: var(--background-foreground);
@@ -160,104 +124,51 @@
   pointer-events: none;
 }
 
-// Tasks Table
-.tasks-table-container {
-  padding: 0 2rem;
+
+.alljob-page.page-wrapper-section::before {
+  height: 234px;
 }
 
-.tasks-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.table-header {
-  border-bottom: 1px solid var(--foreground-divider);
-}
-
-.table-header-cell {
-  text-align: left;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  width: 12rem;
-
-  &:first-child {
-    width: 3rem;
-  }
-
-  &:nth-child(3),
-  &:nth-child(4),
-  &:nth-child(5) {
-    width: 10rem;
-  }
-}
-
-.table-row {
-  border-bottom: 1px solid var(--foreground-divider);
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: var(--background-hover);
-  }
-}
-
-.table-cell {
-  padding: 1rem;
-  font-size: 0.875rem;
-  color: var(--text-color);
-
-  &.overdue {
-    color: var(--color-warn-rgb);
-  }
-}
-
-.task-checkbox {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 0.25rem;
-  border: 1px solid var(--foreground-divider);
-  background-color: var(--background-foreground);
-  color: var(--color-primary-rgb);
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    ring: 2px;
-    ring-color: var(--color-primary-rgb);
-  }
-}
-
-.task-title {
-  color: var(--text-color);
-}
-
-.task-icon {
-  width: 1rem;
-  height: 1rem;
-  color: var(--text-secondary);
-}
-
-// Utility classes (can still use Tailwind for layout, but ensuring theme colors)
-.flex {
+.header-actions {
   display: flex;
-}
-
-.items-center {
   align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  
+  .layout-toggle-group {
+    margin-right: 0;
+  }
+  
+  .new-task-header-button {
+    white-space: nowrap;
+    
+    mat-icon {
+      margin-right: 0.5rem;
+    }
+  }
 }
 
-.gap-2 {
-  gap: 0.5rem;
+.search-box-on-tabs-table {
+  right: 24px;
+  top: 12px;
+  max-width: 400px;
+  width: 100%;
+  z-index: 10;
+  position: absolute;
 }
 
-.overflow-x-auto {
-  overflow-x: auto;
-}
+@media screen and (max-width:1504px) {
+  .search-box-on-tabs-table {
+      left: unset;
+      right: unset;
+      top: unset;
+      padding-top: 14px;
+      padding-left: 20px;
+      padding-right: 20px;
+      position: relative;
+  }
 
-// Empty state (if needed)
-.empty-state {
-  padding: 3rem;
-  text-align: center;
-  color: var(--text-secondary);
+  .table-with-tabs-header::before {
+      top: 101px;
+  }
 }

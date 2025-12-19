@@ -1,159 +1,140 @@
-<!-- Evernote Tasks Page - Pixel Perfect Recreation -->
-<div class="tasks-container">
-  <!-- Header Section -->
-  <div class="header-section">
-    <!-- Title and Top Bar -->
-    <div class="title-bar">
-      <div class="flex-1">
-        <h1 class="title">Tasks</h1>
-        
-        <!-- Tabs -->
-        <div class="tabs-container">
-          <button 
-            (click)="setActiveTab('my-tasks')"
-            [class.active]="activeTab === 'my-tasks'"
-            class="tab-button">
-            My tasks
-          </button>
-          <button 
-            (click)="setActiveTab('notebooks')"
-            [class.active]="activeTab === 'notebooks'"
-            class="tab-button">
-            Notebooks
-          </button>
-          <button 
-            (click)="setActiveTab('notes')"
-            [class.active]="activeTab === 'notes'"
-            class="tab-button">
-            Notes
-          </button>
-          <button 
-            (click)="setActiveTab('today')"
-            [class.active]="activeTab === 'today'"
-            class="tab-button">
-            Today
-          </button>
-          <button 
-            (click)="setActiveTab('assigned')"
-            [class.active]="activeTab === 'assigned'"
-            class="tab-button">
-            Assigned
-          </button>
-        </div>
+<vex-page-layout mode="card">
+  <vex-page-layout-header
+    class="pb-16 flex flex-col items-start justify-center"
+  >
+    <div
+      [class.container]="layoutCtrl.value === 'boxed'"
+      [class.px-gutter]="layoutCtrl.value === 'fullwidth'"
+      class="w-full flex flex-col sm:flex-row justify-between"
+    >
+      <div>
+        <h1 class="title mt-0 mb-1">Tasks</h1>
+        <vex-breadcrumbs [crumbs]="['Apps', 'Tasks']"></vex-breadcrumbs>
       </div>
-
-      <!-- Right Side Actions -->
-      <div class="actions-bar">
+      <div class="header-actions">
+        <mat-button-toggle-group
+          [formControl]="layoutCtrl"
+          appearance="legacy"
+          aria-label="Layout type"
+          class="layout-toggle-group"
+        >
+          <mat-button-toggle value="boxed">
+            <mat-icon svgIcon="mat:grid_view" class="mr-1"></mat-icon>
+            Boxed
+          </mat-button-toggle>
+          <mat-button-toggle value="fullwidth">
+            <mat-icon svgIcon="mat:crop_16_9" class="mr-1"></mat-icon>
+            Full-Width
+          </mat-button-toggle>
+        </mat-button-toggle-group>
         <button 
+          mat-flat-button
+          color="primary"
           (click)="openNewTaskModal()"
-          class="new-task-button">
-          + New Task
+          class="new-task-header-button"
+        >
+          <mat-icon svgIcon="mat:add" class="mr-1"></mat-icon>
+          New Task
         </button>
-        <button class="filter-button">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6l4 4-4 4"></path>
-          </svg>
-        </button>
-        <div class="search-container">
-          <input 
-            type="text" 
-            placeholder="Find tasks…" 
-            class="search-input"
-            [value]="searchQuery"
-            (input)="onSearchChange($any($event.target).value)"
-          >
-          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-          </svg>
+      </div>
+    </div>
+  </vex-page-layout-header>
+  <vex-page-layout-content
+    [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-gutter]="layoutCtrl.value === 'fullwidth'"
+    class="-mt-6"
+  >
+    <div class="pb-4">
+      <div>
+        <span
+          class="md:text-32 text-20 text-gray-200 mb-24c block lg:leading-43 leading-16"
+        >
+          Tasks
+        </span>
+      </div>
+      <div class="table-with-top-header w-full overflow-auto">
+        <div class="table-with-tabs-header bg-white">
+          <div class="table-mega-header relative">
+            <div class="search-box-on-tabs-table relative lg:absolute">
+              <div class="xl:max-w-[400px] w-full">
+                <div
+                  class="bg-foreground rounded-full border px-4 flex-auto flex items-center border-gray-100"
+                >
+                  <mat-icon
+                    class="icon-sm text-secondary"
+                    svgIcon="mat:search"
+                  ></mat-icon>
+                  <input
+                    class="px-4 py-2 border-1 border-gray-100 outline-none w-full bg-transparent"
+                    placeholder="Search tasks..."
+                    type="search"
+                    [formControl]="searchCtrl"
+                  />
+                </div>
+              </div>
+            </div>
+            <!-- <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start"> -->
+            <mat-tab-group
+              #tasksTabs
+              animationDuration="0ms"
+              mat-stretch-tabs="false"
+              mat-align-tabs="start"
+              (selectedTabChange)="onTabChange($event)"
+            >
+              <mat-tab label="My Tasks">
+                <ng-template matTabContent>
+                  <vex-tasks-list
+                    #tasksList
+                    [tasks]="myTasks"
+                    [loading]="loading"
+                    [error]="error"
+                    (taskClick)="onTaskClick($event)"
+                    (taskToggle)="onTaskToggle($event.task, $event.completed)"
+                    (taskDelete)="onTaskDelete($event)"
+                  ></vex-tasks-list>
+                </ng-template>
+              </mat-tab>
+              <mat-tab label="All Tasks">
+                <ng-template matTabContent>
+                  <vex-tasks-list
+                    #tasksList
+                    [tasks]="allTasks"
+                    [loading]="loading"
+                    [error]="error"
+                    (taskClick)="onTaskClick($event)"
+                    (taskToggle)="onTaskToggle($event.task, $event.completed)"
+                    (taskDelete)="onTaskDelete($event)"
+                  ></vex-tasks-list>
+                </ng-template>
+              </mat-tab>
+              <mat-tab label="Complete Tasks">
+                <ng-template matTabContent>
+                  <vex-tasks-list
+                    #tasksList
+                    [tasks]="completeTasks"
+                    [loading]="loading"
+                    [error]="error"
+                    (taskClick)="onTaskClick($event)"
+                    (taskToggle)="onTaskToggle($event.task, $event.completed)"
+                    (taskDelete)="onTaskDelete($event)"
+                  ></vex-tasks-list>
+                </ng-template>
+              </mat-tab>
+            </mat-tab-group>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </vex-page-layout-content>
 
-  <!-- Tasks Table -->
-  <div class="tasks-table-container">
-    <div class="overflow-x-auto">
-      <table class="tasks-table">
-        <thead>
-          <tr class="table-header">
-            <th class="table-header-cell">
-              <input type="checkbox" class="task-checkbox">
-            </th>
-            <th class="table-header-cell">Title</th>
-            <th class="table-header-cell">Due date</th>
-            <th class="table-header-cell">Assigned note</th>
-            <th class="table-header-cell">Assigned to</th>
-            <th class="table-header-cell">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @if (loading) {
-            <tr>
-              <td colspan="6" class="table-cell text-center">
-                Loading tasks...
-              </td>
-            </tr>
-          } @else if (error) {
-            <tr>
-              <td colspan="6" class="table-cell text-center error">
-                {{ error }}
-              </td>
-            </tr>
-          } @else if (filteredTasks.length === 0) {
-            <tr>
-              <td colspan="6" class="table-cell text-center">
-                No tasks found
-              </td>
-            </tr>
-          } @else {
-            @for (task of filteredTasks; track task.id) {
-              <tr class="table-row" [class.completed]="task.completed">
-                <td class="table-cell">
-                  <mat-checkbox 
-                    [checked]="task.completed"
-                    (change)="onTaskToggle(task, $event.checked)">
-                  </mat-checkbox>
-                </td>
-                <td class="table-cell task-title" [class.completed-text]="task.completed">
-                  {{ task.title }}
-                </td>
-                <td class="table-cell" [class.overdue]="task.isOverdue">
-                  {{ task.dueDate || '-' }}
-                </td>
-                <td class="table-cell">
-                  <div class="flex items-center gap-2">
-                    <svg class="task-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <span>{{ task.assignedNote }}</span>
-                  </div>
-                </td>
-                <td class="table-cell">
-                  {{ task.assignedTo }}
-                </td>
-                <td class="table-cell">
-                  <button 
-                    type="button"
-                    (click)="onTaskDelete(task)"
-                    class="delete-button"
-                    [attr.aria-label]="'Delete task ' + task.title">
-                    <mat-icon svgIcon="mat:delete"></mat-icon>
-                  </button>
-                </td>
-              </tr>
-            }
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- New Task Modal Component -->
+  <!-- New/Edit Task Modal Component -->
   @if (isNewTaskModalOpen) {
-    <vex-new-task-modal 
-      (closed)="closeNewTaskModal()" 
-      (created)="onCreateTask($event)">
+    <vex-new-task-modal
+      [task]="editingTask"
+      (closed)="closeNewTaskModal()"
+      (created)="onCreateTask($event)"
+      (updated)="onUpdateTask($event)"
+    >
     </vex-new-task-modal>
   }
-</div>
+</vex-page-layout>

@@ -36,7 +36,7 @@
   </div> -->
 
   <a (click)="close()"
-     [routerLink]="['/login']"
+     (click)="logoutUser()"
      class="vex-user-menu-item"
      matRipple
      matRippleColor="rgb(var(--color-primary), 0.1)">

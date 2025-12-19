@@ -1,4 +1,4 @@
-<h3 matDialogTitle>
+<!-- <h3 matDialogTitle>
   {{ event.title }}
 </h3>
 
@@ -30,4 +30,104 @@
 <mat-dialog-actions class="flex justify-end">
   <button mat-button mat-dialog-close>Cancel</button>
   <button (click)="save()" class="save" color="primary" mat-raised-button>Save</button>
+</mat-dialog-actions> -->
+
+<h3 matDialogTitle class="text-lg font-semibold">
+  {{ displayTitle }}
+</h3>
+
+<mat-dialog-content class="mat-typography">
+  @if (isLoading) {
+    <div class="flex flex-col items-center justify-center py-8 gap-4">
+      <mat-spinner diameter="40"></mat-spinner>
+      <span>Loading details...</span>
+    </div>
+  } @else if (error) {
+    <div class="flex items-center gap-2 text-red-600 py-4">
+      <mat-icon>error</mat-icon>
+      <span>{{ error }}</span>
+    </div>
+  } @else {
+    <div class="flex flex-col gap-4 py-4">
+      <!-- Type Badge + Status Icons -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <strong>Type:</strong>
+        <mat-chip
+          [ngClass]="{
+            'task-chip': event.meta?.type === 'task',
+            'note-chip': event.meta?.type !== 'task'
+          }"
+          selected
+          disableRipple
+        >
+          {{ event.meta?.type === "task" ? "Task" : "Pinned Note" }}
+        </mat-chip>
+
+        <mat-icon
+          *ngIf="event.meta?.type === 'task' && event.meta?.completed"
+          class="text-green-600"
+          matTooltip="Completed"
+        >
+          check_circle
+        </mat-icon>
+
+        <mat-icon *ngIf="isOverdue" class="text-red-600" matTooltip="Overdue">
+          warning
+        </mat-icon>
+      </div>
+
+      <!-- Title -->
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Title</mat-label>
+        <input matInput [value]="displayTitle" readonly />
+      </mat-form-field>
+
+      <!-- Description (for tasks) -->
+      <mat-form-field 
+        *ngIf="event.meta?.type === 'task' && displayDescription" 
+        appearance="outline" 
+        class="w-full">
+        <mat-label>Description</mat-label>
+        <textarea matInput [value]="displayDescription" readonly rows="3"></textarea>
+      </mat-form-field>
+
+      <!-- Start Date -->
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Date</mat-label>
+        <input matInput [value]="event.start | date : 'fullDate'" readonly />
+        <mat-icon matSuffix>event</mat-icon>
+      </mat-form-field>
+
+      <!-- Time if not all-day -->
+      <div
+        *ngIf="!event.allDay"
+        class="text-sm text-gray-600 flex items-center gap-2"
+      >
+        <mat-icon class="text-base">access_time</mat-icon>
+        <span>
+          {{ event.start | date : "shortTime" }}
+          <span *ngIf="event.end"> – {{ event.end | date : "shortTime" }}</span>
+        </span>
+      </div>
+
+      <!-- All-day indicator -->
+      <div
+        *ngIf="event.allDay"
+        class="text-sm text-gray-600 flex items-center gap-2"
+      >
+        <mat-icon class="text-base">schedule</mat-icon>
+        <span>All Day Event</span>
+      </div>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onClose()">Close</button>
+  @if (canNavigate && !isLoading && !error) {
+    <button mat-raised-button color="primary" (click)="onNavigate()">
+      <mat-icon [svgIcon]="navigationIcon"></mat-icon>
+      <span class="ml-1">{{ navigationLabel }}</span>
+    </button>
+  }
 </mat-dialog-actions>

@@ -79,6 +79,10 @@ const routes: VexRoutes = [
             path: 'social',
             loadChildren: () => import('./pages/apps/social/social.module').then(m => m.SocialModule)
           },
+          {
+            path: 'aio-table',
+            loadChildren: () => import('./pages/apps/aio-table/aio-table.module').then(m => m.AioTableModule),
+          },
         ]
       },
       // Main routes - USED in sidebar
@@ -90,8 +94,12 @@ const routes: VexRoutes = [
         }
       },
       {
-        path: 'tasks',
+        path: 'tasks-old',
         loadChildren: () => import('./pages/tasks/tasks.module').then(m => m.TasksModule),
+      },
+      {
+        path: 'tasks',
+        loadChildren: () => import('./pages/task-new/task-new.module').then(m => m.TaskNewModule),
       },
       {
         path: 'files',

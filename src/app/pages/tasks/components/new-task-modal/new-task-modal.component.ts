@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Output, OnInit, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, inject, Output, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,8 +8,10 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NotesService } from '../../../notes/services/notes.service';
 import { Note } from '../../../../core/models';
+import { Task } from '../../services/task.service';
 
 export interface NewTaskData {
+  id?: string;
   note_id: string;
   title: string;
   description?: string;
@@ -33,16 +35,19 @@ export interface NewTaskData {
     MatFormFieldModule
   ]
 })
-export class NewTaskModalComponent implements OnInit, OnDestroy {
+export class NewTaskModalComponent implements OnInit, OnDestroy, OnChanges {
   fb = inject(FormBuilder);
   private notesService = inject(NotesService);
   private destroy$ = new Subject<void>();
 
+  @Input() task: Task | null = null; // Task to edit (null for create mode)
   @Output() closed = new EventEmitter<void>();
   @Output() created = new EventEmitter<NewTaskData>();
+  @Output() updated = new EventEmitter<NewTaskData>();
 
   taskForm: FormGroup;
   notes: Note[] = [];
+  isEditMode = false;
 
   selectedDueDate = '';
   selectedReminder = '';
@@ -55,10 +60,68 @@ export class NewTaskModalComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(notes => {
       this.notes = notes.filter(n => !n.trashed && !n.archived);
-      // Set default note if available
-      if (this.notes.length > 0 && !this.taskForm.get('note_id')?.value) {
+      // Set default note if available and not in edit mode
+      if (this.notes.length > 0 && !this.isEditMode && !this.taskForm.get('note_id')?.value) {
         this.taskForm.patchValue({ note_id: this.notes[0].id });
       }
+    });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['task'] && this.task) {
+      this.isEditMode = true;
+      this.loadTaskData(this.task);
+    } else if (changes['task'] && !this.task) {
+      this.isEditMode = false;
+      this.resetForm();
+    }
+  }
+
+  private loadTaskData(task: Task): void {
+    // Format due date for date input (YYYY-MM-DD)
+    let dueDateValue = '';
+    if (task.due_date) {
+      const dueDate = new Date(task.due_date);
+      dueDateValue = dueDate.toISOString().split('T')[0];
+      
+      // Set selected due date button
+      const today = new Date().toISOString().split('T')[0];
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      
+      if (dueDateValue === today) {
+        this.selectedDueDate = 'today';
+      } else if (dueDateValue === tomorrowStr) {
+        this.selectedDueDate = 'tomorrow';
+      } else {
+        this.selectedDueDate = 'custom';
+      }
+    }
+
+    // Set reminder
+    if (task.reminder) {
+      this.selectedReminder = task.reminder;
+    }
+
+    // Set priority
+    if (task.priority) {
+      this.selectedPriority = task.priority;
+    }
+
+    // Set flagged
+    this.isFlagged = task.flagged || false;
+
+    // Populate form
+    this.taskForm.patchValue({
+      note_id: task.note_id,
+      title: task.label,
+      description: task.description || '',
+      dueDate: dueDateValue,
+      reminder: task.reminder || '',
+      assignedTo: task.assigned_to || '',
+      priority: task.priority || '',
+      flagged: this.isFlagged
     });
   }
 
@@ -133,7 +196,17 @@ export class NewTaskModalComponent implements OnInit, OnDestroy {
 
   createTask(): void {
     if (this.taskForm.valid) {
-      this.created.emit(this.taskForm.value as NewTaskData);
+      const formValue = this.taskForm.value;
+      const taskData: NewTaskData = {
+        ...formValue,
+        id: this.isEditMode ? this.task?.id : undefined
+      };
+      
+      if (this.isEditMode) {
+        this.updated.emit(taskData);
+      } else {
+        this.created.emit(taskData);
+      }
       this.closeModal();
     }
   }

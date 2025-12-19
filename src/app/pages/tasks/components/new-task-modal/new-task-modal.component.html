@@ -3,7 +3,7 @@
   <div (click)="onModalClick($event)" class="modal-container">
     <!-- Modal Header -->
     <div class="modal-header">
-      <h2 class="modal-title">New Task</h2>
+      <h2 class="modal-title">{{ isEditMode ? 'Edit Task' : 'New Task' }}</h2>
     </div>
 
     <!-- Modal Content -->
@@ -176,7 +176,7 @@
         (click)="createTask()"
         class="footer-button primary"
       >
-        Create task
+        {{ isEditMode ? 'Update task' : 'Create task' }}
       </button>
     </div>
   </div>

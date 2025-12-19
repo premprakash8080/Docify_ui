@@ -1,0 +1,103 @@
+<form (ngSubmit)="save()" [formGroup]="form">
+  <div class="flex items-center" mat-dialog-title>
+    <h2 *ngIf="form.get('title').value"
+        class="headline m-0 flex-auto">{{ form.get('title').value }}</h2>
+    <h2 *ngIf="!form.get('title').value"
+        class="headline m-0 flex-auto">New Task</h2>
+
+    <button [matMenuTriggerFor]="settingsMenu" class="text-secondary" mat-icon-button type="button">
+      <mat-icon svgIcon="mat:more_vert"></mat-icon>
+    </button>
+
+    <button class="text-secondary" mat-dialog-close mat-icon-button type="button">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+  </div>
+
+  <mat-divider class="text-border"></mat-divider>
+
+  <mat-dialog-content class="flex flex-col">
+    <mat-form-field class="flex-auto">
+      <mat-label>Note</mat-label>
+      <mat-select formControlName="note_id" required>
+        <mat-option *ngFor="let note of notes" [value]="note.id">{{ note.title }}</mat-option>
+      </mat-select>
+      <mat-icon matPrefix svgIcon="mat:note"></mat-icon>
+    </mat-form-field>
+
+    <mat-form-field class="flex-auto">
+      <mat-label>Task Title</mat-label>
+      <input formControlName="title" matInput required>
+
+      <mat-icon matPrefix svgIcon="mat:task"></mat-icon>
+    </mat-form-field>
+
+    <mat-form-field class="flex-auto">
+      <mat-label>Description</mat-label>
+      <textarea formControlName="description" matInput rows="3"></textarea>
+    </mat-form-field>
+
+    <div class="flex flex-col sm:flex-row">
+      <mat-form-field class="flex-auto">
+        <mat-label>Due Date</mat-label>
+        <input formControlName="dueDate" matInput type="date">
+
+        <mat-icon matPrefix svgIcon="mat:event"></mat-icon>
+      </mat-form-field>
+
+      <mat-form-field class="sm:ml-6 flex-auto">
+        <mat-label>Reminder</mat-label>
+        <input formControlName="reminder" matInput placeholder="e.g., In 1 hour">
+
+        <mat-icon matPrefix svgIcon="mat:notifications"></mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div class="flex flex-col sm:flex-row">
+      <mat-form-field class="flex-auto">
+        <mat-label>Assigned To</mat-label>
+        <input formControlName="assignedTo" matInput placeholder="Name or email">
+
+        <mat-icon matPrefix svgIcon="mat:person"></mat-icon>
+      </mat-form-field>
+
+      <mat-form-field class="sm:ml-6 flex-auto">
+        <mat-label>Priority</mat-label>
+        <mat-select formControlName="priority">
+          <mat-option value="">None</mat-option>
+          <mat-option value="low">Low</mat-option>
+          <mat-option value="medium">Medium</mat-option>
+          <mat-option value="high">High</mat-option>
+        </mat-select>
+        <mat-icon matPrefix svgIcon="mat:flag"></mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div class="flex items-center">
+      <mat-checkbox formControlName="flagged" class="mr-2">Flagged</mat-checkbox>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close type="button">Cancel</button>
+    <button *ngIf="isCreateMode()" color="primary" mat-flat-button type="submit">Create Task</button>
+    <button *ngIf="isUpdateMode()" color="primary" mat-flat-button type="submit">Update Task</button>
+  </mat-dialog-actions>
+</form>
+
+<mat-menu #settingsMenu="matMenu" xPosition="before" yPosition="below">
+  <button mat-menu-item>
+    <mat-icon svgIcon="mat:print"></mat-icon>
+    <span>Print</span>
+  </button>
+
+  <button mat-menu-item>
+    <mat-icon svgIcon="mat:download"></mat-icon>
+    <span>Export</span>
+  </button>
+
+  <button mat-menu-item>
+    <mat-icon svgIcon="mat:delete"></mat-icon>
+    <span>Delete</span>
+  </button>
+</mat-menu>

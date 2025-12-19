@@ -1,169 +1,299 @@
-import { Component, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import { CalendarEvent, CalendarEventAction, CalendarEventTimesChangedEvent, CalendarView } from 'angular-calendar';
-import { addDays, addHours, endOfDay, endOfMonth, isSameDay, isSameMonth, startOfDay, subDays } from 'date-fns';
+import {
+  CalendarEvent,
+  CalendarEventAction,
+  CalendarEventTimesChangedEvent,
+  CalendarView,
+} from 'angular-calendar';
+import {
+  isSameDay,
+  isSameMonth,
+  parseISO,
+  startOfDay,
+  endOfDay,
+  isValid,
+} from 'date-fns';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CalendarEditComponent } from './calendar-edit/calendar-edit.component';
+import { CalendarService } from './services/calender.service';
 
-const colors: any = {
-  blue: {
-    primary: '#5c77ff',
-    secondary: '#FFFFFF'
-  },
-  yellow: {
-    primary: '#ffc107',
-    secondary: '#FDF1BA'
-  },
-  red: {
-    primary: '#f44336',
-    secondary: '#FFFFFF'
-  }
-};
+interface CalendarItem {
+  id: string;          // e.g., "task_55" or "note_88"
+  type: 'task' | 'note';
+  title: string;
+  start: string;       // ISO date or datetime
+  end: string | null;
+  allDay: boolean;
+  completed?: boolean;
+  color: string;
+  sourceId: number;
+}
 
 @Component({
   selector: 'vex-calendar',
-  standalone: false,
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  standalone: false,
+  encapsulation: ViewEncapsulation.None,
 })
-export class CalendarComponent {
-
-  @ViewChild('modalContent', { static: true }) modalContent: TemplateRef<any>;
+export class CalendarComponent implements OnInit {
+  @ViewChild('modalContent', { static: true }) modalContent!: TemplateRef<any>;
 
   view: CalendarView = CalendarView.Month;
-
   CalendarView = CalendarView;
-
   viewDate: Date = new Date();
+  refresh = new Subject<void>();
 
-  modalData: {
-    action: string;
-    event: CalendarEvent;
-  };
-  refresh: Subject<any> = new Subject();
+  events: CalendarEvent[] = [];
+
+  activeDayIsOpen = true;
+
   actions: CalendarEventAction[] = [
     {
       label: '<i class="fa fa-fw fa-pencil"></i>',
       onClick: ({ event }: { event: CalendarEvent }): void => {
         this.handleEvent('Edited', event);
-      }
+      },
     },
     {
       label: '<i class="fa fa-fw fa-times"></i>',
       onClick: ({ event }: { event: CalendarEvent }): void => {
-        this.events = this.events.filter(iEvent => iEvent !== event);
-        this.handleEvent('Deleted', event);
-      }
-    }
-  ];
-  events: CalendarEvent[] = [
-    {
-      start: subDays(startOfDay(new Date()), 1),
-      end: addDays(new Date(), 1),
-      title: 'A 3 day event',
-      color: colors.primary,
-      actions: this.actions,
-      allDay: true,
-      resizable: {
-        beforeStart: true,
-        afterEnd: true
+        this.events = this.events.filter((iEvent) => iEvent !== event);
+        this.snackbar.open('Event deleted', 'Close', { duration: 3000 });
+        this.refresh.next();
       },
-      draggable: true
     },
-    {
-      start: startOfDay(new Date()),
-      title: 'An event with no end date',
-      color: colors.yellow,
-      actions: this.actions
-    },
-    {
-      start: subDays(endOfMonth(new Date()), 3),
-      end: addDays(endOfMonth(new Date()), 3),
-      title: 'A long event that spans 2 months',
-      color: colors.primary,
-      allDay: true
-    },
-    {
-      start: addHours(startOfDay(new Date()), 2),
-      end: new Date(),
-      title: 'A draggable and resizable event',
-      color: colors.red,
-      actions: this.actions,
-      resizable: {
-        beforeStart: true,
-        afterEnd: true
-      },
-      draggable: true
-    }
   ];
-  activeDayIsOpen = true;
 
-  constructor(private dialog: MatDialog,
-              private snackbar: MatSnackBar) {}
+  constructor(
+    private dialog: MatDialog,
+    private snackbar: MatSnackBar,
+    private calendarService: CalendarService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.loadCalendarItems();
+  }
+
+  private loadCalendarItems(): void {
+    this.calendarService.getCalendarItems().subscribe({
+      next: (response) => {
+        if (!response?.success || !response.data?.items) {
+          this.snackbar.open('No calendar data available', 'Close', {
+            duration: 3000,
+          });
+          return;
+        }
+
+        const items = Array.isArray(response.data.items) ? response.data.items : [];
+        const validItems = this.validateAndDeduplicateItems(items);
+        this.events = validItems.map((item: CalendarItem) =>
+          this.mapToCalendarEvent(item)
+        );
+        this.refresh.next();
+      },
+      error: (err) => {
+        console.error('Failed to load calendar items', err);
+        this.snackbar.open('Failed to load calendar data', 'Close', {
+          duration: 5000,
+        });
+      },
+    });
+  }
+
+  private validateAndDeduplicateItems(items: CalendarItem[]): CalendarItem[] {
+    const seen = new Set<string>();
+    const valid: CalendarItem[] = [];
+
+    for (const item of items) {
+      if (!item || typeof item !== 'object') continue;
+      if (!item.id || typeof item.id !== 'string') continue;
+      if (!item.title || typeof item.title !== 'string') continue;
+      if (!item.start || typeof item.start !== 'string') continue;
+      if (item.type !== 'task' && item.type !== 'note') continue;
+      if (typeof item.allDay !== 'boolean') continue;
+      if (!item.color || typeof item.color !== 'string') continue;
+      if (!item.sourceId || typeof item.sourceId !== 'number') continue;
+
+      if (seen.has(item.id)) continue;
+      seen.add(item.id);
+
+      valid.push(item);
+    }
+
+    return valid;
+  }
+
+  private mapToCalendarEvent(item: CalendarItem): CalendarEvent {
+    const startDate = this.parseSafeDate(item.start);
+    const endDate = item.end ? this.parseSafeDate(item.end) : undefined;
+    const isCompleted = item.completed === true;
+    const canDragResize = !isCompleted;
+
+    if (!isValid(startDate)) {
+      console.warn('Invalid start date for item:', item.id, item.start);
+      return this.createFallbackEvent(item);
+    }
+
+    return {
+      id: item.id,
+      title: item.type === 'task' && isCompleted ? `✓ ${item.title}` : item.title,
+      start: startDate,
+      end: endDate && isValid(endDate) ? endDate : undefined,
+      color: {
+        primary: item.color,
+        secondary: this.lightenColor(item.color),
+      },
+      allDay: item.allDay,
+      resizable: {
+        beforeStart: canDragResize,
+        afterEnd: canDragResize,
+      },
+      draggable: canDragResize,
+      actions: this.actions,
+      meta: {
+        type: item.type,
+        sourceId: item.sourceId,
+        completed: isCompleted,
+      },
+    };
+  }
+
+  private parseSafeDate(dateString: string): Date {
+    if (!dateString || typeof dateString !== 'string') {
+      return new Date();
+    }
+
+    const parsed = parseISO(dateString);
+    if (isValid(parsed)) {
+      return parsed;
+    }
+
+    const fallback = new Date(dateString);
+    return isValid(fallback) ? fallback : new Date();
+  }
+
+  private createFallbackEvent(item: CalendarItem): CalendarEvent {
+    return {
+      id: item.id,
+      title: item.title,
+      start: new Date(),
+      color: {
+        primary: item.color,
+        secondary: this.lightenColor(item.color),
+      },
+      allDay: item.allDay,
+      resizable: {
+        beforeStart: false,
+        afterEnd: false,
+      },
+      draggable: false,
+      actions: this.actions,
+      meta: {
+        type: item.type,
+        sourceId: item.sourceId,
+        completed: item.completed || false,
+      },
+    };
+  }
+
+  // Optional: helper to create a lighter secondary color
+  private lightenColor(hex: string): string {
+    return hex + '40'; // adds 25% opacity (e.g., #ff000040)
+  }
 
   dayClicked({ date, events }: { date: Date; events: CalendarEvent[] }): void {
     if (isSameMonth(date, this.viewDate)) {
-      this.activeDayIsOpen = !((isSameDay(this.viewDate, date) && this.activeDayIsOpen === true) || events.length === 0);
+      if (
+        (isSameDay(this.viewDate, date) && this.activeDayIsOpen === true) ||
+        events.length === 0
+      ) {
+        this.activeDayIsOpen = false;
+      } else {
+        this.activeDayIsOpen = true;
+      }
       this.viewDate = date;
     }
   }
 
-  eventTimesChanged({ event, newStart, newEnd }: CalendarEventTimesChangedEvent): void {
-    this.events = this.events.map(iEvent => {
+  eventTimesChanged({
+    event,
+    newStart,
+    newEnd,
+  }: CalendarEventTimesChangedEvent): void {
+    if (!event.meta) return;
+
+    const isCompleted = event.meta.completed === true;
+    if (isCompleted) {
+      this.snackbar.open('Cannot modify completed items', 'Close', {
+        duration: 3000,
+      });
+      this.refresh.next();
+      return;
+    }
+
+    if (!event.draggable || !event.resizable) {
+      this.snackbar.open('This item cannot be moved or resized', 'Close', {
+        duration: 3000,
+      });
+      this.refresh.next();
+      return;
+    }
+
+    this.events = this.events.map((iEvent) => {
       if (iEvent === event) {
         return {
           ...event,
           start: newStart,
-          end: newEnd
+          end: newEnd,
         };
       }
       return iEvent;
     });
-    this.handleEvent('Dropped or resized', event);
+    this.snackbar.open('Event moved/resized', 'Close', { duration: 3000 });
+    this.refresh.next();
   }
+
+  // handleEvent(action: string, event: CalendarEvent): void {
+  //   const dialogRef = this.dialog.open(CalendarEditComponent, {
+  //     data: { event, action },
+  //     width: '500px',
+  //   });
+
+  //   dialogRef.afterClosed().subscribe((result) => {
+  //     if (result) {
+  //       // If edit component returns updated event
+  //       const index = this.events.findIndex((e) => e.id === event.id);
+  //       if (index > -1) {
+  //         this.events[index] = result;
+  //         this.events = [...this.events]; // trigger change detection
+  //       }
+  //       this.snackbar.open(`Event ${action.toLowerCase()}: ${result.title}`, 'Close', {
+  //         duration: 4000,
+  //       });
+  //       this.refresh.next();
+  //     }
+  //   });
+  // }
 
   handleEvent(action: string, event: CalendarEvent): void {
-    const dialogRef = this.dialog.open(CalendarEditComponent, {
-      data: event
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        event = result;
-        this.snackbar.open('Updated Event: ' + event.title);
-        this.refresh.next(null);
-      }
+    this.dialog.open(CalendarEditComponent, {
+      data: { event },
+      width: '500px',
+      maxWidth: '90vw',
+      panelClass: 'calendar-event-dialog'
     });
   }
 
-  addEvent(): void {
-    this.events = [
-      ...this.events,
-      {
-        title: 'New event',
-        start: startOfDay(new Date()),
-        end: endOfDay(new Date()),
-        color: colors.red,
-        draggable: true,
-        resizable: {
-          beforeStart: true,
-          afterEnd: true
-        }
-      }
-    ];
-  }
-
-  deleteEvent(eventToDelete: CalendarEvent) {
-    this.events = this.events.filter(event => event !== eventToDelete);
-  }
-
-  setView(view: CalendarView) {
+  setView(view: CalendarView): void {
     this.view = view;
   }
 
-  closeOpenMonthViewDay() {
+  closeOpenMonthViewDay(): void {
     this.activeDayIsOpen = false;
   }
 }
