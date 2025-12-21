@@ -701,7 +701,7 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
       event.preventDefault();
       event.stopPropagation();
       const file = imageItem.getAsFile();
-      if (file) {
+      if (file && file instanceof File && file.size > 0) {
         this.uploadAndInsertImage(file);
         return true;
       }
@@ -714,10 +714,15 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
    * Uploads image and inserts it into editor at cursor position
    */
   private uploadAndInsertImage(imageFile: File): void {
-    if (!this.editor) return;
+    if (!this.editor || !imageFile) return;
 
     const formData = new FormData();
-    formData.append('image', imageFile);
+    formData.append('image', imageFile, imageFile.name);
+    
+    // Add note_id to request body if available
+    if (this.noteId) {
+      formData.append('note_id', this.noteId);
+    }
 
     this.notesService.uploadNoteImage(formData).pipe(
       map((response: any) => {

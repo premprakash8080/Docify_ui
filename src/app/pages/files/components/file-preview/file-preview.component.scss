@@ -13,15 +13,37 @@
   border-bottom: 1px solid var(--foreground-divider);
   background-color: var(--background-card);
   flex-shrink: 0;
+  position: relative;
+  gap: 1rem;
+
+  .go-to-notes-button {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-right: auto;
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
 
   .breadcrumb {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     color: var(--text-secondary);
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
 
     .breadcrumb-item {
       font-size: 0.875rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
 
       &.current {
         color: var(--text-color);
@@ -33,6 +55,7 @@
       font-size: 16px;
       width: 16px;
       height: 16px;
+      flex-shrink: 0;
     }
   }
 
@@ -40,6 +63,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
+    margin-left: auto;
   }
 }
 

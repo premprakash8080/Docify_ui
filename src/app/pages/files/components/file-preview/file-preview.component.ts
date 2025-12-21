@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, OnInit, inject, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
 import { FileAttachment } from '../../../../core/data/sample-data';
 
@@ -11,13 +12,14 @@ import { FileAttachment } from '../../../../core/data/sample-data';
   imports: [
     CommonModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    MatTooltipModule
   ],
   templateUrl: './file-preview.component.html',
   styleUrls: ['./file-preview.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FilePreviewComponent implements OnInit {
+export class FilePreviewComponent implements OnInit, OnChanges {
   private router = inject(Router);
 
   @Input() file: FileAttachment | null = null;
@@ -26,8 +28,20 @@ export class FilePreviewComponent implements OnInit {
   fileType: string = '';
 
   ngOnInit(): void {
+    this.updateFileType();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['file']) {
+      this.updateFileType();
+    }
+  }
+
+  private updateFileType(): void {
     if (this.file) {
       this.fileType = this.getFileType(this.file.mimeType || '');
+    } else {
+      this.fileType = '';
     }
   }
 
