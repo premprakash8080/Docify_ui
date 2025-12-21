@@ -7,7 +7,11 @@
         <vex-note-editor-content
           #editorContent
           [initialContent]="note?.content || ''"
+          [title]="titleControl.value || ''"
+          [noteId]="note?.id || null"
           (contentChange)="onContentChange($event)"
+          (titleChange)="onTitleChange($event)"
+          (titleSaveImmediate)="onTitleSaveImmediate($event)"
         >
         </vex-note-editor-content>
       </div>

@@ -101,10 +101,23 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
                     const query = slashMatch[1];
                     const coords = currentView.coordsAtPos($from.pos);
                     const editorRect = currentView.dom.getBoundingClientRect();
+                    
+                    // Get the editor-content-wrapper to calculate position relative to it
+                    const editorWrapper = currentView.dom.closest('.editor-content-wrapper') as HTMLElement;
+                    const wrapperRect = editorWrapper?.getBoundingClientRect() || editorRect;
+
+                    // Calculate position relative to editor-content-wrapper (top-level container)
+                    // Position menu below cursor with sufficient spacing to avoid overlapping text
+                    // Use line height (typically ~24px) plus padding to ensure menu doesn't overlap content
+                    const lineHeight = coords.bottom - coords.top;
+                    const spacing = Math.max(12, lineHeight + 4); // At least 12px, or line height + 4px
+                    // Calculate top position relative to wrapper (includes title input height)
+                    const menuTop = coords.bottom - wrapperRect.top + spacing;
+                    const menuLeft = coords.left - wrapperRect.left;
 
                     extension.options.onOpen(query, {
-                      top: coords.bottom - editorRect.top + 8,
-                      left: coords.left - editorRect.left,
+                      top: menuTop,
+                      left: menuLeft,
                     });
                     isMenuOpen = true;
                   } else if (isMenuOpen) {

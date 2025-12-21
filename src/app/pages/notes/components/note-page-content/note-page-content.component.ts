@@ -169,6 +169,15 @@ export class NotePageContentComponent implements OnInit, OnDestroy, OnChanges {
     this.noteUpdated.emit(note);
   }
 
+  onTitleChange(title: string): void {
+    // Update note title in real-time for immediate UI update in notes list
+    if (this.note) {
+      this.note = { ...this.note, title: title };
+      // Emit updated note to parent for notes list update
+      this.noteUpdated.emit(this.note);
+    }
+  }
+
   onWordCountChange(count: number): void {
     this.wordCount = count;
   }

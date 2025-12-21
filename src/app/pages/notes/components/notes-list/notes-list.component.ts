@@ -219,15 +219,25 @@ export class NotesListComponent implements OnInit, OnDestroy {
       // Create a new array reference to ensure change detection works
       const newItems = Array.isArray(notes) ? [...notes] as SideListItem[] : [];
       
-      // Check if items changed (length, IDs, order, or properties like pinned)
+      // Check if items changed (length, IDs, order, or properties like pinned, title)
       const itemsChanged = this.items.length !== newItems.length || 
         this.items.some((item, index) => {
           const newItem = newItems[index];
-          return !newItem || item.id !== newItem.id || item.pinned !== newItem.pinned;
+          if (!newItem || item.id !== newItem.id) return true;
+          // Check for property changes (pinned, title, etc.)
+          const oldNote = item as any as Note;
+          const newNote = newItem as any as Note;
+          return oldNote.pinned !== newNote.pinned || 
+                 oldNote.title !== newNote.title;
         }) ||
         newItems.some((item, index) => {
           const oldItem = this.items[index];
-          return !oldItem || item.id !== oldItem.id;
+          if (!oldItem || item.id !== oldItem.id) return true;
+          // Check for property changes
+          const oldNote = oldItem as any as Note;
+          const newNote = item as any as Note;
+          return oldNote.pinned !== newNote.pinned || 
+                 oldNote.title !== newNote.title;
         });
       
       if (itemsChanged) {

@@ -39,17 +39,29 @@ export class HttpResponseInterceptor implements HttpInterceptor {
       }
     }
     
+    // Check if request should skip loading indicator (for autosave, background operations)
+    const skipLoading = request.headers.has('X-Skip-Loading');
+    
     // Clone request and add Authorization header if token exists
+    // Preserve existing headers including X-Skip-Loading
     let requestWithToken = request;
     if (token && token !== '' && token !== 'null' && token !== 'undefined') {
+      const headers: { [key: string]: string } = {
+        'Authorization': `Bearer ${token}`
+      };
+      // Preserve X-Skip-Loading header if it exists
+      if (skipLoading) {
+        headers['X-Skip-Loading'] = 'true';
+      }
       requestWithToken = request.clone({
-        setHeaders: {
-          'Authorization': `Bearer ${token}`
-        }
+        setHeaders: headers
       });
     }
 
-    this.loadingService.show();
+    // Only show loading indicator if not explicitly skipped
+    if (!skipLoading) {
+      this.loadingService.show();
+    }
     
     return next.handle(requestWithToken || request).pipe(retry(0), catchError((error: HttpErrorResponse) => {
       let message = '';
@@ -87,7 +99,10 @@ export class HttpResponseInterceptor implements HttpInterceptor {
       return throwError(message);
     }),
       finalize(() => {
-        this.loadingService.hide();
+        // Only hide loading indicator if it was shown
+        if (!skipLoading) {
+          this.loadingService.hide();
+        }
       }))
   }
 }

@@ -11,15 +11,15 @@ export interface SlashCommandItem {
   description: string;
 }
 
-@Component({
+  @Component({
   selector: 'vex-slash-menu',
   template: `
     <div 
       *ngIf="visible"
       #menuContainer
       class="slash-menu visible"
-      [style.top.px]="position?.top || 0"
-      [style.left.px]="position?.left || 0"
+      [style.top.px]="adjustedPosition?.top || 0"
+      [style.left.px]="adjustedPosition?.left || 0"
       role="listbox"
       aria-label="Block type menu">
       <div 
@@ -39,20 +39,37 @@ export interface SlashCommandItem {
   `,
   styles: [`
     .slash-menu {
-      position: absolute;
-      z-index: 1000;
-      background: var(--background-card);
-      border: 1px solid var(--foreground-divider);
+      position: fixed;
+      z-index: 10000;
+      background: var(--background-card, #ffffff) !important;
+      border: 1px solid var(--foreground-divider, #e0e0e0);
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       min-width: 280px;
       max-width: 320px;
       max-height: 300px;
       overflow-y: auto;
+      overflow-x: hidden;
       opacity: 0;
       pointer-events: none;
       transform: translateY(-8px);
       transition: opacity 0.15s ease, transform 0.15s ease;
+      margin: 0;
+      padding: 4px 0;
+      /* Ensure menu doesn't interfere with text selection */
+      user-select: none;
+      -webkit-user-select: none;
+      /* Top-level overlay - doesn't affect document flow */
+      isolation: isolate;
+      /* Ensure menu appears above all editor content */
+      contain: layout style paint;
+      /* Ensure background is fully opaque and doesn't mix with content */
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      /* Prevent any content bleeding through */
+      mix-blend-mode: normal;
+      /* Ensure proper rendering */
+      will-change: transform, opacity;
       
       &.visible {
         opacity: 1;
@@ -72,38 +89,48 @@ export interface SlashCommandItem {
       text-align: left;
       cursor: pointer;
       transition: background-color 0.1s ease;
-      color: var(--text-color);
+      color: var(--text-color, #000000);
+      position: relative;
+      z-index: 1;
+      /* Ensure menu items are isolated from editor content */
+      isolation: isolate;
       
       &:hover,
       &.selected {
-        background: var(--background-hover);
+        background: var(--background-hover, #f5f5f5);
       }
       
       .item-icon {
         width: 20px;
         height: 20px;
         font-size: 20px;
-        color: var(--text-secondary);
+        color: var(--text-secondary, #666666);
         flex-shrink: 0;
+        position: relative;
+        z-index: 1;
       }
       
       .item-content {
         flex: 1;
         min-width: 0;
+        position: relative;
+        z-index: 1;
         
         .item-label {
           font-size: 14px;
           font-weight: 500;
-          color: var(--text-color);
+          color: var(--text-color, #000000);
           margin-bottom: 2px;
+          line-height: 1.4;
         }
         
         .item-description {
           font-size: 12px;
-          color: var(--text-secondary);
+          color: var(--text-secondary, #666666);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          line-height: 1.3;
         }
       }
     }
@@ -120,6 +147,7 @@ export class SlashMenuComponent implements AfterViewInit, OnChanges {
   @ViewChild('menuContainer', { static: false }) menuContainer?: ElementRef<HTMLDivElement>;
 
   selectedIndex = 0;
+  adjustedPosition: { top: number; left: number } | null = null;
 
   // Available block commands
   readonly commands: SlashCommandItem[] = [
@@ -132,6 +160,8 @@ export class SlashMenuComponent implements AfterViewInit, OnChanges {
     { id: 'taskList', label: 'To-do List', icon: 'mat:checklist', description: 'Track tasks with a to-do list' },
     { id: 'codeBlock', label: 'Code Block', icon: 'mat:code', description: 'Capture a code snippet' },
     { id: 'blockquote', label: 'Quote', icon: 'mat:format_quote', description: 'Capture a quote' },
+    { id: 'table', label: 'Table', icon: 'mat:table_chart', description: 'Insert a table' },
+    { id: 'details', label: 'Toggle', icon: 'mat:expand_more', description: 'Collapsible content block' },
   ];
 
   get filteredItems(): SlashCommandItem[] {
@@ -146,18 +176,113 @@ export class SlashMenuComponent implements AfterViewInit, OnChanges {
     );
   }
 
-  ngAfterViewInit(): void {
-    // Reset selection when menu becomes visible
-    if (this.visible) {
-      this.selectedIndex = 0;
-    }
-  }
 
   ngOnChanges(changes: SimpleChanges): void {
     // Reset selection when query or visibility changes
     if (changes['query'] || changes['visible']) {
       this.selectedIndex = 0;
     }
+    
+    // Adjust position when position or visibility changes
+    if (changes['position'] || changes['visible']) {
+      this.adjustPosition();
+    }
+  }
+  
+  ngAfterViewInit(): void {
+    // Reset selection when menu becomes visible
+    if (this.visible) {
+      this.selectedIndex = 0;
+    }
+    // Adjust position after view init
+    this.adjustPosition();
+  }
+  
+  /**
+   * Adjusts menu position to stay within viewport bounds and avoid overlapping text
+   * Uses fixed positioning relative to viewport
+   */
+  private adjustPosition(): void {
+    if (!this.visible || !this.position) {
+      this.adjustedPosition = this.position;
+      return;
+    }
+    
+    // Use setTimeout to ensure DOM is updated and menu is rendered
+    setTimeout(() => {
+      if (!this.menuContainer) {
+        this.adjustedPosition = this.position;
+        return;
+      }
+      
+      const menuElement = this.menuContainer.nativeElement;
+      
+      // Get the editor content wrapper to calculate viewport position
+      const editorWrapper = menuElement.closest('.editor-content-wrapper') as HTMLElement;
+      if (!editorWrapper) {
+        this.adjustedPosition = this.position;
+        return;
+      }
+      
+      // Get wrapper's position in viewport
+      const wrapperRect = editorWrapper.getBoundingClientRect();
+      
+      // Calculate viewport coordinates from relative position
+      // position.top is relative to wrapper, so add wrapper's top offset
+      const viewportTop = wrapperRect.top + this.position.top;
+      const viewportLeft = wrapperRect.left + this.position.left;
+      
+      // Get actual menu dimensions after render
+      const menuRect = menuElement.getBoundingClientRect();
+      
+      // Menu dimensions
+      const menuHeight = menuRect.height > 0 ? menuRect.height : 300; // fallback to max-height
+      const menuWidth = menuRect.width > 0 ? menuRect.width : 280; // fallback to min-width
+      
+      // Calculate available space in viewport
+      const spaceBelow = window.innerHeight - viewportTop;
+      const spaceAbove = viewportTop;
+      const spaceRight = window.innerWidth - viewportLeft;
+      const spaceLeft = viewportLeft;
+      
+      let adjustedTop = viewportTop;
+      let adjustedLeft = viewportLeft;
+      
+      // Adjust vertical position to avoid overflow and overlap
+      const minSpacing = 12; // Minimum spacing to prevent overlap
+      
+      if (spaceBelow < menuHeight + minSpacing) {
+        // Not enough space below, try positioning above cursor
+        if (spaceAbove >= menuHeight + minSpacing) {
+          // Position above cursor with gap to avoid overlap
+          adjustedTop = viewportTop - menuHeight - minSpacing;
+        } else {
+          // Not enough space above either, position at bottom of viewport with padding
+          adjustedTop = Math.max(8, window.innerHeight - menuHeight - 8);
+        }
+      } else {
+        // Enough space below, add small spacing
+        adjustedTop = viewportTop + minSpacing;
+      }
+      
+      // Adjust horizontal position to avoid overflow
+      if (spaceRight < menuWidth + 8) {
+        // Not enough space on right, align to right edge with padding
+        adjustedLeft = Math.max(8, window.innerWidth - menuWidth - 8);
+      } else if (spaceLeft < 8) {
+        // Menu would overflow left, align to left edge with padding
+        adjustedLeft = 8;
+      }
+      
+      // Final bounds check to ensure menu stays within viewport
+      adjustedTop = Math.max(8, Math.min(adjustedTop, window.innerHeight - menuHeight - 8));
+      adjustedLeft = Math.max(8, Math.min(adjustedLeft, window.innerWidth - menuWidth - 8));
+      
+      this.adjustedPosition = {
+        top: adjustedTop,
+        left: adjustedLeft
+      };
+    }, 0);
   }
 
   trackById(index: number, item: SlashCommandItem): string {

@@ -29,9 +29,16 @@ export class HttpService {
     }
 
     put(
-        url: string, params?: any,showLoader:boolean=true
+        url: string, params?: any, showLoader: boolean = true, skipLoadingIndicator: boolean = false
     ): Observable<any> {
-        return this._http.put(this.API_URL + url,params, { reportProgress: showLoader});
+        const headers: { [key: string]: string } = {};
+        if (skipLoadingIndicator) {
+            headers['X-Skip-Loading'] = 'true';
+        }
+        return this._http.put(this.API_URL + url, params, { 
+            reportProgress: showLoader,
+            headers: new HttpHeaders(headers)
+        });
     }
 
     delete(

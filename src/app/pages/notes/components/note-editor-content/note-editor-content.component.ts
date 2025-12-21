@@ -8,12 +8,16 @@ import Image from '@tiptap/extension-image';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
+import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
+import { Details, DetailsSummary, DetailsContent } from '@tiptap/extension-details';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { createLowlight, common } from 'lowlight';
 import { SlashCommand } from './slash-command.extension';
 import { FontFamily } from '../note-editor-toolbar/font-family.extension';
 import { FontSize } from '../note-editor-toolbar/font-size.extension';
 import { NotesService } from '../../services/notes.service';
-import { Subject } from 'rxjs';
-import { takeUntil, map } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { takeUntil, map, catchError } from 'rxjs/operators';
 
 /**
  * Component that wraps the Tiptap editor for note content editing.
@@ -31,11 +35,26 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
   /** Initial HTML content to load into the editor */
   @Input() initialContent: string = '';
   
+  /** Note title value */
+  @Input() title: string = '';
+  
+  /** Note ID for saving title */
+  @Input() noteId: string | null = null;
+  
   /** Emits when editor content changes (user-driven edits only) */
   @Output() contentChange = new EventEmitter<string>();
   
+  /** Emits when title changes */
+  @Output() titleChange = new EventEmitter<string>();
+  
+  /** Emits when title should be saved immediately (Enter/blur) */
+  @Output() titleSaveImmediate = new EventEmitter<string>();
+  
   /** ViewChild reference to the editor DOM element */
   @ViewChild('editorElement', { static: false }) editorElement?: ElementRef<HTMLDivElement>;
+  
+  /** ViewChild reference to the title input element */
+  @ViewChild('titleInput', { static: false }) titleInput?: ElementRef<HTMLInputElement>;
   
   /** ViewChild reference to the slash menu component */
   @ViewChild('slashMenu', { static: false }) slashMenuComponent?: any;
@@ -57,6 +76,12 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
 
   private notesService = inject(NotesService);
   private destroy$ = new Subject<void>();
+  
+  // Track last saved title to prevent duplicate saves
+  private lastSavedTitle: string | null = null;
+
+  // Create lowlight instance for syntax highlighting
+  private lowlight = createLowlight(common);
 
   /**
    * Initializes the Tiptap editor ONLY in ngAfterViewInit after ViewChild is available.
@@ -88,6 +113,29 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
         contentString = newContent.content || '';
       }
       this.updateContent(contentString);
+    }
+    
+    // Handle title changes - update input value
+    if (changes['title']) {
+      const newTitle = changes['title'].currentValue || '';
+      if (this.titleInput && this.titleInput.nativeElement.value !== newTitle) {
+        this.titleInput.nativeElement.value = newTitle;
+      }
+      // Only update lastSavedTitle on first change (when note initially loads)
+      // NOT on subsequent changes (which happen when user types and parent updates)
+      if (changes['title'].firstChange) {
+        this.lastSavedTitle = newTitle.trim();
+      }
+    }
+    
+    // Reset last saved title when noteId changes (new note loaded)
+    if (changes['noteId'] && changes['noteId'].currentValue) {
+      // When a new note is loaded, update last saved title to current title
+      if (this.title) {
+        this.lastSavedTitle = this.title.trim();
+      } else {
+        this.lastSavedTitle = null;
+      }
     }
   }
 
@@ -123,6 +171,7 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
             heading: {
               levels: [1, 2, 3], // Limit to H1, H2, H3
             },
+            codeBlock: false, // Disable default codeBlock to use CodeBlockLowlight
           }),
           TextStyle,
           Color,
@@ -131,6 +180,18 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
           }),
           FontFamily,
           FontSize,
+          Table.configure({
+            resizable: true,
+          }),
+          TableRow,
+          TableHeader,
+          TableCell,
+          Details,
+          DetailsSummary,
+          DetailsContent,
+          CodeBlockLowlight.configure({
+            lowlight: this.lowlight,
+          }),
           TaskList.configure({
             HTMLAttributes: {
               class: 'task-list',
@@ -335,6 +396,12 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
       case 'blockquote':
         this.editor.chain().focus().clearNodes().toggleBlockquote().run();
         break;
+      case 'table':
+        this.editor.chain().focus().clearNodes().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+        break;
+      case 'details':
+        this.editor.chain().focus().clearNodes().setDetails().run();
+        break;
     }
 
     // Close menu after command execution
@@ -429,6 +496,100 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
         this.editor?.commands.focus();
       }, 0);
     }
+  }
+
+  /**
+   * Handles title input changes
+   */
+  onTitleInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const newTitle = input.value || '';
+    this.titleChange.emit(newTitle);
+  }
+
+  /**
+   * Handles Enter key in title input - saves and moves focus to editor
+   */
+  onTitleEnter(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    keyboardEvent.preventDefault();
+    keyboardEvent.stopPropagation();
+    
+    // Get new title value
+    const input = keyboardEvent.target as HTMLInputElement;
+    const newTitle = input.value || '';
+    
+    // Emit title change for parent components
+    this.titleChange.emit(newTitle);
+    this.titleSaveImmediate.emit(newTitle);
+    
+    // Save title immediately via API (silent save, no loading indicator)
+    this.saveTitleImmediately(newTitle);
+    
+    // Move focus to editor content area
+    if (this.editor && !this.editor.isDestroyed) {
+      setTimeout(() => {
+        this.editor?.commands.focus();
+      }, 0);
+    }
+  }
+
+  /**
+   * Handles blur event on title input - saves title immediately
+   */
+  onTitleBlur(): void {
+    if (this.titleInput) {
+      const newTitle = this.titleInput.nativeElement.value || '';
+      
+      // Emit title change for parent components
+      this.titleChange.emit(newTitle);
+      this.titleSaveImmediate.emit(newTitle);
+      
+      // Save title immediately via API (silent save, no loading indicator)
+      this.saveTitleImmediately(newTitle);
+    }
+  }
+
+  /**
+   * Saves title immediately to database via API
+   * Uses skipLoadingIndicator to save silently without showing loading bar
+   */
+  private saveTitleImmediately(title: string): void {
+    // Don't save if noteId is not available
+    if (!this.noteId) {
+      console.warn('Cannot save title: noteId is not available');
+      return;
+    }
+
+    // Get trimmed title value
+    const trimmedTitle = (title || '').trim();
+    
+    // Don't save if title hasn't changed from last saved value
+    // Only skip if lastSavedTitle is not null and matches (to allow saving when lastSavedTitle is null on first save)
+    if (this.lastSavedTitle !== null && trimmedTitle === this.lastSavedTitle) {
+      // Title hasn't changed, no need to save
+      return;
+    }
+
+    // Save title silently without showing loading indicators
+    const payload = { title: trimmedTitle };
+    this.notesService.updateNote(this.noteId, payload, true).pipe(
+      takeUntil(this.destroy$),
+      catchError(error => {
+        console.error('Immediate title save failed:', error);
+        return of(null);
+      })
+    ).subscribe({
+      next: (response) => {
+        // Title saved successfully - update last saved title ONLY after successful save
+        this.lastSavedTitle = trimmedTitle;
+        // Silent save, no UI updates needed
+      },
+      error: (error) => {
+        // Silently handle errors - don't interrupt user experience
+        console.error('Title save error:', error);
+      }
+    });
   }
 
   /**

@@ -490,6 +490,26 @@ export class NotePageComponent implements OnInit, OnDestroy {
     this.note = note;
     this.lastSaved = new Date();
     this.isSaving = false;
+    
+    // Update the note in the notes list in real-time
+    this.updateNoteInList(note);
+  }
+
+  /**
+   * Updates a note in the notes list in real-time (for title/content changes)
+   */
+  private updateNoteInList(updatedNote: Note): void {
+    const currentNotes = this.notesSubject.value;
+    const noteIndex = currentNotes.findIndex(n => n.id === updatedNote.id);
+    
+    if (noteIndex !== -1) {
+      // Update the note in the array
+      const updatedNotes = [...currentNotes];
+      updatedNotes[noteIndex] = { ...updatedNotes[noteIndex], ...updatedNote };
+      
+      // Update the BehaviorSubject to trigger change detection
+      this.notesSubject.next(updatedNotes);
+    }
   }
 
   getNotebookName(notebookId: string | undefined): string {

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, OnChanges, SimpleChanges, Input, Output, EventEmitter, ViewChild, inject, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl } from '@angular/forms';
-import { Subject, throwError, of } from 'rxjs';
+import { Subject, throwError, of, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil, map, switchMap, catchError } from 'rxjs/operators';
 import { Note, Notebook } from '../../../../core/models';
 import { NotesService } from '../../services/notes.service';
@@ -45,6 +45,7 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
   @Output() wordCountChange = new EventEmitter<number>();
   @Output() savingStateChange = new EventEmitter<{ isSaving: boolean; lastSaved: Date | null }>();
   @Output() editorReady = new EventEmitter<Editor | null>();
+  @Output() titleChange = new EventEmitter<string>();
   @ViewChild(NoteEditorContentComponent, { static: false }) editorContentComponent?: NoteEditorContentComponent;
 
   form!: FormGroup<{
@@ -53,6 +54,9 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
   }>;
   isSaving = false;
   lastSaved: Date | null = null;
+  
+  // Flag to prevent autosave during note loading
+  private isLoadingNote = false;
   
   // Formatting toolbar state
   showFormattingToolbar = false;
@@ -110,17 +114,31 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
     }
 
     // Autosave with debounce (uses environment.autoSaveDelay)
+    // Autosave saves both content and title silently without loading indicators
     if (this.autoSave) {
       const autoSaveDelay = environment.autoSaveDelay || 30000; // Default to 30 seconds
-      this.form.valueChanges
+      
+      // Autosave on content changes
+      this.contentControl.valueChanges
         .pipe(
           debounceTime(autoSaveDelay),
           distinctUntilChanged(),
           takeUntil(this.destroy$)
         )
         .subscribe(() => {
-          this.saveNote(false);
+          this.saveNoteContentAndTitle();
           this.updateWordCount();
+        });
+      
+      // Autosave on title changes
+      this.titleControl.valueChanges
+        .pipe(
+          debounceTime(autoSaveDelay),
+          distinctUntilChanged(),
+          takeUntil(this.destroy$)
+        )
+        .subscribe(() => {
+          this.saveNoteContentAndTitle();
         });
     }
     
@@ -279,6 +297,9 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
   loadNote(note: Note): void {
     if (!note) return;
     
+    // Set flag to prevent autosave during loading
+    this.isLoadingNote = true;
+    
     this.note = note;
     const content = typeof note.content === 'string' ? note.content : (note.content || '');
     
@@ -310,6 +331,11 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
     }
     
     this.updateWordCount();
+    
+    // Reset flag after a short delay to allow editor to settle
+    setTimeout(() => {
+      this.isLoadingNote = false;
+    }, 500);
   }
   
   /**
@@ -317,15 +343,109 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
    * @param html - HTML content from editor
    */
   onContentChange(html: string): void {
-    // Update form without triggering change events to prevent loops
+    // Update form and trigger change events for autosave
     const currentContent = this.contentControl.value || '';
     if (html !== currentContent) {
-      this.contentControl.setValue(html, { emitEvent: false });
+      // Emit event to trigger autosave subscription
+      this.contentControl.setValue(html, { emitEvent: true });
       this.updateWordCount();
-      
-      // Trigger save via form update
-      this.form.updateValueAndValidity({ emitEvent: true });
     }
+  }
+
+  /**
+   * Handles title changes from the title input
+   * @param title - New title value
+   */
+  onTitleChange(title: string): void {
+    // Update form and trigger change events for autosave
+    const currentTitle = this.titleControl.value || '';
+    if (title !== currentTitle) {
+      // Emit event to trigger autosave subscription
+      this.titleControl.setValue(title, { emitEvent: true });
+      
+      // Emit titleChange event to parent for real-time updates in notes list
+      this.titleChange.emit(title);
+      
+      // Update local note object immediately for real-time UI updates
+      if (this.note) {
+        this.note = { ...this.note, title: title };
+      }
+    }
+  }
+
+  /**
+   * Handles immediate title save request (from Enter/blur)
+   * @param title - Title to save immediately
+   */
+  onTitleSaveImmediate(title: string): void {
+    // Update form first to ensure state is in sync
+    const currentTitle = this.titleControl.value || '';
+    if (title !== currentTitle) {
+      this.titleControl.setValue(title, { emitEvent: false });
+    }
+    
+    // Save immediately (bypasses debounce)
+    this.saveTitleImmediately(title);
+  }
+
+  /**
+   * Saves title immediately without debounce (for Enter/blur events)
+   * This method saves instantly without waiting for autosave delay
+   */
+  private saveTitleImmediately(title: string): void {
+    if (!this.note || !this.note.id) {
+      // Don't save if note doesn't exist yet
+      return;
+    }
+
+    // Get the current saved title from note object
+    const currentSavedTitle = this.note.title || '';
+    const trimmedTitle = (title || '').trim();
+    const trimmedCurrentTitle = (currentSavedTitle || '').trim();
+
+    // Don't save if title hasn't actually changed
+    if (trimmedTitle === trimmedCurrentTitle) {
+      return;
+    }
+
+    // Don't save if a manual save is in progress
+    if (this.isSaving) {
+      return;
+    }
+
+    // Update note title in memory immediately for UI responsiveness
+    if (this.note) {
+      this.note.title = trimmedTitle;
+    }
+
+    // Save title silently without showing loading indicators
+    // Use skipLoadingIndicator=true to prevent HTTP interceptor from showing loading bar
+    const payload: any = { title: trimmedTitle };
+    this.notesService.updateNote(this.note.id, payload, true).pipe(
+      takeUntil(this.destroy$),
+      catchError(error => {
+        console.error('Immediate title save failed:', error);
+        // Revert title change on error
+        if (this.note) {
+          this.note.title = currentSavedTitle;
+        }
+        return of(null);
+      })
+    ).subscribe({
+      next: () => {
+        // Update lastSaved timestamp silently (without emitting savingStateChange)
+        this.lastSaved = new Date();
+        // Note title already updated in memory above for immediate UI feedback
+        
+        // Emit noteUpdated to ensure parent components (like notes list) are updated
+        if (this.note) {
+          this.noteUpdated.emit({ ...this.note });
+        }
+      },
+      error: () => {
+        // Silently handle errors - don't interrupt user experience
+      }
+    });
   }
 
   /**
@@ -473,6 +593,107 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
           }
         });
       }
+  }
+
+  /**
+   * Saves note content and title silently in the background (for autosave)
+   * Does not show loading indicators
+   * 
+   * IMPORTANT: This method must NEVER:
+   * - Set this.isSaving = true
+   * - Emit savingStateChange event
+   * - Show any loading indicators
+   * - Interfere with manual save operations
+   */
+  private saveNoteContentAndTitle(): void {
+    if (!this.note || !this.note.id) {
+      // Don't autosave if note doesn't exist yet
+      return;
+    }
+
+    // Don't autosave while loading a note
+    if (this.isLoadingNote) {
+      return;
+    }
+
+    // Don't autosave if a manual save is in progress
+    if (this.isSaving) {
+      return;
+    }
+
+    const content = this.contentControl.value || '';
+    const title = this.titleControl.value || 'Untitled';
+    
+    // Don't autosave if neither content nor title has changed
+    const contentChanged = this.note.content !== content;
+    const titleChanged = this.note.title !== title;
+    
+    if (!contentChanged && !titleChanged) {
+      return;
+    }
+    
+    // Prepare payload for updateNote API
+    const payload: any = {};
+    if (titleChanged) {
+      payload.title = title;
+    }
+    // Note: content is saved separately via saveNoteContent
+    
+    // Save title and content silently without showing loading indicators
+    // CRITICAL: Do NOT set isSaving or emit savingStateChange
+    const saveOperations: any[] = [];
+    
+    // Save title if changed
+    if (titleChanged) {
+      saveOperations.push(
+        this.notesService.updateNote(this.note.id, payload, true).pipe(
+          catchError(error => {
+            console.error('Autosave title failed:', error);
+            return of(null);
+          })
+        )
+      );
+    }
+    
+    // Save content if changed
+    if (contentChanged) {
+      saveOperations.push(
+        this.notesService.saveNoteContent(this.note.id, { content }, true).pipe(
+          catchError(error => {
+            console.error('Autosave content failed:', error);
+            return of(null);
+          })
+        )
+      );
+    }
+    
+    // Execute save operations in parallel
+    if (saveOperations.length > 0) {
+      forkJoin(saveOperations).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
+          // Update lastSaved timestamp silently (without emitting savingStateChange)
+          // This ensures autosave doesn't trigger any UI loading indicators
+          this.lastSaved = new Date();
+          // Update note in memory without emitting events
+          if (this.note) {
+            if (titleChanged) {
+              this.note.title = title;
+            }
+            if (contentChanged) {
+              this.note.content = content;
+            }
+          }
+          // CRITICAL: Do NOT emit savingStateChange or set isSaving
+          // Autosave must remain completely silent - no UI updates
+        },
+        error: () => {
+          // Silently handle errors - autosave failures shouldn't interrupt user
+          // Do NOT emit any events or update UI state
+        }
+      });
+    }
   }
 
   /**

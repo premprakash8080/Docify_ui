@@ -21,10 +21,12 @@ export class NotesService {
     return this.httpService.post(NOTES_ENDPOINTS.createNote, payload);
   }
 
-  updateNote(noteId: string, payload: any) {
+  updateNote(noteId: string, payload: any, skipLoadingIndicator: boolean = false) {
     return this.httpService.put(
       NOTES_ENDPOINTS.updateNote.replace(':id', noteId),
-      payload
+      payload,
+      true, // showLoader for reportProgress
+      skipLoadingIndicator // skip loading indicator for autosave
     );
   }
 
@@ -34,10 +36,12 @@ export class NotesService {
     );
   }
 
-  saveNoteContent(noteId: string, payload: { content: string }) {
+  saveNoteContent(noteId: string, payload: { content: string }, skipLoadingIndicator: boolean = false) {
     return this.httpService.put(
       NOTES_ENDPOINTS.saveNoteContent.replace(':id', noteId),
-      payload
+      payload,
+      true, // showLoader for reportProgress
+      skipLoadingIndicator // skip loading indicator for autosave
     );
   }
 
