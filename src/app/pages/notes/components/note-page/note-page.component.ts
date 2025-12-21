@@ -273,7 +273,6 @@ export class NotePageComponent implements OnInit, OnDestroy {
       })
     ).subscribe(notes => {
       this.notesSubject.next(notes);
-      this.filteredNotes$ = of(notes);
       this.isLoadingSubject.next(false);
       this.cdr.markForCheck();
     });
@@ -518,6 +517,124 @@ export class NotePageComponent implements OnInit, OnDestroy {
     // TODO: Implement next note navigation based on filteredNotes$
   }
 
+  private reloadNotesList(): void {
+    const getAllParams = (route: ActivatedRoute): { [key: string]: any } => {
+      const params: { [key: string]: any } = {};
+      const parentParams: { [key: string]: any } = {};
+      let parent: ActivatedRoute | null = route.parent;
+      while (parent) {
+        Object.assign(parentParams, parent.snapshot.params);
+        parent = parent.parent;
+      }
+      Object.assign(params, parentParams, route.snapshot.params);
+      return params;
+    };
+
+    const allParams = getAllParams(this.route);
+    const notebookId = allParams['notebookId'];
+    const tagId = allParams['tagId'];
+    const stackId = allParams['stackId'];
+    
+    this.isLoadingSubject.next(true);
+    this.errorSubject.next(null);
+    
+    let notesObservable: Observable<Note[]>;
+    
+    if (tagId) {
+      notesObservable = this.notesService.getAllNotes({ tag_id: tagId, archived: false, trashed: false }).pipe(
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          const notesArray = backendResponse?.notes || [];
+          return notesArray.map((note: BackendNoteResponse) => this.mapBackendNoteToFrontend(note));
+        }),
+        map(notes => {
+          return notes
+            .filter(note => !note.trashed && !note.archived)
+            .sort((a, b) => {
+              if (a.pinned && !b.pinned) return -1;
+              if (!a.pinned && b.pinned) return 1;
+              return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            });
+        }),
+        catchError(error => {
+          this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to load notes');
+          this.isLoadingSubject.next(false);
+          return of([]);
+        })
+      );
+    } else if (notebookId) {
+      notesObservable = this.notesService.getAllNotes({ notebook_id: notebookId, archived: false, trashed: false }).pipe(
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          const notesArray = backendResponse?.notes || [];
+          return notesArray.map((note: BackendNoteResponse) => this.mapBackendNoteToFrontend(note));
+        }),
+        map(notes => {
+          return notes.sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          });
+        }),
+        catchError(error => {
+          this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to load notes');
+          this.isLoadingSubject.next(false);
+          return of([]);
+        })
+      );
+    } else if (stackId && !notebookId) {
+      notesObservable = this.notesService.getAllNotes({ stack_id: stackId, archived: false, trashed: false }).pipe(
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          const notesArray = backendResponse?.notes || [];
+          return notesArray.map((note: BackendNoteResponse) => this.mapBackendNoteToFrontend(note));
+        }),
+        map(notes => {
+          return notes.sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          });
+        }),
+        catchError(error => {
+          this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to load notes');
+          this.isLoadingSubject.next(false);
+          return of([]);
+        })
+      );
+    } else {
+      notesObservable = this.notesService.getAllNotes({ archived: false, trashed: false }).pipe(
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          const notesArray = backendResponse?.notes || [];
+          return notesArray.map((note: BackendNoteResponse) => this.mapBackendNoteToFrontend(note));
+        }),
+        map(notes => {
+          return notes
+            .filter(note => !note.trashed && !note.archived)
+            .sort((a, b) => {
+              if (a.pinned && !b.pinned) return -1;
+              if (!a.pinned && b.pinned) return 1;
+              return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            });
+        }),
+        catchError(error => {
+          this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to load notes');
+          this.isLoadingSubject.next(false);
+          return of([]);
+        })
+      );
+    }
+    
+    notesObservable.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(notes => {
+      this.notesSubject.next(notes);
+      this.isLoadingSubject.next(false);
+      this.cdr.markForCheck();
+    });
+  }
+
   toggleFullscreen(): void {
     // TODO: Implement fullscreen mode using Fullscreen API
   }
@@ -540,13 +657,6 @@ export class NotePageComponent implements OnInit, OnDestroy {
     
     pinAction.pipe(
       takeUntil(this.destroy$),
-      map((response: any) => {
-        const backendResponse = response?.data || response;
-        if (!backendResponse || !backendResponse.note) {
-          throw new Error('Invalid response structure');
-        }
-        return this.mapBackendNoteToFrontend(backendResponse.note);
-      }),
       catchError(error => {
         this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to pin/unpin note');
         this.isSaving = false;
@@ -554,10 +664,18 @@ export class NotePageComponent implements OnInit, OnDestroy {
         return throwError(() => error);
       })
     ).subscribe({
-      next: (updated) => {
-        this.note = updated;
+      next: (response: any) => {
+        const backendResponse = response?.data || response;
+        if (backendResponse?.note?.id) {
+          // Update current note's pinned status
+          if (this.note) {
+            this.note.pinned = !this.note.pinned;
+          }
+        }
         this.isSaving = false;
         this.lastSaved = new Date();
+        // Reload notes list to reflect pin status change
+        this.reloadNotesList();
       },
       error: () => {
         this.isSaving = false;

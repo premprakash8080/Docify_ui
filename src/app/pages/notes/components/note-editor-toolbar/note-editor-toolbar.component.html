@@ -2,6 +2,64 @@
 <div class="formatting-toolbar always-visible" [class.disabled]="!isEditorReady">
   <div class="toolbar-content">
     
+    <!-- Typography Group -->
+    <div class="toolbar-group">
+      <button 
+        mat-icon-button
+        [matMenuTriggerFor]="fontFamilyMenu"
+        #fontFamilyMenuTrigger="matMenuTrigger"
+        (click)="saveSelection()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Font Family'"
+        type="button"
+        title="Font Family">
+        <span class="font-family-display">{{ getCurrentFontFamily() || 'Aa' }}</span>
+        <mat-icon svgIcon="mat:arrow_drop_down"></mat-icon>
+      </button>
+      <mat-menu #fontFamilyMenu="matMenu" (closed)="editor?.commands.focus()">
+        <button 
+          mat-menu-item 
+          (click)="setFontFamily(''); fontFamilyMenuTrigger?.closeMenu()"
+          [class.active]="getCurrentFontFamily() === ''">
+          <span>Default</span>
+        </button>
+        <mat-divider></mat-divider>
+        @for (font of fontFamilies; track font.value) {
+          <button 
+            mat-menu-item 
+            (click)="setFontFamily(font.value); fontFamilyMenuTrigger?.closeMenu()"
+            [class.active]="getCurrentFontFamily() === font.value">
+            <span [style.font-family]="font.font">{{ font.label }}</span>
+          </button>
+        }
+      </mat-menu>
+      
+      <button 
+        mat-icon-button
+        [matMenuTriggerFor]="fontSizeMenu"
+        #fontSizeMenuTrigger="matMenuTrigger"
+        (click)="saveSelection()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Font Size'"
+        type="button"
+        title="Font Size">
+        <span class="font-size-display">{{ getCurrentFontSize() || '48' }}</span>
+        <mat-icon svgIcon="mat:arrow_drop_down"></mat-icon>
+      </button>
+      <mat-menu #fontSizeMenu="matMenu" (closed)="editor?.commands.focus()">
+        @for (size of fontSizes; track size.value) {
+          <button 
+            mat-menu-item 
+            (click)="setFontSize(size.value); fontSizeMenuTrigger?.closeMenu()"
+            [class.active]="getCurrentFontSize() === size.value">
+            <span>{{ size.label }}</span>
+          </button>
+        }
+      </mat-menu>
+    </div>
+    
+    <div class="toolbar-divider"></div>
+    
     <!-- Text Formatting Group -->
     <div class="toolbar-group">
       <button 
@@ -51,23 +109,80 @@
         title="Inline Code">
         <mat-icon svgIcon="mat:code"></mat-icon>
       </button>
+      
+      <button 
+        mat-icon-button
+        [matMenuTriggerFor]="colorMenu"
+        #colorMenuTrigger="matMenuTrigger"
+        (click)="saveSelection()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Text Color'"
+        type="button"
+        title="Text Color">
+        <mat-icon svgIcon="mat:format_color_text"></mat-icon>
+        <span class="color-indicator" [style.background-color]="getCurrentColor() || '#000000'"></span>
+      </button>
+      <mat-menu #colorMenu="matMenu" (closed)="editor?.commands.focus()">
+        @for (color of colorPalette; track color.value) {
+          <button 
+            mat-menu-item 
+            (click)="setColor(color.value); colorMenuTrigger?.closeMenu()"
+            [class.active]="getCurrentColor() === color.value">
+            <span class="color-preview" [style.background-color]="color.color"></span>
+            <span>{{ color.label }}</span>
+          </button>
+        }
+      </mat-menu>
+      
+      <button 
+        mat-icon-button
+        [matMenuTriggerFor]="highlightMenu"
+        #highlightMenuTrigger="matMenuTrigger"
+        (click)="saveSelection()"
+        [class.active]="isHighlightActive()"
+        [disabled]="!isEditorReady"
+        [attr.aria-label]="'Highlight'"
+        [attr.aria-pressed]="isHighlightActive()"
+        type="button"
+        title="Highlight">
+        <mat-icon svgIcon="mat:format_color_fill"></mat-icon>
+        <span class="highlight-indicator" [style.background-color]="getCurrentHighlight() || 'transparent'"></span>
+      </button>
+      <mat-menu #highlightMenu="matMenu" (closed)="editor?.commands.focus()">
+        @for (highlight of highlightPalette; track highlight.value) {
+          <button 
+            mat-menu-item 
+            (click)="setHighlight(highlight.value); highlightMenuTrigger?.closeMenu()"
+            [class.active]="getCurrentHighlight() === highlight.value">
+            <span class="highlight-preview" [style.background-color]="highlight.color"></span>
+            <span>{{ highlight.label }}</span>
+          </button>
+        }
+      </mat-menu>
     </div>
     
     <div class="toolbar-divider"></div>
     
-    <!-- Heading Selector -->
+    <!-- Text / Paragraph Selector -->
     <div class="toolbar-group">
       <button 
         mat-icon-button
-        [matMenuTriggerFor]="headingMenu"
-        [class.active]="getCurrentHeadingLevel() !== null"
+        [matMenuTriggerFor]="textMenu"
+        [class.active]="isParagraphActive() || getCurrentHeadingLevel() !== null"
         [disabled]="!isEditorReady"
-        [attr.aria-label]="'Heading'"
+        [attr.aria-label]="'Text Style'"
         type="button"
-        title="Heading">
+        title="Text Style">
         <mat-icon svgIcon="mat:title"></mat-icon>
       </button>
-      <mat-menu #headingMenu="matMenu">
+      <mat-menu #textMenu="matMenu">
+        <button 
+          mat-menu-item 
+          (click)="setParagraph()"
+          [class.active]="isParagraphActive() && getCurrentHeadingLevel() === null">
+          <span>Text</span>
+        </button>
+        <mat-divider></mat-divider>
         <button 
           mat-menu-item 
           (click)="setHeading(1)"
@@ -85,13 +200,6 @@
           (click)="setHeading(3)"
           [class.active]="isHeadingActive(3)">
           <span class="heading-option h3">Heading 3</span>
-        </button>
-        <mat-divider></mat-divider>
-        <button 
-          mat-menu-item 
-          (click)="setParagraph()"
-          [class.active]="getCurrentHeadingLevel() === null">
-          <span>Paragraph</span>
         </button>
       </mat-menu>
     </div>

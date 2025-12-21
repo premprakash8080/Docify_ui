@@ -5,10 +5,15 @@ import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Image from '@tiptap/extension-image';
+import { TextStyle } from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import Highlight from '@tiptap/extension-highlight';
 import { SlashCommand } from './slash-command.extension';
+import { FontFamily } from '../note-editor-toolbar/font-family.extension';
+import { FontSize } from '../note-editor-toolbar/font-size.extension';
 import { NotesService } from '../../services/notes.service';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, map } from 'rxjs/operators';
 
 /**
  * Component that wraps the Tiptap editor for note content editing.
@@ -119,6 +124,13 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
               levels: [1, 2, 3], // Limit to H1, H2, H3
             },
           }),
+          TextStyle,
+          Color,
+          Highlight.configure({
+            multicolor: true,
+          }),
+          FontFamily,
+          FontSize,
           TaskList.configure({
             HTMLAttributes: {
               class: 'task-list',
@@ -170,7 +182,8 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
             class: 'tiptap-editor',
           },
           handlePaste: (view, event) => {
-            return this.handlePaste(event);
+            const handled = this.handlePaste(event);
+            return handled;
           },
           handleKeyDown: (view, event) => {
             // Handle keyboard navigation when slash menu is visible
@@ -511,8 +524,12 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
    * Handles paste events to detect and upload images
    */
   private handlePaste(event: ClipboardEvent): boolean {
+    if (!this.editor) {
+      return false;
+    }
+
     const clipboardData = event.clipboardData;
-    if (!clipboardData || !this.editor) {
+    if (!clipboardData) {
       return false;
     }
 
@@ -521,11 +538,12 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
 
     if (imageItem) {
       event.preventDefault();
+      event.stopPropagation();
       const file = imageItem.getAsFile();
       if (file) {
         this.uploadAndInsertImage(file);
+        return true;
       }
-      return true;
     }
 
     return false;
@@ -541,10 +559,37 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
     formData.append('image', imageFile);
 
     this.notesService.uploadNoteImage(formData).pipe(
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (backendResponse?.secure_url) {
+          return backendResponse.secure_url;
+        }
+        if (backendResponse?.imageUrl) {
+          return backendResponse.imageUrl;
+        }
+        if (backendResponse?.url) {
+          return backendResponse.url;
+        }
+        if (response?.secure_url) {
+          return response.secure_url;
+        }
+        if (response?.imageUrl) {
+          return response.imageUrl;
+        }
+        if (response?.url) {
+          return response.url;
+        }
+        if (typeof backendResponse === 'string') {
+          return backendResponse;
+        }
+        throw new Error('Image URL not found in response');
+      }),
       takeUntil(this.destroy$)
     ).subscribe({
       next: (imageUrl) => {
-        this.insertImageAtCursor(imageUrl);
+        if (imageUrl) {
+          this.insertImageAtCursor(imageUrl);
+        }
       },
       error: (error) => {
         console.error('Failed to upload image:', error);
@@ -563,8 +608,12 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
       .setImage({ src: imageUrl, alt: 'Pasted image' })
       .run();
 
-    const html = this.editor.getHTML();
-    this.contentChange.emit(html);
+    setTimeout(() => {
+      if (this.editor) {
+        const html = this.editor.getHTML();
+        this.contentChange.emit(html);
+      }
+    }, 0);
   }
 
   /**
