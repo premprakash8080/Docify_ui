@@ -1,6 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { map } from 'rxjs/operators';
 import { TaskService, Task } from '../services/task.service';
 import { NotesService } from '../../notes/services/notes.service';
 import { Note } from '../../../core/models';
@@ -46,7 +47,30 @@ export class CustomerCreateUpdateComponent implements OnInit {
     }
 
     // Load notes for dropdown
-    this.notesService.getNotes().subscribe(notes => {
+    this.notesService.getAllNotes({ archived: false, trashed: false }).pipe(
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        const notesArray = backendResponse?.notes || [];
+        return notesArray.map((note: any) => ({
+          id: note.id,
+          userId: note.user_id?.toString() || '',
+          title: note.title,
+          content: note.content || '',
+          tags: note.tags || [],
+          notebookId: note.notebook_id || undefined,
+          pinned: note.pinned,
+          archived: note.archived,
+          trashed: note.trashed,
+          createdAt: note.created_at,
+          updatedAt: note.updated_at || note.created_at,
+          version: note.version || 1,
+          synced: note.synced || false,
+          lastModified: note.last_modified || note.updated_at || note.created_at,
+          attachments: [],
+          tasks: []
+        }));
+      })
+    ).subscribe(notes => {
       this.notes = notes.filter(n => !n.trashed && !n.archived);
       
       // Initialize form after notes are loaded

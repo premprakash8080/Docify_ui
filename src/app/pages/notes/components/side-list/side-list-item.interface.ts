@@ -25,6 +25,9 @@ export interface SideListDisplayConfig {
   // Additional metadata
   metadata?: (item: SideListItem) => any;
   
+  // Tags field for displaying tags
+  tagsField?: string | ((item: SideListItem) => string[]);
+  
   // Item-specific styling
   itemClass?: string | ((item: SideListItem) => string);
 }

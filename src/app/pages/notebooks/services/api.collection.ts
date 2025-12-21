@@ -13,7 +13,7 @@ export const ENDPOINTS = {
     // Notebooks CRUD
     getAllNotebooks: `${environment.apiUrl}/notebooks/list`,
     getNotebookById: (id: string) => `${environment.apiUrl}/notebooks/${id}`,
-    createNotebook: `${environment.apiUrl}/notebooks`,
+    createNotebook: `${environment.apiUrl}/notebooks/createNotebook`,
     updateNotebook: (id: string) => `${environment.apiUrl}/notebooks/${id}`,
     deleteNotebook: (id: string) => `${environment.apiUrl}/notebooks/${id}`,
     reorderNotebooks: `${environment.apiUrl}/notebooks/reorder`,
@@ -24,4 +24,6 @@ export const ENDPOINTS = {
     
     // Notebook ↔ Notes
     getNotebookNotes: (id: string) => `${environment.apiUrl}/notebooks/${id}/notes`,
+
+    
 }

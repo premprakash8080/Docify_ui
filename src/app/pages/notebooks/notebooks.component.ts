@@ -13,7 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
 import { FormControl, ReactiveFormsModule, UntypedFormControl } from '@angular/forms';
 import { Subject, combineLatest } from 'rxjs';
-import { takeUntil, filter, debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
+import { takeUntil, filter, debounceTime, distinctUntilChanged, startWith, map } from 'rxjs/operators';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { BreadcrumbsModule } from '../../../@vex/components/breadcrumbs/breadcrumbs.module';
 import { NotesService } from '../notes/services/notes.service';
@@ -102,7 +102,30 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     combineLatest([
       this.notebooksService.getAllStacks(),
       this.notebooksService.getAllNotebooks(),
-      this.notesService.getNotes()
+      this.notesService.getAllNotes({ archived: false, trashed: false }).pipe(
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          const notesArray = backendResponse?.notes || [];
+          return notesArray.map((note: any) => ({
+            id: note.id,
+            userId: note.user_id?.toString() || '',
+            title: note.title,
+            content: note.content || '',
+            tags: note.tags || [],
+            notebookId: note.notebook_id || undefined,
+            pinned: note.pinned,
+            archived: note.archived,
+            trashed: note.trashed,
+            createdAt: note.created_at,
+            updatedAt: note.updated_at || note.created_at,
+            version: note.version || 1,
+            synced: note.synced || false,
+            lastModified: note.last_modified || note.updated_at || note.created_at,
+            attachments: [],
+            tasks: []
+          }));
+        })
+      )
     ]).pipe(
       takeUntil(this.destroy$)
     ).subscribe({

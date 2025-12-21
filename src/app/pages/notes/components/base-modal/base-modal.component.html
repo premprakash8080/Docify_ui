@@ -1,0 +1,48 @@
+<div class="base-modal">
+  <div class="modal-header">
+    <h2 mat-dialog-title>{{ title }}</h2>
+    <button 
+      mat-icon-button 
+      (click)="onCancel()"
+      class="close-button"
+      aria-label="Close">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+  </div>
+  
+  @if (subtitle) {
+    <div class="modal-subtitle">{{ subtitle }}</div>
+  }
+  
+  <mat-dialog-content>
+    <ng-content></ng-content>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    @for (action of customActions; track $index) {
+      <button 
+        mat-button 
+        (click)="onCustomAction(action.action)"
+        [disabled]="action.disabled">
+        @if (action.icon) {
+          <mat-icon svgIcon="mat:{{ action.icon }}"></mat-icon>
+        }
+        <span>{{ action.label }}</span>
+      </button>
+    }
+    <div class="spacer" *ngIf="customActions.length > 0"></div>
+    @if (showCancel) {
+      <button mat-button (click)="onCancel()">{{ cancelLabel }}</button>
+    }
+    @if (showDone) {
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="onDone()"
+        [disabled]="doneDisabled">
+        {{ doneLabel }}
+      </button>
+    }
+  </mat-dialog-actions>
+</div>
+

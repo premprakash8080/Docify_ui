@@ -11,6 +11,8 @@ import { Observable, Subject } from 'rxjs';
 import { map, takeUntil, shareReplay } from 'rxjs/operators';
 import { Note, Notebook, Tag, Task } from '../../core/models';
 import { NotesService } from '../notes/services/notes.service';
+import { NotebooksService } from '../notebooks/services/notebooks.service';
+import { TagsService } from '../tags/services/tags.service';
 import { LayoutService } from '../../../@vex/services/layout.service';
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
 import { StripHtmlModule } from '../../../@vex/pipes/strip-html/strip-html.module';
@@ -43,6 +45,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Inject services
   router = inject(Router);
   notesService = inject(NotesService);
+  notebooksService = inject(NotebooksService);
+  tagsService = inject(TagsService);
   layoutService = inject(LayoutService);
 
   // Observables for data
@@ -61,7 +65,31 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor() {
     // Share notes observable to avoid multiple subscriptions
-    const allNotes$ = this.notesService.getNotes().pipe(shareReplay(1));
+    const allNotes$ = this.notesService.getAllNotes({ archived: false, trashed: false }).pipe(
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        const notesArray = backendResponse?.notes || [];
+        return notesArray.map((note: any) => ({
+          id: note.id,
+          userId: note.user_id?.toString() || '',
+          title: note.title,
+          content: note.content || '',
+          tags: note.tags || [],
+          notebookId: note.notebook_id || undefined,
+          pinned: note.pinned,
+          archived: note.archived,
+          trashed: note.trashed,
+          createdAt: note.created_at,
+          updatedAt: note.updated_at || note.created_at,
+          version: note.version || 1,
+          synced: note.synced || false,
+          lastModified: note.last_modified || note.updated_at || note.created_at,
+          attachments: [],
+          tasks: []
+        }));
+      }),
+      shareReplay(1)
+    );
 
     // Get recent notes (last 10 for display, excluding trashed/archived)
     this.recentNotes$ = allNotes$.pipe(
@@ -72,8 +100,37 @@ export class HomeComponent implements OnInit, OnDestroy {
       )
     );
 
-    this.notebooks$ = this.notesService.getNotebooks().pipe(shareReplay(1));
-    this.tags$ = this.notesService.getTags().pipe(shareReplay(1));
+    this.notebooks$ = this.notebooksService.getAllNotebooks().pipe(
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        const notebooksArray = backendResponse?.notebooks || [];
+        return notebooksArray.map((nb: any) => ({
+          id: nb.id,
+          userId: nb.user_id?.toString() || '',
+          name: nb.name,
+          description: nb.description || '',
+          stackId: nb.stack_id || undefined,
+          createdAt: nb.created_at,
+          updatedAt: nb.updated_at || nb.created_at,
+          colorId: nb.color_id || undefined
+        }));
+      }),
+      shareReplay(1)
+    );
+    this.tags$ = this.tagsService.getAllTags().pipe(
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        const tagsArray = backendResponse?.tags || [];
+        return tagsArray.map((tag: any) => ({
+          id: tag.id?.toString() || '',
+          name: tag.name,
+          colorId: tag.color_id || undefined,
+          createdAt: tag.created_at,
+          color: tag.color
+        }));
+      }),
+      shareReplay(1)
+    );
 
     // Web clips (for now, filter notes with specific tag or property)
     this.webClips$ = allNotes$.pipe(

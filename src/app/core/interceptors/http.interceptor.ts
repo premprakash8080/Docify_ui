@@ -10,6 +10,7 @@ import { catchError, finalize, Observable, retry, throwError } from 'rxjs';
 import { SnackBarService } from 'src/app/core/services/snackbar.service';
 import { UserSessionService } from 'src/app/core/services/user-session.service';
 import { AuthService } from '../../auth/service/auth.service';
+import { LoadingService } from '../services/loading.service';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +19,7 @@ export class HttpResponseInterceptor implements HttpInterceptor {
   private userSessionService = inject(UserSessionService);
   private authService = inject(AuthService);
   private snackBarService = inject(SnackBarService);
+  private loadingService = inject(LoadingService);
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     // Get token from UserSessionService (which checks both ACCESS_TOKEN and auth_token)
@@ -47,11 +49,7 @@ export class HttpResponseInterceptor implements HttpInterceptor {
       });
     }
 
-    // List of URLs to exclude from automatic spinner control
-    
-    // Note: Spinner logic removed - can be added back if ngx-spinner is installed
-    // Spinner functionality can be implemented separately if needed
-    // Store the flag in a variable accessible to the finalize callback
+    this.loadingService.show();
     
     return next.handle(requestWithToken || request).pipe(retry(0), catchError((error: HttpErrorResponse) => {
       let message = '';
@@ -89,7 +87,7 @@ export class HttpResponseInterceptor implements HttpInterceptor {
       return throwError(message);
     }),
       finalize(() => {
-        // Note: Spinner logic removed - can be added back if ngx-spinner is installed
+        this.loadingService.hide();
       }))
   }
 }

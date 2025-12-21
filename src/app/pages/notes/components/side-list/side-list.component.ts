@@ -223,6 +223,21 @@ export class SideListComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
+   * Get tags for an item
+   */
+  getItemTags(item: SideListItem): string[] {
+    if (!this.displayConfig.tagsField) {
+      return (item as any).tags || [];
+    }
+    const config = this.displayConfig.tagsField;
+    if (typeof config === 'function') {
+      return config(item) || [];
+    }
+    const tags = this.getFieldValue(item, config);
+    return Array.isArray(tags) ? tags : [];
+  }
+
+  /**
    * Get item CSS class
    */
   getItemClass(item: SideListItem): string {

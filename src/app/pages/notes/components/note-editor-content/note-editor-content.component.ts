@@ -1,10 +1,14 @@
-import { Component, OnDestroy, AfterViewInit, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnDestroy, AfterViewInit, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild, ElementRef, HostListener, inject } from '@angular/core';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
+import Image from '@tiptap/extension-image';
 import { SlashCommand } from './slash-command.extension';
+import { NotesService } from '../../services/notes.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 /**
  * Component that wraps the Tiptap editor for note content editing.
@@ -33,6 +37,9 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
   
   /** Tiptap editor instance */
   editor: Editor | null = null;
+  
+  /** Pending content to set once editor is initialized */
+  private pendingContent: string | null = null;
 
   // Slash menu state
   slashMenuVisible = false;
@@ -42,6 +49,9 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
   // Checkbox sync state
   private checkboxSyncPending = false;
   private checkboxObserver: MutationObserver | null = null;
+
+  private notesService = inject(NotesService);
+  private destroy$ = new Subject<void>();
 
   /**
    * Initializes the Tiptap editor ONLY in ngAfterViewInit after ViewChild is available.
@@ -64,12 +74,21 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
   ngOnChanges(changes: SimpleChanges): void {
     // Handle initialContent changes - only update if content differs
     if (changes['initialContent'] && this.editor && !changes['initialContent'].firstChange) {
-      const newContent = changes['initialContent'].currentValue || '';
-      this.updateContent(newContent);
+      const newContent = changes['initialContent'].currentValue;
+      // Ensure we extract content string if an object is passed
+      let contentString = '';
+      if (typeof newContent === 'string') {
+        contentString = newContent || '';
+      } else if (newContent != null && typeof newContent === 'object' && 'content' in newContent) {
+        contentString = newContent.content || '';
+      }
+      this.updateContent(contentString);
     }
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.destroyEditor();
   }
 
@@ -115,6 +134,13 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
           Placeholder.configure({
             placeholder: 'Type "/" for commands, or just start writing...',
           }),
+          Image.configure({
+            inline: false,
+            allowBase64: false,
+            HTMLAttributes: {
+              style: 'max-width: 100%; height: auto; display: block; margin: 1rem 0;',
+            },
+          }),
           SlashCommand.configure({
             onOpen: (query: string, position: { top: number; left: number }) => {
               this.slashMenuQuery = query;
@@ -131,7 +157,7 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
             },
           }),
         ],
-        content: this.initialContent || '',
+        content: (typeof this.initialContent === 'string' ? this.initialContent : '') || '',
         onUpdate: ({ editor }) => {
           // Only emit for user-driven edits (not programmatic updates)
           const html = editor.getHTML();
@@ -142,6 +168,9 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
         editorProps: {
           attributes: {
             class: 'tiptap-editor',
+          },
+          handlePaste: (view, event) => {
+            return this.handlePaste(event);
           },
           handleKeyDown: (view, event) => {
             // Handle keyboard navigation when slash menu is visible
@@ -192,6 +221,34 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
           editorDOM.style.opacity = '1';
           editorDOM.style.minHeight = '400px';
           editorDOM.style.width = '100%';
+          
+          // If there's pending content, set it now that editor is ready
+          if (this.pendingContent !== null) {
+            setTimeout(() => {
+              if (this.editor) {
+                this.updateContent(this.pendingContent);
+                this.pendingContent = null;
+              }
+            }, 50);
+          } else if (this.initialContent) {
+            // Ensure initial content is set if it wasn't loaded during initialization
+            setTimeout(() => {
+              if (this.editor) {
+                const currentContent = this.editor.getHTML();
+                const normalizeContent = (html: string): string => {
+                  if (!html || html.trim() === '' || html.trim() === '<p></p>' || html.trim() === '<p><br></p>') {
+                    return '';
+                  }
+                  return html.trim();
+                };
+                const normalizedCurrent = normalizeContent(currentContent);
+                const normalizedInitial = normalizeContent(this.initialContent);
+                if (normalizedCurrent !== normalizedInitial && normalizedInitial) {
+                  this.editor.commands.setContent(this.initialContent, { emitUpdate: false });
+                }
+              }
+            }, 50);
+          }
           
           // Sync checkbox states after initialization (with delay to ensure DOM is ready)
           setTimeout(() => this.scheduleCheckboxSync(), 100);
@@ -278,17 +335,44 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
    * Does NOT trigger onUpdate callback (emitUpdate: false).
    * @param content - HTML content to set
    */
-  updateContent(content: string): void {
+  updateContent(content: string | any): void {
+    // Ensure content is a string - handle case where entire note object might be passed
+    let contentString = '';
+    if (typeof content === 'string') {
+      contentString = content;
+    } else if (content != null) {
+      // If it's an object with a content property, extract it
+      if (typeof content === 'object' && 'content' in content) {
+        contentString = content.content || '';
+      } else {
+        contentString = String(content);
+      }
+    }
+
+    // If editor is not initialized yet, store content to set it later
     if (!this.editor) {
-      console.warn('Editor not initialized, cannot update content');
+      this.pendingContent = contentString;
       return;
     }
 
+    // Normalize empty content - TipTap might return <p></p> for empty content
+    const normalizeContent = (html: string): string => {
+      if (!html || html.trim() === '' || html.trim() === '<p></p>' || html.trim() === '<p><br></p>') {
+        return '';
+      }
+      return html.trim();
+    };
+
+    const normalizedNewContent = normalizeContent(contentString);
     const currentContent = this.editor.getHTML();
-    if (currentContent !== content) {
+    const normalizedCurrentContent = normalizeContent(currentContent);
+
+    // Always update if content differs or if editor is empty and we have content
+    if (normalizedNewContent !== normalizedCurrentContent || (normalizedNewContent && !normalizedCurrentContent)) {
       try {
-        // emitUpdate: false prevents triggering onUpdate (user-driven only)
-        this.editor.commands.setContent(content, { emitUpdate: false });
+        // Set content - use empty paragraph if content is empty to maintain editor structure
+        const contentToSet = contentString || '<p></p>';
+        this.editor.commands.setContent(contentToSet, { emitUpdate: false });
       } catch (error) {
         console.error('Failed to update editor content:', error);
       }
@@ -422,6 +506,66 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
     });
   }
 
+
+  /**
+   * Handles paste events to detect and upload images
+   */
+  private handlePaste(event: ClipboardEvent): boolean {
+    const clipboardData = event.clipboardData;
+    if (!clipboardData || !this.editor) {
+      return false;
+    }
+
+    const items = Array.from(clipboardData.items);
+    const imageItem = items.find(item => item.type.startsWith('image/'));
+
+    if (imageItem) {
+      event.preventDefault();
+      const file = imageItem.getAsFile();
+      if (file) {
+        this.uploadAndInsertImage(file);
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Uploads image and inserts it into editor at cursor position
+   */
+  private uploadAndInsertImage(imageFile: File): void {
+    if (!this.editor) return;
+
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    this.notesService.uploadNoteImage(formData).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (imageUrl) => {
+        this.insertImageAtCursor(imageUrl);
+      },
+      error: (error) => {
+        console.error('Failed to upload image:', error);
+      }
+    });
+  }
+
+  /**
+   * Inserts image tag at current cursor position
+   */
+  private insertImageAtCursor(imageUrl: string): void {
+    if (!this.editor) return;
+
+    this.editor.chain()
+      .focus()
+      .setImage({ src: imageUrl, alt: 'Pasted image' })
+      .run();
+
+    const html = this.editor.getHTML();
+    this.contentChange.emit(html);
+  }
 
   /**
    * Safely destroys the editor instance

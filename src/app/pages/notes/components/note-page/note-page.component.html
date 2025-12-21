@@ -3,7 +3,7 @@
   @if (!isMobile) {
     <div class="note-page-layout">
       <!-- Left Column: Notes List Sidebar -->
-      <div class="note-page-sidebar">
+      <div class="note-page-sidebar" [class.hidden]="!sidebarVisible">
         <vex-notes-list
           [selectedNoteId]="noteId"
           [notes$]="filteredNotes$"
@@ -41,13 +41,15 @@
             (archive)="onArchive()"
             (export)="onExport()"
             (manageTags)="onManageTags()"
+            (move)="onMove()"
             (duplicate)="onDuplicate()"
             (find)="onFind()"
             (info)="onInfo()"
             (history)="onHistory()"
             (print)="onPrint()"
             (delete)="onDelete()"
-            (noteUpdated)="onNoteUpdated($event)">
+            (noteUpdated)="onNoteUpdated($event)"
+            (hideSidebar)="onHideSidebar()">
           </vex-note-page-content>
         }
       </div>
@@ -85,6 +87,7 @@
           (archive)="onArchive()"
           (export)="onExport()"
           (manageTags)="onManageTags()"
+          (move)="onMove()"
           (duplicate)="onDuplicate()"
           (find)="onFind()"
           (info)="onInfo()"

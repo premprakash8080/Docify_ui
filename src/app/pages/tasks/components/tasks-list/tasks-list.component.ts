@@ -7,7 +7,6 @@ import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/p
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
-import { DatePipe } from '@angular/common';
 import { TaskRow } from '../../tasks.component';
 
 @Component({
@@ -23,8 +22,7 @@ import { TaskRow } from '../../tasks.component';
     MatPaginatorModule,
     MatSortModule,
     MatButtonModule,
-    MatMenuModule,
-    DatePipe
+    MatMenuModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

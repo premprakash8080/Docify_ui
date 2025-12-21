@@ -128,19 +128,23 @@
                   <!-- Title -->
                   <div class="item-title">{{ getItemTitle(item) }}</div>
                   
-                  <!-- Subtitle -->
-                  @if (getItemSubtitle(item)) {
-                    <div class="item-subtitle">{{ getItemSubtitle(item) }}</div>
-                  }
-                  
-                  <!-- Metadata Row -->
+                  <!-- Metadata Row: Date and Tags -->
                   <div class="item-meta">
                     <!-- Date -->
                     @if (getItemDate(item)) {
                       <span class="item-date">{{ getItemDate(item) }}</span>
                     }
                     
-                    <!-- Badges -->
+                    <!-- Tags -->
+                    @if (getItemTags(item).length > 0) {
+                      <div class="item-tags">
+                        @for (tag of getItemTags(item); track tag) {
+                          <span class="item-tag-chip">{{ tag }}</span>
+                        }
+                      </div>
+                    }
+                    
+                    <!-- Badges (for tasks, etc.) -->
                     @for (badge of getItemBadges(item); track badge.label) {
                       <div 
                         class="item-badge"
@@ -182,19 +186,23 @@
                 <!-- Title -->
                 <div class="item-title">{{ getItemTitle(item) }}</div>
                 
-                <!-- Subtitle -->
-                @if (getItemSubtitle(item)) {
-                  <div class="item-subtitle">{{ getItemSubtitle(item) }}</div>
-                }
-                
-                <!-- Metadata Row -->
+                <!-- Metadata Row: Date and Tags -->
                 <div class="item-meta">
                   <!-- Date -->
                   @if (getItemDate(item)) {
                     <span class="item-date">{{ getItemDate(item) }}</span>
                   }
                   
-                  <!-- Badges -->
+                  <!-- Tags -->
+                  @if (getItemTags(item).length > 0) {
+                    <div class="item-tags">
+                      @for (tag of getItemTags(item); track tag) {
+                        <span class="item-tag-chip">{{ tag }}</span>
+                      }
+                    </div>
+                  }
+                  
+                  <!-- Badges (for tasks, etc.) -->
                   @for (badge of getItemBadges(item); track badge.label) {
                     <div 
                       class="item-badge"

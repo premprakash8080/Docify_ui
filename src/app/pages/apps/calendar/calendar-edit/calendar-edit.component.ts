@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CalendarEvent } from 'angular-calendar';
 import { isPast } from 'date-fns';
+import { map } from 'rxjs/operators';
 import { NotesService } from '../../../notes/services/notes.service';
 import { TaskService } from '../../../tasks/services/task.service';
 
@@ -63,7 +64,33 @@ export class CalendarEditComponent implements OnInit {
     this.error = null;
 
     if (this.event.meta.type === 'note') {
-      this.notesService.getNoteById(this.event.meta.sourceId.toString()).subscribe({
+      this.notesService.getNoteById({ id: this.event.meta.sourceId.toString() }).pipe(
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          if (!backendResponse || !backendResponse.note) {
+            return null;
+          }
+          const note = backendResponse.note;
+          return {
+            id: note.id,
+            userId: note.user_id?.toString() || '',
+            title: note.title,
+            content: note.content || '',
+            tags: note.tags || [],
+            notebookId: note.notebook_id || undefined,
+            pinned: note.pinned,
+            archived: note.archived,
+            trashed: note.trashed,
+            createdAt: note.created_at,
+            updatedAt: note.updated_at || note.created_at,
+            version: note.version || 1,
+            synced: note.synced || false,
+            lastModified: note.last_modified || note.updated_at || note.created_at,
+            attachments: [],
+            tasks: []
+          };
+        })
+      ).subscribe({
         next: (note) => {
           if (note) {
             this.itemDetail = {

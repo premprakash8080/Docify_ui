@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, map } from 'rxjs/operators';
 import { NotesService } from '../../../notes/services/notes.service';
 import { Note } from '../../../../core/models';
 import { Task } from '../../services/task.service';
@@ -56,7 +56,29 @@ export class NewTaskModalComponent implements OnInit, OnDestroy, OnChanges {
 
   ngOnInit(): void {
     // Load notes for dropdown
-    this.notesService.getNotes().pipe(
+    this.notesService.getAllNotes({ archived: false, trashed: false }).pipe(
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        const notesArray = backendResponse?.notes || [];
+        return notesArray.map((note: any) => ({
+          id: note.id,
+          userId: note.user_id?.toString() || '',
+          title: note.title,
+          content: note.content || '',
+          tags: note.tags || [],
+          notebookId: note.notebook_id || undefined,
+          pinned: note.pinned,
+          archived: note.archived,
+          trashed: note.trashed,
+          createdAt: note.created_at,
+          updatedAt: note.updated_at || note.created_at,
+          version: note.version || 1,
+          synced: note.synced || false,
+          lastModified: note.last_modified || note.updated_at || note.created_at,
+          attachments: [],
+          tasks: []
+        }));
+      }),
       takeUntil(this.destroy$)
     ).subscribe(notes => {
       this.notes = notes.filter(n => !n.trashed && !n.archived);

@@ -4,10 +4,10 @@ import { Note } from '../../../../core/models';
 import { NotesService } from '../../services/notes.service';
 import { SearchService } from '../../services/search.service';
 import { NotebooksService } from '../../../notebooks/services/notebooks.service';
-import { Observable, Subject, combineLatest, of } from 'rxjs';
-import { map, takeUntil, switchMap } from 'rxjs/operators';
+import { Observable, Subject, combineLatest, of, throwError } from 'rxjs';
+import { map, takeUntil, switchMap, catchError } from 'rxjs/operators';
 import { SideListItem, SideListAction } from '../side-list/side-list-item.interface';
-import { NOTES_LIST_DISPLAY_CONFIG } from './notes-list.config';
+import { getNotesListDisplayConfig } from './notes-list.config';
 import { formatRelativeDate } from '../utils/date-formatter.util';
 import { getCompletedTasksCount } from '../utils/task-utils.util';
 
@@ -31,13 +31,16 @@ export class NotesListComponent implements OnInit, OnDestroy {
   @Output() noteDeleted = new EventEmitter<Note>();
 
   // Display configuration for side list
-  displayConfig = NOTES_LIST_DISPLAY_CONFIG;
+  get displayConfig() {
+    return getNotesListDisplayConfig(this.notebookId);
+  }
 
   // Items for side list component
   items: SideListItem[] = [];
 
   filteredNotes$: Observable<Note[]>;
   dynamicTitle = 'Notes';
+  isLoading = false;
   private destroy$ = new Subject<void>();
 
   // Inject services using inject() function
@@ -49,24 +52,10 @@ export class NotesListComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
-    // Ensure notes are loaded from API first
-    this.notesService.loadNotes().pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: () => {
-        // Notes loaded, now setup filter and subscribe
-        this.setupNotesFilter();
-        this.subscribeToNotes();
-        this.setupDynamicTitle();
-      },
-      error: (err) => {
-        console.error('Error loading notes:', err);
-        // Still setup filter and subscribe even if load fails
-        this.setupNotesFilter();
-        this.subscribeToNotes();
-        this.setupDynamicTitle();
-      }
-    });
+    // Notes are loaded by NotesService constructor, just setup filter and subscribe
+    this.setupNotesFilter();
+    this.subscribeToNotes();
+    this.setupDynamicTitle();
   }
 
   private setupDynamicTitle(): void {
@@ -152,7 +141,37 @@ export class NotesListComponent implements OnInit, OnDestroy {
         notesStream = this.searchService.filterByStatus(this.filterBy);
       } else {
         // Default: get all notes from service
-        notesStream = this.notesService.getNotes();
+        this.isLoading = true;
+        notesStream = this.notesService.getAllNotes({ archived: false, trashed: false }).pipe(
+          map((response: any) => {
+            const backendResponse = response?.data || response;
+            const notesArray = backendResponse?.notes || [];
+            this.isLoading = false;
+            return notesArray.map((note: any) => ({
+              id: note.id,
+              userId: note.user_id?.toString() || '',
+              title: note.title,
+              content: note.content || '',
+              tags: note.tags || [],
+              notebookId: note.notebook_id || undefined,
+              pinned: note.pinned,
+              archived: note.archived,
+              trashed: note.trashed,
+              createdAt: note.created_at,
+              updatedAt: note.updated_at || note.created_at,
+              version: note.version || 1,
+              synced: note.synced || false,
+              lastModified: note.last_modified || note.updated_at || note.created_at,
+              attachments: [],
+              tasks: []
+            }));
+          }),
+          catchError(error => {
+            this.isLoading = false;
+            console.error('Error loading notes:', error);
+            return of([]);
+          })
+        );
       }
 
       // Sort notes: pinned first, then by updatedAt descending
@@ -211,43 +230,102 @@ export class NotesListComponent implements OnInit, OnDestroy {
 
   onNotePin(note: Note): void {
     this.notesService.pinNote(note.id).pipe(
-      takeUntil(this.destroy$)
+      takeUntil(this.destroy$),
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Invalid response structure');
+        }
+        return {
+          id: backendResponse.note.id,
+          userId: backendResponse.note.user_id?.toString() || '',
+          title: backendResponse.note.title,
+          content: backendResponse.note.content || '',
+          tags: backendResponse.note.tags || [],
+          notebookId: backendResponse.note.notebook_id || undefined,
+          pinned: backendResponse.note.pinned,
+          archived: backendResponse.note.archived,
+          trashed: backendResponse.note.trashed,
+          createdAt: backendResponse.note.created_at,
+          updatedAt: backendResponse.note.updated_at || backendResponse.note.created_at,
+          version: backendResponse.note.version || 1,
+          synced: backendResponse.note.synced || false,
+          lastModified: backendResponse.note.last_modified || backendResponse.note.updated_at || backendResponse.note.created_at,
+          attachments: [],
+          tasks: []
+        };
+      }),
+      catchError(error => {
+        console.error('Failed to pin note:', error);
+        return throwError(() => error);
+      })
     ).subscribe({
       next: (updatedNote) => {
-        // Note: The notes$ BehaviorSubject in NotesService will emit updated list
-        // No need to manually update here, just emit for parent dashboard if needed
         this.notePinned.emit(updatedNote);
       },
-      error: (err) => {
-        console.error('Failed to pin note:', err);
-      }
+      error: () => {}
     });
   }
 
   onNoteArchive(note: Note): void {
     this.notesService.archiveNote(note.id).pipe(
-      takeUntil(this.destroy$)
+      takeUntil(this.destroy$),
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Invalid response structure');
+        }
+        return {
+          id: backendResponse.note.id,
+          userId: backendResponse.note.user_id?.toString() || '',
+          title: backendResponse.note.title,
+          content: backendResponse.note.content || '',
+          tags: backendResponse.note.tags || [],
+          notebookId: backendResponse.note.notebook_id || undefined,
+          pinned: backendResponse.note.pinned,
+          archived: backendResponse.note.archived,
+          trashed: backendResponse.note.trashed,
+          createdAt: backendResponse.note.created_at,
+          updatedAt: backendResponse.note.updated_at || backendResponse.note.created_at,
+          version: backendResponse.note.version || 1,
+          synced: backendResponse.note.synced || false,
+          lastModified: backendResponse.note.last_modified || backendResponse.note.updated_at || backendResponse.note.created_at,
+          attachments: [],
+          tasks: []
+        };
+      }),
+      catchError(error => {
+        console.error('Failed to archive note:', error);
+        return throwError(() => error);
+      })
     ).subscribe({
       next: (updatedNote) => {
         this.noteArchived.emit(updatedNote);
       },
-      error: (err) => {
-        console.error('Failed to archive note:', err);
-      }
+      error: () => {}
     });
   }
 
   onNoteDelete(note: Note): void {
     if (confirm('Are you sure you want to delete this note?')) {
       this.notesService.deleteNote(note.id).pipe(
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          if (!backendResponse?.success) {
+            throw new Error(backendResponse?.msg || 'Failed to delete note');
+          }
+          return true;
+        }),
+        catchError(error => {
+          console.error('Failed to delete note:', error);
+          return throwError(() => error);
+        })
       ).subscribe({
         next: () => {
           this.noteDeleted.emit(note);
         },
-        error: (err) => {
-          console.error('Failed to delete note:', err);
-        }
+        error: () => {}
       });
     }
   }
@@ -300,10 +378,55 @@ export class NotesListComponent implements OnInit, OnDestroy {
     // TODO: Implement menu (MatMenu with view/sort options)
   }
 
+  private loadNoteById(id: string): Observable<Note | undefined> {
+    return this.notesService.getNoteContent(id).pipe(
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (!backendResponse || !backendResponse.note) {
+          return undefined;
+        }
+        const note = backendResponse.note;
+        // Content is now directly in note.content (string)
+        const content = note.content || '';
+        // Convert Firestore timestamp to ISO string if needed
+        const convertTimestamp = (ts: any): string => {
+          if (!ts) return new Date().toISOString();
+          if (ts._seconds) {
+            return new Date(ts._seconds * 1000 + (ts._nanoseconds || 0) / 1000000).toISOString();
+          }
+          if (typeof ts === 'string') return ts;
+          return new Date(ts).toISOString();
+        };
+        return {
+          id: note.id,
+          userId: '1',
+          title: note.title || '',
+          content: content,
+          tags: backendResponse.tags || [],
+          notebookId: note.notebook_id || undefined,
+          pinned: false,
+          archived: false,
+          trashed: note.is_trashed || false,
+          createdAt: convertTimestamp(note.created_at),
+          updatedAt: convertTimestamp(note.updated_at || note.created_at),
+          version: 1,
+          synced: false,
+          lastModified: convertTimestamp(note.updated_at || note.created_at),
+          attachments: [],
+          tasks: []
+        };
+      }),
+      catchError(error => {
+        console.error('Error loading note:', error);
+        return of(undefined);
+      })
+    );
+  }
+
   onNoteSelect(noteId: string): void {
     this.selectNote(noteId);
     // Fetch and emit the note object from service
-    this.notesService.getNoteById(noteId).pipe(
+    this.loadNoteById(noteId).pipe(
       takeUntil(this.destroy$)
     ).subscribe(note => {
       if (note) {
@@ -315,13 +438,13 @@ export class NotesListComponent implements OnInit, OnDestroy {
   /**
    * Handle item selection from side list component
    * Fetches the latest note data from service before emitting
+   * Does not navigate - parent component handles note update
    */
   onItemSelected(item: SideListItem): void {
     const note = item as Note;
-    this.selectNote(note.id);
     
     // Fetch the latest note data from service to ensure we have complete, up-to-date data
-    this.notesService.getNoteById(note.id).pipe(
+    this.loadNoteById(note.id).pipe(
       takeUntil(this.destroy$)
     ).subscribe(updatedNote => {
       if (updatedNote) {
@@ -428,11 +551,46 @@ export class NotesListComponent implements OnInit, OnDestroy {
       notebookId: currentNotebookId || undefined
     };
 
-    this.notesService.createNote(newNoteData).pipe(
-      takeUntil(this.destroy$)
+    const payload: any = {
+      title: newNoteData.title || 'Untitled'
+    };
+    if (newNoteData.notebookId) {
+      payload.notebook_id = newNoteData.notebookId;
+    }
+    
+    this.notesService.createNote(payload).pipe(
+      takeUntil(this.destroy$),
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Invalid response structure');
+        }
+        const note = backendResponse.note;
+        return {
+          id: note.id,
+          userId: note.user_id?.toString() || '',
+          title: note.title,
+          content: note.content || '',
+          tags: note.tags || [],
+          notebookId: note.notebook_id || undefined,
+          pinned: note.pinned,
+          archived: note.archived,
+          trashed: note.trashed,
+          createdAt: note.created_at,
+          updatedAt: note.updated_at || note.created_at,
+          version: note.version || 1,
+          synced: note.synced || false,
+          lastModified: note.last_modified || note.updated_at || note.created_at,
+          attachments: [],
+          tasks: []
+        };
+      }),
+      catchError(error => {
+        console.error('Failed to create note:', error);
+        return throwError(() => error);
+      })
     ).subscribe({
       next: (createdNote) => {
-        // Note is automatically added to the list via BehaviorSubject
         // Navigate to the new note
         if (currentNotebookId) {
           const stackId = allParams['stackId'];
@@ -442,7 +600,6 @@ export class NotesListComponent implements OnInit, OnDestroy {
             this.router.navigate(['/notes/notebook', currentNotebookId, 'note', createdNote.id]);
           }
         } else {
-          // Use notebook from created note (backend ensures every note has a notebook)
           const noteNotebookId = createdNote.notebookId;
           if (noteNotebookId) {
             this.router.navigate(['/notes/notebook', noteNotebookId, 'note', createdNote.id]);
@@ -453,7 +610,7 @@ export class NotesListComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Failed to create note:', error);
-        alert('Failed to create note: ' + (error.message || 'Unknown error'));
+        alert('Failed to create note: ' + (error?.error?.msg || error?.message || 'Unknown error'));
       }
     });
   }

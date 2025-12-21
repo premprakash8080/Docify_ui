@@ -1,35 +1,48 @@
 import { environment } from '../../../../environments/environment';
 
-// API_BASE should be relative to the apiUrl configured in environment.ts
-const API_BASE = `/notes`;
-
 export const NOTES_ENDPOINTS = {
   // CRUD
-  getAllNotes: `${API_BASE}`,
-  getNoteById: (id: string) => `${API_BASE}/${id}`,
-  createNote: `${API_BASE}`,
-  updateNote: (id: string) => `${API_BASE}/${id}`,
-  deleteNote: (id: string) => `${API_BASE}/${id}`,
-  
+  getAllNotes: environment.apiUrl + '/notes/getAllNotes',
+  getNoteById: environment.apiUrl + '/notes/getNoteById',
+  createNote: environment.apiUrl + '/notes',
+  updateNote: environment.apiUrl + '/notes/:id',
+  deleteNote: environment.apiUrl + '/notes/:id',
+
   // Notebook operations
-  moveNoteToNotebook: (id: string, notebookId: string) => `${API_BASE}/${id}/notebook/${notebookId}`,
-  
+  moveNoteToNotebook: environment.apiUrl + '/notes/:id/notebook/:notebookId',
+  createNotebook: environment.apiUrl + '/notebooks/createNotebook',
+
   // State operations
-  pinNote: (id: string) => `${API_BASE}/${id}/pin`,
-  unpinNote: (id: string) => `${API_BASE}/${id}/unpin`,
-  archiveNote: (id: string) => `${API_BASE}/${id}/archive`,
-  unarchiveNote: (id: string) => `${API_BASE}/${id}/unarchive`,
-  trashNote: (id: string) => `${API_BASE}/${id}/trash`,
-  restoreNote: (id: string) => `${API_BASE}/${id}/restore`,
-  
+  pinNote: environment.apiUrl + '/notes/:id/pin',
+  unpinNote: environment.apiUrl + '/notes/:id/unpin',
+  archiveNote: environment.apiUrl + '/notes/:id/archive',
+  unarchiveNote: environment.apiUrl + '/notes/:id/unarchive',
+  trashNote: environment.apiUrl + '/notes/:id/trash',
+  restoreNote: environment.apiUrl + '/notes/:id/restore',
+
   // Sync
-  markNoteSynced: (id: string) => `${API_BASE}/${id}/synced`,
-  
-  // Tags
-  addTagToNote: (id: string, tagId: string) => `${API_BASE}/${id}/tags/${tagId}`,
-  removeTagFromNote: (id: string, tagId: string) => `${API_BASE}/${id}/tags/${tagId}`,
-  
+  markNoteSynced: environment.apiUrl + '/notes/:id/synced',
+
   // Files & Tasks
-  getNoteFiles: (id: string) => `${API_BASE}/${id}/files`,
-  getNoteTasks: (id: string) => `${API_BASE}/${id}/tasks`,
+  getNoteFiles: environment.apiUrl + '/notes/:id/files',
+  getNoteTasks: environment.apiUrl + '/notes/:id/tasks',
+
+  // Content operations
+  saveNoteContent: environment.apiUrl + '/notes/:id/content',
+  getNoteContent: environment.apiUrl + '/notes/getNoteContent',
+
+  // Image operations
+  uploadNoteImage: environment.apiUrl + '/notes/images',
+  getNoteImages: environment.apiUrl + '/notes/images',
+  deleteNoteImage: environment.apiUrl + '/notes/images/:id',
+
+  // Tags
+  getUserTags: environment.apiUrl + '/tags/getUserTags',
+  addTagToNote: environment.apiUrl + '/notes/addTagToNote',
+  removeTagFromNote: environment.apiUrl + '/notes/removeTagFromNote',
+  createTag: environment.apiUrl + '/tags/createTag',
+
+  // Move / Stack
+  getNoteWithStack: environment.apiUrl + '/notes/:noteId/with-stack',
+  getNotebooksWithStacks: environment.apiUrl + '/notebooks/with-stacks'
 };

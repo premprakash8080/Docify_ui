@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Subject, of } from 'rxjs';
-import { map, takeUntil, catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { map, takeUntil, catchError, debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 import { NewTaskModalComponent, NewTaskData } from './components/new-task-modal/new-task-modal.component';
 import { TasksListComponent } from './components/tasks-list/tasks-list.component';
 import { TaskService, Task } from './services/task.service';
@@ -73,6 +73,9 @@ export class TasksComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
   
+  // Flag to prevent multiple simultaneous load calls
+  private isLoadingTasks = false;
+  
   // Task map for quick lookup
   private tasksMap = new Map<string, Task>();
   
@@ -94,13 +97,36 @@ export class TasksComponent implements OnInit, OnDestroy {
   // searchCtrl = new UntypedFormControl();
 
   ngOnInit(): void {
-    // Load notes first to build lookup map
-    this.notesService.getNotes().pipe(
+    // Load notes first to build lookup map (take(1) to only load once)
+    this.notesService.getAllNotes({ archived: false, trashed: false }).pipe(
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        const notesArray = backendResponse?.notes || [];
+        return notesArray.map((note: any) => ({
+          id: note.id,
+          userId: note.user_id?.toString() || '',
+          title: note.title,
+          content: note.content || '',
+          tags: note.tags || [],
+          notebookId: note.notebook_id || undefined,
+          pinned: note.pinned,
+          archived: note.archived,
+          trashed: note.trashed,
+          createdAt: note.created_at,
+          updatedAt: note.updated_at || note.created_at,
+          version: note.version || 1,
+          synced: note.synced || false,
+          lastModified: note.last_modified || note.updated_at || note.created_at,
+          attachments: [],
+          tasks: []
+        }));
+      }),
+      take(1), // Only take the first emission to prevent multiple calls
       takeUntil(this.destroy$)
     ).subscribe(notes => {
       this.notesMap.clear();
       notes.forEach(note => this.notesMap.set(note.id, note));
-      // Load tasks after notes are loaded
+      // Load tasks after notes are loaded (only once)
       this.loadTasks();
     });
 
@@ -125,6 +151,12 @@ export class TasksComponent implements OnInit, OnDestroy {
    * Load all tasks for the current user
    */
   private loadTasks(): void {
+    // Prevent multiple simultaneous calls
+    if (this.isLoadingTasks) {
+      return;
+    }
+
+    this.isLoadingTasks = true;
     this.loading = true;
     this.error = null;
     this.cdr.markForCheck();
@@ -153,14 +185,23 @@ export class TasksComponent implements OnInit, OnDestroy {
       catchError(err => {
         this.error = err?.error?.msg || err?.message || 'Failed to load tasks';
         this.loading = false;
+        this.isLoadingTasks = false;
         this.cdr.markForCheck();
         return of([]);
       })
-    ).subscribe(tasks => {
-      this.tasks = tasks;
-      this.loading = false;
-      this.updateFilteredTasks();
-      this.cdr.markForCheck();
+    ).subscribe({
+      next: (tasks) => {
+        this.tasks = tasks;
+        this.loading = false;
+        this.isLoadingTasks = false;
+        this.updateFilteredTasks();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loading = false;
+        this.isLoadingTasks = false;
+        this.cdr.markForCheck();
+      }
     });
   }
 

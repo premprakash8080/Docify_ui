@@ -46,6 +46,15 @@
   height: 100%; // Take full height
   margin: 0;
   padding: 0;
+  transition: width 0.3s ease, min-width 0.3s ease, max-width 0.3s ease;
+  
+  &.hidden {
+    width: 0;
+    min-width: 0;
+    max-width: 0;
+    border-right: none;
+    overflow: hidden;
+  }
   
   // Ensure the notes-list component can scroll independently
   ::ng-deep {

@@ -19,11 +19,31 @@ export class UserSettingsInitService {
   private configService = inject(ConfigService);
   private settingsService = inject(SettingsService);
   
+  // Track if settings have been loaded to avoid reloading on every page visit
+  private settingsLoaded = false;
+  private loadedUserId: string | null = null;
+  
   // Check authentication state directly to avoid circular dependency
   private isAuthenticated(): boolean {
     const token = localStorage.getItem('auth_token') || localStorage.getItem('ACCESS_TOKEN');
     const userStr = localStorage.getItem('current_user');
     return !!(token && token !== 'null' && token !== 'undefined' && userStr);
+  }
+
+  /**
+   * Get current user ID from localStorage
+   */
+  private getCurrentUserId(): string | null {
+    try {
+      const userStr = localStorage.getItem('current_user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user?.id || null;
+      }
+    } catch {
+      return null;
+    }
+    return null;
   }
 
   // Rounded corner values matching SettingsComponent
@@ -41,11 +61,26 @@ export class UserSettingsInitService {
   /**
    * Load and apply user settings from the database
    * Should be called after user authentication
+   * This method ensures settings are only loaded once per user session
    */
-  async loadAndApplySettings(): Promise<void> {
+  async loadAndApplySettings(forceReload: boolean = false): Promise<void> {
     // Only load settings if user is authenticated
     if (!this.isAuthenticated()) {
+      this.settingsLoaded = false;
+      this.loadedUserId = null;
       return;
+    }
+
+    const currentUserId = this.getCurrentUserId();
+    
+    // Skip if settings already loaded for this user (unless force reload)
+    if (!forceReload && this.settingsLoaded && this.loadedUserId === currentUserId) {
+      return;
+    }
+
+    // If user changed, reset the loaded state
+    if (this.loadedUserId !== null && this.loadedUserId !== currentUserId) {
+      this.settingsLoaded = false;
     }
 
     try {
@@ -53,11 +88,22 @@ export class UserSettingsInitService {
 
       if (settings) {
         this.applySettings(settings);
+        this.settingsLoaded = true;
+        this.loadedUserId = currentUserId;
       }
     } catch (error) {
       console.error('Failed to load user settings:', error);
       // Don't throw - app should continue even if settings fail to load
+      // Don't mark as loaded on error, so it can retry later if needed
     }
+  }
+
+  /**
+   * Reset the loaded state (useful when user logs out)
+   */
+  resetLoadedState(): void {
+    this.settingsLoaded = false;
+    this.loadedUserId = null;
   }
 
   /**

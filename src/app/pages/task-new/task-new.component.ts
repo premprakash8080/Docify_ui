@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, Input, OnInit, ViewChild } from '@angular/core';
 import { Observable, of, ReplaySubject } from 'rxjs';
-import { filter, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { filter, debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -98,7 +98,30 @@ export class TaskNewComponent implements OnInit, AfterViewInit {
     this.dataSource.data = [];
 
     // Load notes first, then load tasks
-    this.notesService.getNotes().subscribe(notes => {
+    this.notesService.getAllNotes({ archived: false, trashed: false }).pipe(
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        const notesArray = backendResponse?.notes || [];
+        return notesArray.map((note: any) => ({
+          id: note.id,
+          userId: note.user_id?.toString() || '',
+          title: note.title,
+          content: note.content || '',
+          tags: note.tags || [],
+          notebookId: note.notebook_id || undefined,
+          pinned: note.pinned,
+          archived: note.archived,
+          trashed: note.trashed,
+          createdAt: note.created_at,
+          updatedAt: note.updated_at || note.created_at,
+          version: note.version || 1,
+          synced: note.synced || false,
+          lastModified: note.last_modified || note.updated_at || note.created_at,
+          attachments: [],
+          tasks: []
+        }));
+      })
+    ).subscribe(notes => {
       this.notes = notes;
       this.loadTasks();
     });
@@ -161,7 +184,30 @@ export class TaskNewComponent implements OnInit, AfterViewInit {
   private refreshTasks() {
     // Ensure notes are loaded first
     if (this.notes.length === 0) {
-      this.notesService.getNotes().subscribe(notes => {
+      this.notesService.getAllNotes({ archived: false, trashed: false }).pipe(
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          const notesArray = backendResponse?.notes || [];
+          return notesArray.map((note: any) => ({
+            id: note.id,
+            userId: note.user_id?.toString() || '',
+            title: note.title,
+            content: note.content || '',
+            tags: note.tags || [],
+            notebookId: note.notebook_id || undefined,
+            pinned: note.pinned,
+            archived: note.archived,
+            trashed: note.trashed,
+            createdAt: note.created_at,
+            updatedAt: note.updated_at || note.created_at,
+            version: note.version || 1,
+            synced: note.synced || false,
+            lastModified: note.last_modified || note.updated_at || note.created_at,
+            attachments: [],
+            tasks: []
+          }));
+        })
+      ).subscribe(notes => {
         this.notes = notes;
         this.loadTasks();
       });

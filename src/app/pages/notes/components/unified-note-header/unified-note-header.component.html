@@ -6,21 +6,21 @@
       <!-- Navigation Controls (Previous/Next/Fullscreen) -->
       <button 
         mat-icon-button
-        (click)="onPrevious()"
-        [attr.aria-label]="'Previous note'"
+        (click)="onHideNotesSidebar()"
+        [attr.aria-label]="'Hide notes sidebar'"
         type="button"
         class="nav-button">
-        <mat-icon svgIcon="mat:chevron_left"></mat-icon>
+        <mat-icon svgIcon="mat:menu"></mat-icon>
       </button>
       
-      <button 
+      <!-- <button 
         mat-icon-button
         (click)="onNext()"
         [attr.aria-label]="'Next note'"
         type="button"
         class="nav-button">
         <mat-icon svgIcon="mat:chevron_right"></mat-icon>
-      </button>
+      </button> -->
       
       <button 
         mat-icon-button
@@ -53,6 +53,18 @@
       </span>
       
       <!-- Action Buttons -->
+      <button 
+        mat-raised-button
+        color="primary"
+        (click)="onSave()"
+        [attr.aria-label]="'Save note'"
+        [disabled]="isSaving"
+        type="button"
+        class="save-button">
+        <mat-icon svgIcon="mat:save"></mat-icon>
+        <span>Save</span>
+      </button>
+      
       <button 
         mat-raised-button
         color="primary"
@@ -118,6 +130,10 @@
         <button mat-menu-item (click)="onManageTags()">
           <mat-icon svgIcon="mat:label"></mat-icon>
           <span>Tags</span>
+        </button>
+        <button mat-menu-item (click)="onMove()">
+          <mat-icon svgIcon="mat:drive_file_move"></mat-icon>
+          <span>Move</span>
         </button>
         <mat-divider style="margin: 8px 0;"></mat-divider>
         <!-- Find in note , note info , note history button -->

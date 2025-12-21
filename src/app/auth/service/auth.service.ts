@@ -81,7 +81,8 @@ export class AuthService {
     private http: HttpClient
   ) {
     this.loadUserFromStorage();
-    // Load settings if user is already authenticated (using setTimeout to defer execution)
+    // Load settings once if user is already authenticated (using setTimeout to defer execution)
+    // This will only load if not already loaded for the current user
     setTimeout(() => {
       if (this.isAuthenticated) {
         this.userSettingsInitService.loadAndApplySettings();
@@ -134,9 +135,9 @@ export class AuthService {
           };
           
         this.setAuthData(authResponse);
-        // Load and apply user settings after login
+        // Load and apply user settings after login (force reload for new session)
         setTimeout(() => {
-          this.userSettingsInitService.loadAndApplySettings();
+          this.userSettingsInitService.loadAndApplySettings(true);
         }, 0);
         return authResponse;
       }),
@@ -166,9 +167,9 @@ export class AuthService {
         };
         
         this.setAuthData(authResponse);
-        // Load and apply user settings after registration
+        // Load and apply user settings after registration (force reload for new session)
         setTimeout(() => {
-          this.userSettingsInitService.loadAndApplySettings();
+          this.userSettingsInitService.loadAndApplySettings(true);
         }, 0);
         return authResponse;
       }),
@@ -190,22 +191,26 @@ export class AuthService {
     // Clear UserSessionService
     this.userSessionService.accessToken = '';
     
+    // Clear current user
     this.currentUserSubject.next(null);
     
+    // Reset settings loaded state
+    this.userSettingsInitService.resetLoadedState();
+    
     // Call logout API if token exists (fire and forget)
-    if (token) {
-      this.http.post<void>(ENDPOINTS.logout, {}).subscribe({
-        next: () => {
-          this.router.navigate(['/login']);
-        },
-        error: () => {
-          // Even if API call fails, navigate to login
-          this.router.navigate(['/login']);
-        }
-      });
-    } else {
+    // if (token) {
+    //   this.http.post<void>(ENDPOINTS.logout, {}).subscribe({
+    //     next: () => {
+    //       this.router.navigate(['/login']);
+    //     },
+    //     error: () => {
+    //       // Even if API call fails, navigate to login
+    //       this.router.navigate(['/login']);
+    //     }
+    //   });
+    // } else {
     this.router.navigate(['/login']);
-    }
+    // }
   }
 
   private setAuthData(response: AuthResponse): void {
