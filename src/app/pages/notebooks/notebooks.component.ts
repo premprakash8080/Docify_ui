@@ -20,6 +20,7 @@ import { NotesService } from '../notes/services/notes.service';
 import { NotebooksService } from './services/notebooks.service';
 import { Note, Notebook } from '../../core/models';
 import { AddNotebookComponent, AddNotebookDialogResult } from './components/add-notebook/add-notebook.component';
+import { AddStackComponent, AddStackDialogResult } from './components/add-stack/add-stack.component';
 import { NotebooksListViewComponent } from './components/notebooks-list-view/notebooks-list-view.component';
 import { NotebooksGridViewComponent } from './components/notebooks-grid-view/notebooks-grid-view.component';
 import { StackSelectionDialogComponent } from './components/stack-selection-dialog/stack-selection-dialog.component';
@@ -630,7 +631,8 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     const stacks = this.notebooks.filter(item => item.isStack && item.stackId);
     
     if (stacks.length === 0) {
-      alert('No stacks available. Please create a stack first.');
+      // Open create stack dialog instead of alert
+      this.openCreateStackDialog(notebook);
       return;
     }
 
@@ -645,6 +647,35 @@ export class NotebooksComponent implements OnInit, OnDestroy {
           next: (res: any) => {
             if (!res?.success) return;
             this.getAllStacks();
+          },
+          error: () => {
+            this.error = 'Failed to add notebook to stack';
+            this.cdr.markForCheck();
+          }
+        });
+      }
+    });
+  }
+
+  private openCreateStackDialog(notebook: NotebookRow): void {
+    const dialogRef = this.dialog.open(AddStackComponent, {
+      width: '500px',
+      maxWidth: '90vw',
+      disableClose: false,
+      autoFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe((result: AddStackDialogResult | undefined) => {
+      if (result && !result.cancelled && result.stack && notebook.notebookId) {
+        // After creating stack, automatically add notebook to the new stack
+        this.notebooksService.moveNotebookToStack(notebook.notebookId, result.stack.id).subscribe({
+          next: (res: any) => {
+            if (res?.success) {
+              this.getAllStacks();
+            } else {
+              this.error = 'Failed to add notebook to stack';
+              this.cdr.markForCheck();
+            }
           },
           error: () => {
             this.error = 'Failed to add notebook to stack';

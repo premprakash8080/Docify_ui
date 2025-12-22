@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
-import { map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
+import { map, debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { Note, Notebook } from '../models';
 import { notes, notebooks } from '../data/sample-data';
+import { GlobalSearchService } from './global-search.service';
 
 export interface SearchResult {
   id: string;
-  type: 'note' | 'notebook';
+  type: 'note' | 'notebook' | 'tag' | 'stack' | 'task';
   title: string;
   notebookId?: string;
   notebookName?: string;
@@ -14,6 +15,8 @@ export interface SearchResult {
   updatedAt: string;
   createdAt: string;
   icon?: string;
+  description?: string;
+  noteId?: string; // For tasks
 }
 
 export interface GroupedSearchResults {
@@ -30,6 +33,10 @@ export class SearchService {
   
   searchQuery$ = this.searchQuerySubject.asObservable();
   selectedFilters$ = this.selectedFiltersSubject.asObservable();
+
+  constructor(
+    private globalSearchService: GlobalSearchService
+  ) {}
 
   // Mock stack data - in real app this would come from backend
   // Map notebook names to stack names (for UI-only grouping)
@@ -189,7 +196,86 @@ export class SearchService {
       this.searchQuery$.pipe(debounceTime(300), distinctUntilChanged()),
       this.selectedFilters$
     ]).pipe(
-      map(([query, filters]) => this.searchSync(query, filters))
+      switchMap(([query, filters]) => {
+        if (!query || query.trim().length === 0) {
+          return of([]);
+        }
+
+        // Extract notebook IDs from filters
+        const notebookIds = filters
+          .filter(f => f.startsWith('notebook:'))
+          .map(f => f.replace('notebook:', ''));
+
+        // Determine search types based on filters
+        const types: ('note' | 'notebook' | 'tag' | 'stack' | 'task')[] = [];
+        if (filters.includes('everywhere')) {
+          types.push('note', 'notebook', 'tag', 'stack', 'task');
+        } else {
+          if (filters.some(f => f.startsWith('notebook:'))) {
+            types.push('note', 'task'); // Notes and tasks are in notebooks
+          }
+          if (filters.includes('notebook')) {
+            types.push('notebook');
+          }
+          if (filters.includes('tag')) {
+            types.push('tag');
+          }
+          if (filters.includes('stack')) {
+            types.push('stack');
+          }
+          if (filters.includes('task')) {
+            types.push('task');
+          }
+        }
+
+        // Call API
+        return this.globalSearchService.globalSearch({
+          query: query.trim(),
+          filters: notebookIds.length > 0 ? notebookIds : undefined,
+          types: types.length > 0 ? types : undefined
+        }).pipe(
+          map((response: any) => {
+            if (response?.success && response?.data?.results) {
+              return this.mapApiResultsToGroupedResults(response.data.results);
+            }
+            return [];
+          }),
+          catchError((err) => {
+            console.error('Error in global search:', err);
+            // Fallback to client-side search on error
+            return of(this.searchSync(query, filters));
+          })
+        );
+      })
     );
+  }
+
+  private mapApiResultsToGroupedResults(apiResults: any[]): GroupedSearchResults[] {
+    const results: SearchResult[] = apiResults.map((item: any) => ({
+      id: item.id,
+      type: item.type,
+      title: item.title || item.name || item.label || 'Untitled',
+      notebookId: item.notebook_id || item.notebookId,
+      notebookName: item.notebook_name || item.notebookName,
+      stackName: item.stack_name || item.stackName,
+      updatedAt: item.updated_at || item.updatedAt || item.created_at || item.createdAt,
+      createdAt: item.created_at || item.createdAt,
+      icon: this.getIconForType(item.type),
+      description: item.description || item.content,
+      noteId: item.note_id || item.noteId
+    }));
+
+    return this.groupResultsByTime(results);
+  }
+
+  private getIconForType(type: string): string {
+    const iconMap: { [key: string]: string } = {
+      'note': 'description',
+      'notebook': 'book',
+      'tag': 'label',
+      'stack': 'folder',
+      'task': 'assignment'
+    };
+    return iconMap[type] || 'description';
   }
 }

@@ -41,6 +41,7 @@ export const NOTES_ENDPOINTS = {
   addTagToNote: environment.apiUrl + '/notes/addTagToNote',
   removeTagFromNote: environment.apiUrl + '/notes/removeTagFromNote',
   createTag: environment.apiUrl + '/tags/createTag',
+  getTagById: environment.apiUrl + '/tags/getTagById',
 
   // Move / Stack
   getNoteWithStack: environment.apiUrl + '/notes/:noteId/with-stack',

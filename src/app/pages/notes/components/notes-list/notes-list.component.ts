@@ -82,25 +82,57 @@ export class NotesListComponent implements OnInit, OnDestroy {
       const allParams = getAllParams(this.route);
       const notebookId = allParams['notebookId'];
       const stackId = allParams['stackId'];
+      const tagId = allParams['tagId'];
       
       if (notebookId) {
         // Get notebook name
         this.notebooksService.getNotebookById(notebookId).pipe(
-          takeUntil(this.destroy$)
-        ).subscribe(notebook => {
-          this.dynamicTitle = notebook?.name || 'Notebook';
+          takeUntil(this.destroy$),
+          map((response: any) => {
+            const backendResponse = response?.data || response;
+            const notebook = backendResponse?.notebook || backendResponse;
+            return notebook?.name || 'Notebook';
+          }),
+          catchError(() => of('Notebook'))
+        ).subscribe(notebookName => {
+          this.dynamicTitle = notebookName;
           this.cdr.markForCheck();
         });
       } else if (stackId) {
-        // For stack context, format the stack ID to a readable name
-        // Stack IDs are typically slugs like 'personal', 'work', etc.
-        // Format: capitalize first letter and replace hyphens with spaces
-        const formattedStackName = stackId
-          .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        this.dynamicTitle = formattedStackName;
-        this.cdr.markForCheck();
+        // Get stack name from API
+        this.notebooksService.getStackById(stackId).pipe(
+          takeUntil(this.destroy$),
+          map((response: any) => {
+            const backendResponse = response?.data || response;
+            const stack = backendResponse?.stack || backendResponse;
+            return stack?.name || 'Stack';
+          }),
+          catchError(() => {
+            // Fallback to formatted stack ID on error
+            const formattedStackName = stackId
+              .split('-')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+            return of(formattedStackName);
+          })
+        ).subscribe(stackName => {
+          this.dynamicTitle = stackName;
+          this.cdr.markForCheck();
+        });
+      } else if (tagId) {
+        // Get tag name from API
+        this.notesService.getTagById(tagId).pipe(
+          takeUntil(this.destroy$),
+          map((response: any) => {
+            const backendResponse = response?.data || response;
+            const tag = backendResponse?.tag || backendResponse;
+            return tag?.name || 'Tag';
+          }),
+          catchError(() => of('Tag'))
+        ).subscribe(tagName => {
+          this.dynamicTitle = tagName;
+          this.cdr.markForCheck();
+        });
       } else {
         this.dynamicTitle = 'Notes';
         this.cdr.markForCheck();

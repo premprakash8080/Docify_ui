@@ -15,7 +15,7 @@ export class TagsService {
   }
 
   getTagById(tagId: string) {
-    return this.httpService.get(ENDPOINTS.getTagById + '/' + tagId);
+    return this.httpService.get(ENDPOINTS.getTagById, { id: tagId });
   }
 
   createTag(payload: { name: string; color_id?: number | null }) {

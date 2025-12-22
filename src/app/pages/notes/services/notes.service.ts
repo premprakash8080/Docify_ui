@@ -167,5 +167,9 @@ export class NotesService {
   }) {
     return this.httpService.post(NOTES_ENDPOINTS.createNotebook, payload);
   }
+
+  getTagById(tagId: string) {
+    return this.httpService.get(NOTES_ENDPOINTS.getTagById, { id: tagId });
+  }
 }
 
