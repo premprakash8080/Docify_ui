@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
-import { TaskNewComponent  } from './task-new.component';
+import { TaskNewComponent  } from './tasks.component';
 
 describe('TaskNewComponent', () => {
   let component: TaskNewComponent;

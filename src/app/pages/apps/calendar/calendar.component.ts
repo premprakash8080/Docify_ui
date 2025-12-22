@@ -31,6 +31,11 @@ interface CalendarItem {
   completed?: boolean;
   color: string;
   sourceId: number | string;  // number for tasks, string (UUID) for notes
+  // Task-specific fields (only for tasks)
+  start_date?: string;  // YYYY-MM-DD
+  end_date?: string;   // YYYY-MM-DD
+  start_time?: string; // HH:mm:ss
+  end_time?: string;   // HH:mm:ss
 }
 
 @Component({
@@ -279,13 +284,33 @@ export class CalendarComponent implements OnInit {
     this.refresh.next();
 
     // Update on server
-    const payload: { start?: string; end?: string; allDay?: boolean } = {
-      start: newStart.toISOString(),
+    // For tasks, use the new format with start_date, end_date, start_time, end_time
+    // For notes, keep the old format
+    const isTask = event.meta?.type === 'task';
+    
+    let payload: any = {
       allDay: event.allDay || false,
     };
 
-    if (newEnd) {
-      payload.end = newEnd.toISOString();
+    if (isTask) {
+      // Format dates and times for tasks
+      const startDate = format(newStart, 'yyyy-MM-dd');
+      const startTime = format(newStart, 'HH:mm:ss');
+      payload.start_date = startDate;
+      payload.start_time = startTime;
+
+      if (newEnd) {
+        const endDate = format(newEnd, 'yyyy-MM-dd');
+        const endTime = format(newEnd, 'HH:mm:ss');
+        payload.end_date = endDate;
+        payload.end_time = endTime;
+      }
+    } else {
+      // For notes, use ISO datetime format
+      payload.start = newStart.toISOString();
+      if (newEnd) {
+        payload.end = newEnd.toISOString();
+      }
     }
 
     this.calendarService.updateCalendarEvent(event.id, payload).subscribe({

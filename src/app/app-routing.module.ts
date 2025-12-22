@@ -98,12 +98,8 @@ const routes: VexRoutes = [
         }
       },
       {
-        path: 'tasks-old',
-        loadChildren: () => import('./pages/tasks/tasks.module').then(m => m.TasksModule),
-      },
-      {
         path: 'tasks',
-        loadChildren: () => import('./pages/task-new/task-new.module').then(m => m.TaskNewModule),
+        loadChildren: () => import('./pages/tasks/tasks.module').then(m => m.TasksModule),
       },
       {
         path: 'files',

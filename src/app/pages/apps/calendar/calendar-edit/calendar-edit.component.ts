@@ -26,6 +26,10 @@ interface TaskDetail {
   note_id: string;
   label: string;
   description?: string;
+  start_date?: string;  // YYYY-MM-DD
+  end_date?: string;    // YYYY-MM-DD
+  start_time?: string; // HH:mm:ss
+  end_time?: string;    // HH:mm:ss
   due_date?: string;
   reminder?: string;
   assigned_to?: string;
@@ -87,7 +91,7 @@ export class CalendarEditComponent implements OnInit {
 
     this.isLoading = true;
     this.error = null;
-    
+
     if (this.event.meta.type === 'note') {
       this.calendarService.getCalendarNoteDetails(sourceId).subscribe({
         next: (response: any) => {
@@ -128,6 +132,10 @@ export class CalendarEditComponent implements OnInit {
               note_id: task.note_id,
               label: task.label || 'Untitled Task',
               description: task.description,
+              start_date: task.start_date,
+              end_date: task.end_date,
+              start_time: task.start_time,
+              end_time: task.end_time,
               due_date: task.due_date,
               reminder: task.reminder,
               assigned_to: task.assigned_to,

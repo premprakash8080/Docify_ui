@@ -24,7 +24,7 @@ export const ENDPOINTS = {
     
     // Notebook ↔ Notes
     getNotebookNotes: (id: string) => `${environment.apiUrl}/notebooks/${id}/notes`,
-    
+
     // Get notebook notes by ID (query param: ?id=...)
     getNotebookNotesById: environment.apiUrl + '/notebooks/getNotebookNotesById',
     

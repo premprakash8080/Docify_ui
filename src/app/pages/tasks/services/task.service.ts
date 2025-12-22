@@ -10,6 +10,10 @@ export interface Task {
   note_id: string;
   label: string;
   description?: string;
+  start_date?: string;  // YYYY-MM-DD
+  end_date?: string;    // YYYY-MM-DD
+  start_time?: string; // HH:mm:ss
+  end_time?: string;    // HH:mm:ss
   due_date?: string;
   reminder?: string;
   assigned_to?: string;
@@ -33,6 +37,10 @@ export class TaskService {
     note_id: string;
     label: string;
     description?: string;
+    start_date?: string | null;
+    end_date?: string | null;
+    start_time?: string | null;
+    end_time?: string | null;
     due_date?: string | null;
     reminder?: string | null;
     assigned_to?: string | null;
@@ -44,13 +52,17 @@ export class TaskService {
     return this.httpService.post(ENDPOINTS.createTask, payload);
   }
 
-  getTaskById(id: string, skipLoadingIndicator: boolean = false) {
-    return this.httpService.get(ENDPOINTS.getTaskById, { id }, true, skipLoadingIndicator);
+  getTaskById(id: string) {
+    return this.httpService.get(ENDPOINTS.getTaskById, { id });
   }
 
   updateTask(id: string, payload: {
     label?: string;
     description?: string;
+    start_date?: string | null;
+    end_date?: string | null;
+    start_time?: string | null;
+    end_time?: string | null;
     due_date?: string | null;
     reminder?: string | null;
     assigned_to?: string | null;
@@ -80,7 +92,7 @@ export class TaskService {
   /**
    * Get all tasks for the current user (across all notes)
    */
-  getAllTasks() {
-    return this.httpService.get(ENDPOINTS.getAllTasks);
+  getAllTasks(params?: any) {
+    return this.httpService.get(ENDPOINTS.getAllTasks, params);
   }
 }

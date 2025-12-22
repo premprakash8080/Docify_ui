@@ -35,8 +35,14 @@ export const FontFamily = Extension.create<FontFamilyOptions>({
               if (!attributes.fontFamily) {
                 return {};
               }
+              // Quote font names that contain spaces or are not generic families
+              const fontFamily = attributes.fontFamily;
+              const genericFamilies = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy'];
+              const needsQuotes = !genericFamilies.includes(fontFamily.toLowerCase()) &&
+                (fontFamily.includes(' ') || fontFamily.includes('-'));
+              const quotedFont = needsQuotes ? `"${fontFamily}"` : fontFamily;
               return {
-                style: `font-family: ${attributes.fontFamily}`,
+                style: `font-family: ${quotedFont}`,
               };
             },
           },

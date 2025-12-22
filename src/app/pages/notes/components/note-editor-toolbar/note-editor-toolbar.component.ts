@@ -1,6 +1,7 @@
 import { Component, Input, ChangeDetectionStrategy, ViewChild } from '@angular/core';
 import { Editor } from '@tiptap/core';
 import { MatMenuTrigger } from '@angular/material/menu';
+import { FONT_FAMILIES, FontFamilyConfig } from './font.config';
 
 /**
  * Evernote/Notion-style formatting toolbar for TipTap editor.
@@ -374,16 +375,10 @@ export class NoteEditorToolbarComponent {
   // ============================================================================
 
   /**
-   * Font family options
+   * Font family options - loaded from centralized configuration
+   * @see font.config.ts for adding/modifying fonts
    */
-  readonly fontFamilies = [
-    { value: 'Handwritten', label: 'Handwritten', font: 'cursive' },
-    { value: 'Script', label: 'Script', font: 'cursive' },
-    { value: 'Monospace', label: 'Monospace', font: 'monospace' },
-    { value: 'Slab Serif', label: 'Slab Serif', font: 'serif' },
-    { value: 'Serif', label: 'Serif', font: 'serif' },
-    { value: 'Sans Serif', label: 'Sans Serif', font: 'sans-serif' },
-  ];
+  readonly fontFamilies: FontFamilyConfig[] = FONT_FAMILIES;
 
   /**
    * Font size options
@@ -393,6 +388,7 @@ export class NoteEditorToolbarComponent {
     { value: '14px', label: '14' },
     { value: '16px', label: '16' },
     { value: '18px', label: '18' },
+    { value: '20px', label: '20' },
     { value: '24px', label: '24' },
     { value: '32px', label: '32' },
     { value: '48px', label: '48' },

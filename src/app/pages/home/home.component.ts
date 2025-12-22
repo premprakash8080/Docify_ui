@@ -240,7 +240,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Error loading scratchpad:', err);
         this.scratchpadLoading = false;
-      }
+    }
     });
   }
 

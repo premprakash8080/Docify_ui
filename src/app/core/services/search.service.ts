@@ -245,7 +245,7 @@ export class SearchService {
             // Fallback to client-side search on error
             return of(this.searchSync(query, filters));
           })
-        );
+    );
       })
     );
   }

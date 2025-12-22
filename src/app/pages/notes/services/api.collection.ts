@@ -3,6 +3,7 @@ import { environment } from '../../../../environments/environment';
 export const NOTES_ENDPOINTS = {
   // CRUD
   getAllNotes: environment.apiUrl + '/notes/getAllNotes',
+  getNotesName: environment.apiUrl + '/notes/getNotesName',
   getNoteById: environment.apiUrl + '/notes/getNoteById',
   createNote: environment.apiUrl + '/notes',
   updateNote: environment.apiUrl + '/notes/:id',

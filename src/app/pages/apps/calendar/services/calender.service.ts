@@ -36,7 +36,15 @@ export class CalendarService {
   }
 
   // Update calendar event (task)
-  updateCalendarEvent(id: string | number, payload: { start?: string; end?: string; allDay?: boolean; }) {
+  updateCalendarEvent(id: string | number, payload: { 
+    start?: string; 
+    end?: string; 
+    allDay?: boolean;
+    start_date?: string;
+    end_date?: string;
+    start_time?: string;
+    end_time?: string;
+  }) {
     return this.httpService.put(ENDPOINTS.updateCalendarEvent, { id, ...payload });
   }
 

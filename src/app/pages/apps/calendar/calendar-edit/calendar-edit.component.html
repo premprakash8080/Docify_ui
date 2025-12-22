@@ -89,38 +89,47 @@
         @let task = taskDetail;
         
         <!-- Title/Label -->
-        <mat-form-field appearance="outline" class="w-full">
+      <mat-form-field appearance="outline" class="w-full">
           <mat-label>Task Label</mat-label>
           <input matInput [value]="task.label || 'Untitled Task'" readonly />
-        </mat-form-field>
+      </mat-form-field>
 
         <!-- Description -->
-        <mat-form-field 
+      <mat-form-field 
           *ngIf="task.description" 
-          appearance="outline" 
-          class="w-full">
-          <mat-label>Description</mat-label>
+        appearance="outline" 
+        class="w-full">
+        <mat-label>Description</mat-label>
           <textarea matInput [value]="task.description" readonly rows="4"></textarea>
-        </mat-form-field>
+      </mat-form-field>
 
-        <!-- Due Date -->
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Due Date</mat-label>
-          <input matInput [value]="event.start | date : 'fullDate'" readonly />
+      <!-- Start Date -->
+        <mat-form-field *ngIf="task.start_date" appearance="outline" class="w-full">
+          <mat-label>Start Date</mat-label>
+          <input matInput [value]="task.start_date" readonly />
           <mat-icon svgIcon="mat:event"></mat-icon>
         </mat-form-field>
 
-        <!-- Time if not all-day -->
-        <div
-          *ngIf="!event.allDay"
-          class="text-sm text-gray-600 flex items-center gap-2"
-        >
-          <mat-icon svgIcon="mat:access_time" class="text-base"></mat-icon>
-          <span>
-            {{ event.start | date : "shortTime" }}
-            <span *ngIf="event.end"> – {{ event.end | date : "shortTime" }}</span>
-          </span>
-        </div>
+        <!-- End Date -->
+        <mat-form-field *ngIf="task.end_date" appearance="outline" class="w-full">
+          <mat-label>End Date</mat-label>
+          <input matInput [value]="task.end_date" readonly />
+          <mat-icon svgIcon="mat:event"></mat-icon>
+        </mat-form-field>
+
+        <!-- Start Time -->
+        <mat-form-field *ngIf="task.start_time && !event.allDay" appearance="outline" class="w-full">
+          <mat-label>Start Time</mat-label>
+          <input matInput [value]="task.start_time" readonly />
+          <mat-icon svgIcon="mat:access_time"></mat-icon>
+        </mat-form-field>
+
+        <!-- End Time -->
+        <mat-form-field *ngIf="task.end_time && !event.allDay" appearance="outline" class="w-full">
+          <mat-label>End Time</mat-label>
+          <input matInput [value]="task.end_time" readonly />
+          <mat-icon svgIcon="mat:access_time"></mat-icon>
+        </mat-form-field>
 
         <!-- All-day indicator -->
         <div
@@ -130,6 +139,13 @@
           <mat-icon svgIcon="mat:schedule" class="text-base"></mat-icon>
           <span>All Day Event</span>
         </div>
+
+        <!-- Due Date (if different from start_date) -->
+        <mat-form-field *ngIf="task.due_date && task.due_date !== task.start_date" appearance="outline" class="w-full">
+          <mat-label>Due Date</mat-label>
+          <input matInput [value]="task.due_date" readonly />
+          <mat-icon svgIcon="mat:event"></mat-icon>
+        </mat-form-field>
 
         <!-- Priority -->
         <mat-form-field *ngIf="task.priority" appearance="outline" class="w-full">
@@ -193,32 +209,32 @@
         </mat-form-field> -->
 
         <!-- Date -->
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Date</mat-label>
-          <input matInput [value]="event.start | date : 'fullDate'" readonly />
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Date</mat-label>
+        <input matInput [value]="event.start | date : 'fullDate'" readonly />
           <mat-icon svgIcon="mat:event"></mat-icon>
-        </mat-form-field>
+      </mat-form-field>
 
-        <!-- Time if not all-day -->
-        <div
-          *ngIf="!event.allDay"
-          class="text-sm text-gray-600 flex items-center gap-2"
-        >
+      <!-- Time if not all-day -->
+      <div
+        *ngIf="!event.allDay"
+        class="text-sm text-gray-600 flex items-center gap-2"
+      >
           <mat-icon svgIcon="mat:access_time" class="text-base"></mat-icon>
-          <span>
-            {{ event.start | date : "shortTime" }}
-            <span *ngIf="event.end"> – {{ event.end | date : "shortTime" }}</span>
-          </span>
-        </div>
+        <span>
+          {{ event.start | date : "shortTime" }}
+          <span *ngIf="event.end"> – {{ event.end | date : "shortTime" }}</span>
+        </span>
+      </div>
 
-        <!-- All-day indicator -->
-        <div
-          *ngIf="event.allDay"
-          class="text-sm text-gray-600 flex items-center gap-2"
-        >
+      <!-- All-day indicator -->
+      <div
+        *ngIf="event.allDay"
+        class="text-sm text-gray-600 flex items-center gap-2"
+      >
           <mat-icon svgIcon="mat:schedule" class="text-base"></mat-icon>
-          <span>All Day Event</span>
-        </div>
+        <span>All Day Event</span>
+      </div>
 
         <!-- Tags -->
         <div *ngIf="note.tags && note.tags.length > 0" class="flex flex-col gap-2 pt-1">

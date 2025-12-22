@@ -2,7 +2,7 @@ import { environment } from "src/environments/environment";
 
 export const ENDPOINTS = {
   // Task CRUD
-  createTask: environment.apiUrl + '/tasks',
+  createTask: environment.apiUrl + '/tasks/createTask',
   getTaskById: environment.apiUrl + '/tasks/getTaskById',
   updateTask: environment.apiUrl + '/tasks/updateTask',
   toggleTaskComplete: environment.apiUrl + '/tasks/toggleTaskComplete',

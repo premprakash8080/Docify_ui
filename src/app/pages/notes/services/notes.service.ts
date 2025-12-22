@@ -13,6 +13,10 @@ export class NotesService {
     return this.httpService.get(NOTES_ENDPOINTS.getAllNotes, params);
   }
 
+  getNotesName(params?: any) {
+    return this.httpService.get(NOTES_ENDPOINTS.getNotesName, params);
+  }
+
   getNoteById(payload: { id: string }, skipLoadingIndicator: boolean = false) {
     return this.httpService.post(NOTES_ENDPOINTS.getNoteById, payload, true, skipLoadingIndicator);
   }

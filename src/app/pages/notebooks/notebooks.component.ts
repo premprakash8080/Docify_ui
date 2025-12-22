@@ -806,7 +806,7 @@ export class NotebooksComponent implements OnInit, OnDestroy {
     if (!notebook.isNotebook || !notebook.notebookId) return;
 
     const wasExpanded = notebook.expanded;
-    notebook.expanded = !notebook.expanded;
+      notebook.expanded = !notebook.expanded;
 
     // If expanding and notes haven't been loaded yet (or empty), fetch them
     if (notebook.expanded && (!notebook.notes || notebook.notes.length === 0)) {
