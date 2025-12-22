@@ -206,4 +206,8 @@ export class NotebooksService {
     return this.httpService.post(ENDPOINTS.getStackById(stackId), { id: stackId });
   }
 
+  getNotebookNotesById(notebookId: string) {
+    return this.httpService.get(ENDPOINTS.getNotebookNotesById, { id: notebookId });
+  }
+
 }

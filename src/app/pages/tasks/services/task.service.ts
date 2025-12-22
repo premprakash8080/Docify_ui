@@ -44,8 +44,8 @@ export class TaskService {
     return this.httpService.post(ENDPOINTS.createTask, payload);
   }
 
-  getTaskById(id: string) {
-    return this.httpService.get(ENDPOINTS.getTaskById, { id });
+  getTaskById(id: string, skipLoadingIndicator: boolean = false) {
+    return this.httpService.get(ENDPOINTS.getTaskById, { id }, true, skipLoadingIndicator);
   }
 
   updateTask(id: string, payload: {

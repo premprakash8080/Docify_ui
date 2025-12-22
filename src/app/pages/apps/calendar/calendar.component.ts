@@ -14,6 +14,7 @@ import {
   startOfDay,
   endOfDay,
   isValid,
+  format,
 } from 'date-fns';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -21,7 +22,7 @@ import { CalendarEditComponent } from './calendar-edit/calendar-edit.component';
 import { CalendarService } from './services/calender.service';
 
 interface CalendarItem {
-  id: string;          // e.g., "task_55" or "note_88"
+  id: string;          // e.g., "task_1" or "note_aad09f09-8e26-4ea1-a9c2-b2ef372d4a28"
   type: 'task' | 'note';
   title: string;
   start: string;       // ISO date or datetime
@@ -29,7 +30,7 @@ interface CalendarItem {
   allDay: boolean;
   completed?: boolean;
   color: string;
-  sourceId: number;
+  sourceId: number | string;  // number for tasks, string (UUID) for notes
 }
 
 @Component({
@@ -44,10 +45,21 @@ export class CalendarComponent implements OnInit {
 
   view: CalendarView = CalendarView.Month;
   CalendarView = CalendarView;
-  viewDate: Date = new Date();
+  private _viewDate: Date = new Date();
   refresh = new Subject<void>();
 
   events: CalendarEvent[] = [];
+
+  get viewDate(): Date {
+    return this._viewDate;
+  }
+
+  set viewDate(value: Date) {
+    if (this._viewDate.getTime() !== value.getTime()) {
+      this._viewDate = value;
+      this.loadCalendarEvents();
+    }
+  }
 
   activeDayIsOpen = true;
 
@@ -76,16 +88,22 @@ export class CalendarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadCalendarItems();
+    this.loadCalendarEvents();
   }
 
-  private loadCalendarItems(): void {
-    this.calendarService.getCalendarItems().subscribe({
+  private loadCalendarEvents(): void {
+    const dateStr = format(this.viewDate, 'yyyy-MM-dd');
+    const viewStr = this.view === CalendarView.Month ? 'month' : 
+                   this.view === CalendarView.Week ? 'week' : 'day';
+
+    this.calendarService.getCalendarEventsByDate({ date: dateStr, view: viewStr }).subscribe({
       next: (response) => {
         if (!response?.success || !response.data?.items) {
           this.snackbar.open('No calendar data available', 'Close', {
             duration: 3000,
           });
+          this.events = [];
+          this.refresh.next();
           return;
         }
 
@@ -97,10 +115,12 @@ export class CalendarComponent implements OnInit {
         this.refresh.next();
       },
       error: (err) => {
-        console.error('Failed to load calendar items', err);
+        console.error('Failed to load calendar events', err);
         this.snackbar.open('Failed to load calendar data', 'Close', {
           duration: 5000,
         });
+        this.events = [];
+        this.refresh.next();
       },
     });
   }
@@ -117,7 +137,8 @@ export class CalendarComponent implements OnInit {
       if (item.type !== 'task' && item.type !== 'note') continue;
       if (typeof item.allDay !== 'boolean') continue;
       if (!item.color || typeof item.color !== 'string') continue;
-      if (!item.sourceId || typeof item.sourceId !== 'number') continue;
+      // sourceId can be number (tasks) or string (notes with UUID)
+      if (!item.sourceId || (typeof item.sourceId !== 'number' && typeof item.sourceId !== 'string')) continue;
 
       if (seen.has(item.id)) continue;
       seen.add(item.id);
@@ -216,7 +237,7 @@ export class CalendarComponent implements OnInit {
       } else {
         this.activeDayIsOpen = true;
       }
-      this.viewDate = date;
+      this.viewDate = date; // This will trigger loadCalendarEvents via setter
     }
   }
 
@@ -225,7 +246,7 @@ export class CalendarComponent implements OnInit {
     newStart,
     newEnd,
   }: CalendarEventTimesChangedEvent): void {
-    if (!event.meta) return;
+    if (!event.meta || !event.id) return;
 
     const isCompleted = event.meta.completed === true;
     if (isCompleted) {
@@ -244,6 +265,7 @@ export class CalendarComponent implements OnInit {
       return;
     }
 
+    // Optimistically update UI
     this.events = this.events.map((iEvent) => {
       if (iEvent === event) {
         return {
@@ -254,8 +276,44 @@ export class CalendarComponent implements OnInit {
       }
       return iEvent;
     });
-    this.snackbar.open('Event moved/resized', 'Close', { duration: 3000 });
     this.refresh.next();
+
+    // Update on server
+    const payload: { start?: string; end?: string; allDay?: boolean } = {
+      start: newStart.toISOString(),
+      allDay: event.allDay || false,
+    };
+
+    if (newEnd) {
+      payload.end = newEnd.toISOString();
+    }
+
+    this.calendarService.updateCalendarEvent(event.id, payload).subscribe({
+      next: (response) => {
+        if (response?.success && response?.data?.item) {
+          // Update event with server response
+          const updatedItem = response.data.item;
+          this.events = this.events.map((iEvent) => {
+            if (iEvent.id === event.id) {
+              return this.mapToCalendarEvent(updatedItem);
+            }
+            return iEvent;
+          });
+          this.refresh.next();
+          this.snackbar.open('Event updated successfully', 'Close', { duration: 3000 });
+        } else {
+          // Revert on failure
+          this.loadCalendarEvents();
+          this.snackbar.open('Failed to update event', 'Close', { duration: 3000 });
+        }
+      },
+      error: (err) => {
+        console.error('Failed to update calendar event', err);
+        // Revert on error
+        this.loadCalendarEvents();
+        this.snackbar.open('Failed to update event', 'Close', { duration: 3000 });
+      },
+    });
   }
 
   // handleEvent(action: string, event: CalendarEvent): void {
@@ -291,6 +349,7 @@ export class CalendarComponent implements OnInit {
 
   setView(view: CalendarView): void {
     this.view = view;
+    this.loadCalendarEvents();
   }
 
   closeOpenMonthViewDay(): void {

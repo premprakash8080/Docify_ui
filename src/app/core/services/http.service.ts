@@ -17,15 +17,30 @@ export class HttpService {
      }
 
     get(
-        url: string, params?: any,showLoader:boolean=true
+        url: string, params?: any, showLoader: boolean = true, skipLoadingIndicator: boolean = false
     ): Observable<any> {
-        return this._http.get(this.API_URL + url, { params,reportProgress: showLoader});
+        const headers: { [key: string]: string } = {};
+        if (skipLoadingIndicator) {
+            headers['X-Skip-Loading'] = 'true';
+        }
+        return this._http.get(this.API_URL + url, { 
+            params, 
+            reportProgress: showLoader,
+            headers: new HttpHeaders(headers)
+        });
     }
 
     post(
-        url: string, params?: any,showLoader:boolean=true
+        url: string, params?: any, showLoader: boolean = true, skipLoadingIndicator: boolean = false
     ): Observable<any> {
-        return this._http.post(this.API_URL + url,params, {reportProgress: showLoader});
+        const headers: { [key: string]: string } = {};
+        if (skipLoadingIndicator) {
+            headers['X-Skip-Loading'] = 'true';
+        }
+        return this._http.post(this.API_URL + url, params, { 
+            reportProgress: showLoader,
+            headers: new HttpHeaders(headers)
+        });
     }
 
     put(

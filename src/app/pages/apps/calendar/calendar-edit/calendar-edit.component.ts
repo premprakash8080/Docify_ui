@@ -3,9 +3,7 @@ import { Router } from '@angular/router';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CalendarEvent } from 'angular-calendar';
 import { isPast } from 'date-fns';
-import { map } from 'rxjs/operators';
-import { NotesService } from '../../../notes/services/notes.service';
-import { TaskService } from '../../../tasks/services/task.service';
+import { CalendarService } from '../services/calender.service';
 
 interface NoteDetail {
   id: string;
@@ -13,16 +11,28 @@ interface NoteDetail {
   content?: string;
   pinned: boolean;
   archived: boolean;
+  trashed?: boolean;
+  tags?: string[];
+  notebookId?: string;
+  notebookName?: string;
   created_at: string;
   updated_at?: string;
+  version?: number;
+  synced?: boolean;
 }
 
 interface TaskDetail {
   id: string;
+  note_id: string;
   label: string;
   description?: string;
   due_date?: string;
+  reminder?: string;
+  assigned_to?: string;
+  priority?: string;
+  flagged?: boolean;
   completed: boolean;
+  sort_order?: number;
   created_at: string;
   updated_at?: string;
 }
@@ -38,69 +48,64 @@ export class CalendarEditComponent implements OnInit {
   itemDetail: NoteDetail | TaskDetail | null = null;
   error: string | null = null;
 
+  event: CalendarEvent<{
+    type: 'task' | 'note';
+    sourceId: number | string;  // number for tasks, string (UUID) for notes
+    completed?: boolean;
+  }>;
+
   constructor(
     private dialogRef: MatDialogRef<CalendarEditComponent>,
     private router: Router,
-    private notesService: NotesService,
-    private taskService: TaskService,
-    @Inject(MAT_DIALOG_DATA) public event: CalendarEvent<{
+    private calendarService: CalendarService,
+    @Inject(MAT_DIALOG_DATA) public data: { event: CalendarEvent<{
       type: 'task' | 'note';
-      sourceId: number;
+      sourceId: number | string;  // number for tasks, string (UUID) for notes
       completed?: boolean;
-    }>
-  ) {}
+    }> }
+  ) {
+    this.event = data.event;
+  }
 
   ngOnInit(): void {
     this.loadItemDetails();
   }
 
   private loadItemDetails(): void {
-    if (!this.event.meta?.type || !this.event.meta?.sourceId) {
+    if (!this.event?.meta?.type) {
+      console.error('Invalid event data: missing type', this.event);
       this.error = 'Invalid event data';
+      return;
+    }
+
+    const sourceId = this.event.meta.sourceId;
+    if (sourceId === null || sourceId === undefined || sourceId === '') {
+      console.error('Invalid sourceId:', sourceId, this.event);
+      this.error = 'Invalid event data: missing sourceId';
       return;
     }
 
     this.isLoading = true;
     this.error = null;
-
+    
     if (this.event.meta.type === 'note') {
-      this.notesService.getNoteById({ id: this.event.meta.sourceId.toString() }).pipe(
-        map((response: any) => {
-          const backendResponse = response?.data || response;
-          if (!backendResponse || !backendResponse.note) {
-            return null;
-          }
-          const note = backendResponse.note;
-          return {
-            id: note.id,
-            userId: note.user_id?.toString() || '',
-            title: note.title,
-            content: note.content || '',
-            tags: note.tags || [],
-            notebookId: note.notebook_id || undefined,
-            pinned: note.pinned,
-            archived: note.archived,
-            trashed: note.trashed,
-            createdAt: note.created_at,
-            updatedAt: note.updated_at || note.created_at,
-            version: note.version || 1,
-            synced: note.synced || false,
-            lastModified: note.last_modified || note.updated_at || note.created_at,
-            attachments: [],
-            tasks: []
-          };
-        })
-      ).subscribe({
-        next: (note) => {
-          if (note) {
+      this.calendarService.getCalendarNoteDetails(sourceId).subscribe({
+        next: (response: any) => {
+          if (response?.success && response?.data?.note) {
+            const note = response.data.note;
             this.itemDetail = {
               id: note.id,
               title: note.title || 'Untitled Note',
               content: note.content,
               pinned: note.pinned,
               archived: note.archived,
-              created_at: note.createdAt,
-              updated_at: note.updatedAt
+              trashed: note.trashed,
+              tags: note.tags || [],
+              notebookId: note.notebook_id,
+              created_at: note.created_at,
+              updated_at: note.updated_at,
+              version: note.version,
+              synced: note.synced
             };
           } else {
             this.error = 'Note not found';
@@ -114,16 +119,22 @@ export class CalendarEditComponent implements OnInit {
         }
       });
     } else if (this.event.meta.type === 'task') {
-      this.taskService.getTaskById(this.event.meta.sourceId.toString()).subscribe({
+      this.calendarService.getCalendarTaskDetails(sourceId).subscribe({
         next: (response: any) => {
           if (response?.success && response?.data?.task) {
             const task = response.data.task;
             this.itemDetail = {
               id: task.id,
+              note_id: task.note_id,
               label: task.label || 'Untitled Task',
               description: task.description,
               due_date: task.due_date,
+              reminder: task.reminder,
+              assigned_to: task.assigned_to,
+              priority: task.priority,
+              flagged: task.flagged,
               completed: task.completed || false,
+              sort_order: task.sort_order,
               created_at: task.created_at,
               updated_at: task.updated_at
             };
@@ -173,7 +184,7 @@ export class CalendarEditComponent implements OnInit {
 
   get navigationLabel(): string {
     if (this.event.meta?.type === 'task') {
-      return 'Go to Task';
+      return 'Go to Tasks';
     } else if (this.event.meta?.type === 'note') {
       return 'Go to Note';
     }
@@ -182,11 +193,29 @@ export class CalendarEditComponent implements OnInit {
 
   get navigationIcon(): string {
     if (this.event.meta?.type === 'task') {
-      return 'mat:assignment';
+      return 'assignment';
     } else if (this.event.meta?.type === 'note') {
-      return 'mat:description';
+      return 'description';
     }
-    return 'mat:info';
+    return 'info';
+  }
+
+  get showGoToNotes(): boolean {
+    return this.event.meta?.type === 'task' && 
+           this.itemDetail && 
+           !!(this.itemDetail as TaskDetail).note_id;
+  }
+
+  get showGoToTasks(): boolean {
+    return this.event.meta?.type === 'note';
+  }
+
+  get noteDetail(): NoteDetail | null {
+    return this.event.meta?.type === 'note' && this.itemDetail ? this.itemDetail as NoteDetail : null;
+  }
+
+  get taskDetail(): TaskDetail | null {
+    return this.event.meta?.type === 'task' && this.itemDetail ? this.itemDetail as TaskDetail : null;
   }
 
   onNavigate(): void {
@@ -197,6 +226,23 @@ export class CalendarEditComponent implements OnInit {
     if (this.event.meta.type === 'note') {
       this.router.navigate(['/notes', this.event.meta.sourceId.toString()]);
     } else if (this.event.meta.type === 'task') {
+      this.router.navigate(['/tasks']);
+    }
+  }
+
+  onNavigateToNotes(): void {
+    if (this.event.meta?.type === 'task' && this.itemDetail) {
+      const taskDetail = this.itemDetail as TaskDetail;
+      if (taskDetail.note_id) {
+        this.dialogRef.close();
+        this.router.navigate(['/notes', taskDetail.note_id]);
+      }
+    }
+  }
+
+  onNavigateToTasks(): void {
+    if (this.event.meta?.type === 'note') {
+      this.dialogRef.close();
       this.router.navigate(['/tasks']);
     }
   }

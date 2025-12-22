@@ -13,6 +13,7 @@ import { Note, Notebook, Tag, Task } from '../../core/models';
 import { NotesService } from '../notes/services/notes.service';
 import { NotebooksService } from '../notebooks/services/notebooks.service';
 import { TagsService } from '../tags/services/tags.service';
+import { ScratchpadService } from './services/scratchpad.service';
 import { LayoutService } from '../../../@vex/services/layout.service';
 import { PageLayoutModule } from '../../../@vex/components/page-layout/page-layout.module';
 import { StripHtmlModule } from '../../../@vex/pipes/strip-html/strip-html.module';
@@ -47,6 +48,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   notesService = inject(NotesService);
   notebooksService = inject(NotebooksService);
   tagsService = inject(TagsService);
+  scratchpadService = inject(ScratchpadService);
   layoutService = inject(LayoutService);
 
   // Observables for data
@@ -57,6 +59,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   // Scratchpad
   scratchpadContent = '';
+  scratchpadLoading = false;
   capturedFilter = 'web-clips';
 
   // Maps for quick lookup
@@ -156,7 +159,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       tags.forEach(tag => this.tagsMap.set(tag.id, tag));
     });
 
-    // Load scratchpad from localStorage
+    // Load scratchpad from API
     this.loadScratchpad();
   }
 
@@ -226,14 +229,43 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   loadScratchpad(): void {
-    const saved = localStorage.getItem('scratchpad');
-    if (saved) {
-      this.scratchpadContent = saved;
-    }
+    this.scratchpadLoading = true;
+    this.scratchpadService.getScratchpad().subscribe({
+      next: (response: any) => {
+        if (response?.success && response?.data?.content !== undefined) {
+          this.scratchpadContent = response.data.content || '';
+        }
+        this.scratchpadLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading scratchpad:', err);
+        this.scratchpadLoading = false;
+      }
+    });
   }
 
   saveScratchpad(): void {
-    localStorage.setItem('scratchpad', this.scratchpadContent);
+    this.scratchpadService.updateScratchpad({ content: this.scratchpadContent }).subscribe({
+      next: (response: any) => {
+        // Scratchpad saved successfully
+      },
+      error: (err) => {
+        console.error('Error saving scratchpad:', err);
+      }
+    });
+  }
+
+  clearScratchpad(): void {
+    this.scratchpadService.clearScratchpad().subscribe({
+      next: (response: any) => {
+        if (response?.success) {
+          this.scratchpadContent = '';
+        }
+      },
+      error: (err) => {
+        console.error('Error clearing scratchpad:', err);
+      }
+    });
   }
 
   onClipWebContent(): void {

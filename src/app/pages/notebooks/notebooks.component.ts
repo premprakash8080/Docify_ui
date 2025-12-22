@@ -772,9 +772,78 @@ export class NotebooksComponent implements OnInit, OnDestroy {
   }
 
   toggleNotebook(notebook: NotebookRow): void {
-    if (notebook.isNotebook && notebook.expanded !== undefined) {
-      notebook.expanded = !notebook.expanded;
+    if (!notebook.isNotebook || !notebook.notebookId) return;
+
+    const wasExpanded = notebook.expanded;
+    notebook.expanded = !notebook.expanded;
+
+    // If expanding and notes haven't been loaded yet (or empty), fetch them
+    if (notebook.expanded && (!notebook.notes || notebook.notes.length === 0)) {
+      this.notebooksService.getNotebookNotesById(notebook.notebookId).subscribe({
+        next: (response: any) => {
+          if (response?.success && response?.data?.notes) {
+            const notes = response.data.notes;
+            const mappedNotes = notes.map((noteData: any) => ({
+              title: noteData.title || 'Untitled',
+              space: '—',
+              createdBy: 'You',
+              updated: this.formatDate(noteData.updated_at || noteData.created_at),
+              sharedWith: 'Only you',
+              rowType: 'note' as const,
+              isNote: true,
+              noteId: noteData.id,
+              notebookId: notebook.notebookId,
+              stackId: notebook.stackId,
+              level: (notebook.level || 0) + 1
+            }));
+            
+            notebook.notes = mappedNotes;
+            notebook.noteCount = notes.length;
+            
+            // Also update the notebook in the nested structure if it exists
+            this.updateNotebookInNestedStructure(notebook.notebookId, mappedNotes, notes.length);
+            
+            this.cdr.markForCheck();
+          } else {
+            // No notes found
+            notebook.notes = [];
+            notebook.noteCount = 0;
+            this.cdr.markForCheck();
+          }
+        },
+        error: (err) => {
+          console.error('Error loading notebook notes:', err);
+          notebook.expanded = wasExpanded; // Revert expansion on error
+          this.cdr.markForCheck();
+        }
+      });
+    } else {
       this.cdr.markForCheck();
+    }
+  }
+
+  private updateNotebookInNestedStructure(notebookId: string, notes: NotebookRow[], noteCount: number): void {
+    // Update notebook in nested stacks structure
+    for (const stack of this.notebooks) {
+      if (stack.isStack && stack.notebooks) {
+        const notebook = stack.notebooks.find(nb => nb.notebookId === notebookId);
+        if (notebook) {
+          notebook.notes = notes;
+          notebook.noteCount = noteCount;
+          notebook.expanded = true;
+          return; // Found and updated, exit early
+        }
+      }
+    }
+    
+    // Also update in unstacked notebooks
+    for (const item of this.notebooks) {
+      if (item.isNotebook && item.notebookId === notebookId) {
+        item.notes = notes;
+        item.noteCount = noteCount;
+        item.expanded = true;
+        return; // Found and updated, exit early
+      }
     }
   }
 

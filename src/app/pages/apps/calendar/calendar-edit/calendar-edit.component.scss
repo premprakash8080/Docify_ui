@@ -1,0 +1,43 @@
+.calendar-dialog-content {
+  overflow-y: auto;
+  max-height: 70vh;
+  padding: 0 !important;
+  
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+    
+    &:hover {
+      background: #a8a8a8;
+    }
+  }
+}
+
+::ng-deep .calendar-event-dialog {
+  .mat-mdc-dialog-content {
+    padding: 24px !important;
+    margin: 0 !important;
+  }
+  
+  .mat-mdc-dialog-title {
+    margin-bottom: 0 !important;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .mat-mdc-dialog-actions {
+    padding: 16px 24px !important;
+    margin: 0 !important;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+

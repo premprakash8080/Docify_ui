@@ -13,8 +13,8 @@ export class NotesService {
     return this.httpService.get(NOTES_ENDPOINTS.getAllNotes, params);
   }
 
-  getNoteById(payload: { id: string }) {
-    return this.httpService.post(NOTES_ENDPOINTS.getNoteById, payload);
+  getNoteById(payload: { id: string }, skipLoadingIndicator: boolean = false) {
+    return this.httpService.post(NOTES_ENDPOINTS.getNoteById, payload, true, skipLoadingIndicator);
   }
 
   createNote(payload: any) {
