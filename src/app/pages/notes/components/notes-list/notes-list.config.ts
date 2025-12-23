@@ -1,4 +1,4 @@
-import { SideListDisplayConfig, SideListBadgeConfig } from '../../../ui/components/side-list/side-list-item.interface';
+import { SideListDisplayConfig, SideListBadgeConfig } from '../side-list/side-list-item.interface';
 import { Note } from '../../../../core/models';
 
 /**

@@ -11,7 +11,7 @@ import {
 import { StorageService } from '../../../core/services/storage.service';
 import { ApiService } from '../../../core/services/api.service';
 import { SyncService } from '../../../core/services/sync.service';
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService } from '../../../auth/service/auth.service';
 
 /**
  * Service for managing notes, notebooks, and tags data.

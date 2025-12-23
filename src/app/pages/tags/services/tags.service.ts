@@ -1,53 +1,86 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, BehaviorSubject, of } from 'rxjs';
-import { map, delay, tap } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { Tag } from '../../../core/models/tag.model';
-import { tags, generateUUID } from '../../../core/data/sample-data';
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService } from '../../../auth/service/auth.service';
+import { ENDPOINTS } from './api.collection';
+
+// Backend API response formats
+interface BackendTag {
+  id: number;
+  user_id: number;
+  name: string;
+  color_id?: number | null;
+  created_at: string;
+  updated_at?: string;
+  color?: {
+    id: number;
+    name: string;
+    hex_code: string;
+  };
+}
+
+interface BackendTagsResponse {
+  success: boolean;
+  msg?: string;
+  data: {
+    tags: BackendTag[];
+    count: number;
+  };
+}
+
+interface BackendTagResponse {
+  success: boolean;
+  msg?: string;
+  data: {
+    tag: BackendTag;
+  };
+}
+
+interface BackendSuccessResponse {
+  success: boolean;
+  msg?: string;
+}
 
 /**
  * Service for managing tags data.
  * 
- * This service provides methods to fetch and manage tag-related data.
- * Currently uses sample-data.ts, but can be easily switched to HTTP calls
- * by replacing the Observable implementations with HttpClient calls.
- * 
- * All methods return Observables to maintain consistency with future HTTP implementations.
+ * This service provides methods to fetch and manage tag-related data using the backend API.
  */
 @Injectable({
   providedIn: 'root'
 })
 export class TagsService {
+  private http = inject(HttpClient);
   private authService = inject(AuthService);
-  
-  // In-memory storage for created tags (in a real app, this would be persisted to backend)
-  private createdTags: Tag[] = [];
   
   // BehaviorSubject to manage tags state (single source of truth)
   private tagsSubject = new BehaviorSubject<Tag[]>([]);
   public tags$ = this.tagsSubject.asObservable();
 
   constructor() {
-    // Initialize with sample data and created tags
-    this.initializeTags();
+    // Load tags when service is initialized
+    this.loadTags();
   }
 
   /**
-   * Initialize tags from sample data and created tags
+   * Load tags from API
    */
-  private initializeTags(): void {
-    const userId = this.authService.currentUserValue?.id;
-    if (!userId) {
+  private loadTags(): void {
+    if (!this.authService.isAuthenticated) {
       this.tagsSubject.next([]);
       return;
     }
 
-    // Get user-specific tags from sample data
-    const userSampleTags = tags.filter(tag => tag.userId === userId);
-    
-    // Combine sample tags with created tags
-    const allTags = [...userSampleTags, ...this.createdTags];
-    this.tagsSubject.next(allTags);
+    this.getAllTags().subscribe({
+      next: (tags) => {
+        this.tagsSubject.next(tags);
+      },
+      error: () => {
+        this.tagsSubject.next([]);
+      }
+    });
   }
 
   /**
@@ -55,97 +88,86 @@ export class TagsService {
    * @returns Observable of all tags
    */
   getAllTags(): Observable<Tag[]> {
-    const userId = this.authService.currentUserValue?.id;
-    if (!userId) {
-      return of([]);
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
     }
 
-    // Return current tags from subject
-    return this.tags$.pipe(
-      map(tagsList => tagsList.filter(tag => tag.userId === userId)),
-      delay(0) // Simulate API delay (change to delay(100) for realistic delay)
+    return this.http.get<BackendTagsResponse>(ENDPOINTS.getAllTags).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Failed to fetch tags');
+        }
+        
+        const mappedTags = response.data.tags.map(tag => this.mapBackendTagToFrontendTag(tag));
+        this.tagsSubject.next(mappedTags);
+        return mappedTags;
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to fetch tags';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
     );
   }
 
   /**
    * Get a tag by its ID
-   * @param tagId - The UUID of the tag
+   * @param tagId - The ID of the tag
    * @returns Observable of the tag, or undefined if not found
    */
-  getTagById(tagId: string): Observable<Tag | undefined> {
-    // Check created tags first, then sample data
-    const createdTag = this.createdTags.find(t => t.id === tagId);
-    if (createdTag) {
-      return of(createdTag).pipe(delay(0));
+  getTagById(tagId: string): Observable<Tag> {
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
+    }
+
+    // Backend expects id in body, but GET requests typically use URL params
+    // Using POST-like approach with body for compatibility
+    return this.http.post<BackendTagResponse>(ENDPOINTS.getTagById(tagId), { id: tagId }).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Tag not found');
     }
     
-    // Check sample data
-    const sampleTag = tags.find(t => t.id === tagId);
-    return of(sampleTag).pipe(delay(0));
+        return this.mapBackendTagToFrontendTag(response.data.tag);
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to fetch tag';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
+    );
   }
 
   /**
    * Create a new tag
-   * @param tagData - Partial tag data (name is required, color is optional)
+   * @param tagData - Partial tag data (name is required, color_id is optional)
    * @returns Observable of the created tag
    */
-  createTag(tagData: { name: string; color?: string }): Observable<Tag> {
-    const userId = this.authService.currentUserValue?.id;
-    if (!userId) {
-      return new Observable(observer => {
-        observer.error(new Error('User not authenticated'));
-      });
+  createTag(tagData: { name: string; color_id?: number | null }): Observable<Tag> {
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
     }
 
-    // Generate ID for new tag
-    const tagId = generateUUID();
-    const now = new Date().toISOString();
-
-    // Check if tag with same name already exists
-    const currentTags = this.tagsSubject.value;
-    const existingTag = currentTags.find(
-      t => t.name.toLowerCase().trim() === tagData.name.toLowerCase().trim() && t.userId === userId
-    );
-
-    if (existingTag) {
-      return new Observable(observer => {
-        observer.error(new Error('Tag with this name already exists'));
-      });
-    }
-
-    // Create new tag object
-    const newTag: Tag = {
-      id: tagId,
+    const payload = {
       name: tagData.name.trim(),
-      color: tagData.color,
-      userId: userId,
-      createdAt: now
+      color_id: tagData.color_id || null
     };
 
-    // Optimistic UI update - immediately add to local storage
-    this.createdTags.push(newTag);
-    const updatedTags = [...currentTags, newTag];
-    this.tagsSubject.next(updatedTags);
+    return this.http.post<BackendTagResponse>(ENDPOINTS.createTag, payload).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Failed to create tag');
+        }
+        
+        const newTag = this.mapBackendTagToFrontendTag(response.data.tag);
+        
+        // Update local state
+        const currentTags = this.tagsSubject.value;
+        this.tagsSubject.next([...currentTags, newTag]);
 
-    // Simulate API call - in real app, this would be:
-    // return this.http.post<Tag>('/api/tags', newTag).pipe(
-    //   tap(savedTag => {
-    //     // Update local state with server response
-    //     const index = this.createdTags.findIndex(t => t.id === tagId);
-    //     if (index >= 0) {
-    //       this.createdTags[index] = savedTag;
-    //       const current = this.tagsSubject.value;
-    //       const updated = current.map(t => t.id === tagId ? savedTag : t);
-    //       this.tagsSubject.next(updated);
-    //     }
-    //   })
-    // );
-
-    return of(newTag).pipe(
-      delay(0), // Simulate API delay
-      tap(() => {
-        // In real app, handle API response here
-        // For now, the optimistic update is sufficient
+        return newTag;
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to create tag';
+        return throwError(() => ({ message, status: error?.status || 500 }));
       })
     );
   }
@@ -153,53 +175,43 @@ export class TagsService {
   /**
    * Update an existing tag
    * @param tagId - The ID of the tag to update
-   * @param updates - Partial tag data with fields to update
+   * @param updates - Partial tag data with fields to update (name, color_id)
    * @returns Observable of the updated tag
    */
-  updateTag(tagId: string, updates: Partial<Tag>): Observable<Tag> {
-    const currentTags = this.tagsSubject.value;
-    const tagIndex = currentTags.findIndex(t => t.id === tagId);
-
-    if (tagIndex === -1) {
-      return new Observable(observer => {
-        observer.error(new Error('Tag not found'));
-      });
+  updateTag(tagId: string, updates: { name?: string; color_id?: number | null }): Observable<Tag> {
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
     }
 
-    // Check if name change conflicts with existing tag
-    if (updates.name) {
-      const userId = this.authService.currentUserValue?.id;
-      const existingTag = currentTags.find(
-        t => t.id !== tagId && 
-             t.name.toLowerCase().trim() === updates.name?.toLowerCase().trim() &&
-             t.userId === userId
-      );
-      if (existingTag) {
-        return new Observable(observer => {
-          observer.error(new Error('Tag with this name already exists'));
-        });
-      }
+    const payload: any = {};
+    if (updates.name !== undefined) {
+      payload.name = updates.name.trim();
     }
+    if (updates.color_id !== undefined) {
+      payload.color_id = updates.color_id;
+    }
+    payload.id = tagId; // Backend expects id in body
 
-    // Optimistic UI update
-    const updatedTag: Tag = {
-      ...currentTags[tagIndex],
-      ...updates,
-      id: tagId // Ensure ID doesn't change
-    };
-
-    const updatedTags = [...currentTags];
-    updatedTags[tagIndex] = updatedTag;
+    return this.http.put<BackendTagResponse>(ENDPOINTS.updateTag(tagId), payload).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Failed to update tag');
+        }
+        
+        const updatedTag = this.mapBackendTagToFrontendTag(response.data.tag);
+        
+        // Update local state
+        const currentTags = this.tagsSubject.value;
+        const updatedTags = currentTags.map(t => t.id === tagId ? updatedTag : t);
     this.tagsSubject.next(updatedTags);
 
-    // Update in created tags if applicable
-    const createdTagIndex = this.createdTags.findIndex(t => t.id === tagId);
-    if (createdTagIndex >= 0) {
-      this.createdTags[createdTagIndex] = updatedTag;
-    }
-
-    // Simulate API call
-    return of(updatedTag).pipe(delay(0));
+        return updatedTag;
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to update tag';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
+    );
   }
 
   /**
@@ -208,24 +220,29 @@ export class TagsService {
    * @returns Observable that completes when tag is deleted
    */
   deleteTag(tagId: string): Observable<void> {
-    const currentTags = this.tagsSubject.value;
-    const tagIndex = currentTags.findIndex(t => t.id === tagId);
-
-    if (tagIndex === -1) {
-      return new Observable(observer => {
-        observer.error(new Error('Tag not found'));
-      });
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
     }
 
-    // Optimistic UI update
+    // Backend expects id in body, use request() method to send body with DELETE
+    return this.http.request<BackendSuccessResponse>('DELETE', ENDPOINTS.deleteTag(tagId), {
+      body: { id: tagId }
+    }).pipe(
+      map((response) => {
+        if (!response.success) {
+          throw new Error(response.msg || 'Failed to delete tag');
+    }
+
+        // Update local state
+        const currentTags = this.tagsSubject.value;
     const updatedTags = currentTags.filter(t => t.id !== tagId);
     this.tagsSubject.next(updatedTags);
-
-    // Remove from created tags if applicable
-    this.createdTags = this.createdTags.filter(t => t.id !== tagId);
-
-    // Simulate API call
-    return of(undefined).pipe(delay(0));
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to delete tag';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
+    );
   }
 
   /**
@@ -244,8 +261,73 @@ export class TagsService {
         tagsList.filter(tag => 
           tag.name.toLowerCase().includes(searchTerm)
         )
-      ),
-      delay(0)
+      )
     );
+  }
+
+  /**
+   * Attach a tag to a note
+   * @param tagId - The ID of the tag
+   * @param noteId - The ID of the note
+   * @returns Observable that completes when tag is attached
+   */
+  attachTagToNote(tagId: string, noteId: string): Observable<void> {
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
+    }
+
+    const payload = { id: tagId, noteId };
+
+    return this.http.post<BackendSuccessResponse>(ENDPOINTS.attachTagToNote(tagId, noteId), payload).pipe(
+      map((response) => {
+        if (!response.success) {
+          throw new Error(response.msg || 'Failed to attach tag to note');
+        }
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to attach tag to note';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
+    );
+  }
+
+  /**
+   * Detach a tag from a note
+   * @param tagId - The ID of the tag
+   * @param noteId - The ID of the note
+   * @returns Observable that completes when tag is detached
+   */
+  detachTagFromNote(tagId: string, noteId: string): Observable<void> {
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
+    }
+
+    // Backend expects id in body, use request() method to send body with DELETE
+    return this.http.request<BackendSuccessResponse>('DELETE', ENDPOINTS.detachTagFromNote(tagId, noteId), {
+      body: { id: tagId, noteId }
+    }).pipe(
+      map((response) => {
+        if (!response.success) {
+          throw new Error(response.msg || 'Failed to detach tag from note');
+        }
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to detach tag from note';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
+    );
+  }
+
+  /**
+   * Map backend tag format to frontend Tag model
+   */
+  private mapBackendTagToFrontendTag(backendTag: BackendTag): Tag {
+    return {
+      id: backendTag.id.toString(),
+      name: backendTag.name,
+      color: backendTag.color?.hex_code || undefined,
+      userId: backendTag.user_id.toString(),
+      createdAt: backendTag.created_at,
+    };
   }
 }

@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { NotesListComponent } from './notes-list.component';
 import { NotePreviewModule } from '../note-preview/note-preview.module';
-import { SideListModule } from '../../../ui/components/side-list/side-list.module';
+import { SideListModule } from '../side-list/side-list.module';
 
 @NgModule({
   declarations: [NotesListComponent],

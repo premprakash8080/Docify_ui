@@ -11,36 +11,39 @@
     <div class="settings-container">
        <!-- Theme Base Section -->
        <div class="settings-section">
-         <h2 class="section-title">Theme Layout</h2>
-         <div class="section-content">
-           <div class="theme-layout-buttons">
-             <button
-               (click)="setConfig(ConfigName.apollo, ColorSchemeName.light)"
-               class="theme-button"
-               mat-raised-button
-               type="button"
-             >
-               Light
-             </button>
-             <button
-               (click)="setConfig(ConfigName.apollo, ColorSchemeName.dark)"
-               class="theme-button"
-               mat-raised-button
-               type="button"
-             >
-               Dark
-             </button>
-             <button
-               (click)="setConfig(ConfigName.apollo, ColorSchemeName.default)"
-               class="theme-button"
-               mat-raised-button
-               type="button"
-             >
-               Default
-             </button>
-           </div>
-         </div>
-       </div>
+        <h2 class="section-title">Theme Layout</h2>
+        <div class="section-content">
+          <div class="theme-layout-buttons">
+            <button
+              mat-raised-button
+              type="button"
+              class="theme-button"
+              (click)="setConfig(ConfigName.apollo, ColorSchemeName.default)"
+            >
+              Default
+            </button>
+      
+            <button
+              mat-raised-button
+              type="button"
+              class="theme-button"
+              (click)="setConfig(ConfigName.apollo, ColorSchemeName.light)"
+            >
+              Light
+            </button>
+      
+            <button
+              mat-raised-button
+              type="button"
+              class="theme-button"
+              (click)="setConfig(ConfigName.apollo, ColorSchemeName.dark)"
+            >
+              Dark
+            </button>
+          </div>
+        </div>
+      </div>
+      
 
       <!-- Theme Colors Section -->
       <div class="settings-section">
@@ -75,56 +78,6 @@
         </div>
       </div>
 
-       <!-- Pre-built Styles Section -->
-       <!-- <div class="settings-section">
-         <h2 class="section-title">Pre-built Styles</h2>
-         <div class="section-content">
-           <div class="layout-grid">
-             @for (config of configs; track config.id; let first = $first) {
-             <div [class.mt-6]="!first" class="layout-card">
-               <div
-                 class="layout-image-container rounded overflow-hidden relative hover:bg-hover shadow-md"
-               >
-                 <img
-                   [src]="config.imgSrc"
-                   class="layout-image"
-                   alt="{{ config.name }} layout"
-                 />
-                 <div
-                   class="layout-overlay flex items-center justify-center gap-1"
-                 >
-                   <button
-                     (click)="setConfig(config.id, ColorSchemeName.light)"
-                     class="bg-contrast-white text-contrast-black"
-                     mat-raised-button
-                     type="button"
-                   >
-                     LIGHT
-                   </button>
-                   <button
-                     (click)="setConfig(config.id, ColorSchemeName.default)"
-                     color="primary"
-                     mat-raised-button
-                     type="button"
-                   >
-                     DEFAULT
-                   </button>
-                   <button
-                     (click)="setConfig(config.id, ColorSchemeName.dark)"
-                     class="bg-contrast-black text-contrast-white"
-                     mat-raised-button
-                     type="button"
-                   >
-                     DARK
-                   </button>
-                 </div>
-               </div>
-               <div class="layout-name">{{ config.name }}</div>
-             </div>
-             }
-           </div>
-         </div>
-       </div> -->
 
       <!-- Rounded Corners Section -->
       <div class="settings-section">
@@ -211,66 +164,6 @@
         </div>
       </div>
 
-      <!-- Layout Section -->
-      <div class="settings-section">
-        <h2 class="section-title">Layout</h2>
-        <div class="section-content">
-          <div class="setting-item">
-            <mat-slide-toggle
-              (change)="layoutRTLChange($event)"
-              [checked]="isRTL$ | async"
-            >
-              Orientation: RTL
-            </mat-slide-toggle>
-          </div>
-        </div>
-      </div>
-
-      <!-- Toolbar Section -->
-      <div class="settings-section">
-        <h2 class="section-title">Toolbar</h2>
-        <div class="section-content">
-          <div class="setting-item">
-            <span class="setting-label">Position</span>
-            <mat-radio-group
-              (change)="toolbarPositionChange($event)"
-              [value]="setting.toolbar.fixed ? 'fixed' : 'static'"
-              class="radio-group"
-            >
-              <mat-radio-button value="fixed">Fixed</mat-radio-button>
-              <mat-radio-button value="static">Static</mat-radio-button>
-            </mat-radio-group>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer Section -->
-      <div class="settings-section">
-        <h2 class="section-title">Footer</h2>
-        <div class="section-content">
-          <div class="setting-item">
-            <mat-slide-toggle
-              (change)="footerVisibleChange($event)"
-              [checked]="setting.footer.visible"
-            >
-              Show Footer
-            </mat-slide-toggle>
-          </div>
-          @if (setting.footer.visible) {
-          <div class="setting-item">
-            <span class="setting-label">Position</span>
-            <mat-radio-group
-              (change)="footerPositionChange($event)"
-              [value]="setting.footer.fixed ? 'fixed' : 'static'"
-              class="radio-group"
-            >
-              <mat-radio-button value="fixed">Fixed</mat-radio-button>
-              <mat-radio-button value="static">Static</mat-radio-button>
-            </mat-radio-group>
-          </div>
-          }
-        </div>
-      </div>
     </div>
     }
   </vex-page-layout-content>

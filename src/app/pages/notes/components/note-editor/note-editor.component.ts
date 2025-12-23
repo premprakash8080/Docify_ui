@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { Note, Notebook } from '../../../../core/models';
 import { NotesService } from '../../services/notes.service';
-import { AuthService } from '../../../../core/services/auth.service';
+import { AuthService } from '../../../../auth/service/auth.service';
 import { Editor } from '@tiptap/core';
 import { NoteEditorContentComponent } from '../note-editor-content/note-editor-content.component';
 

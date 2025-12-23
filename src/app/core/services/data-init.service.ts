@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { StorageService } from './storage.service';
 import { NotesService } from '../../pages/notes/services/notes.service';
-import { AuthService } from './auth.service';
+import { AuthService } from '../../auth/service/auth.service';
+import { UserSettingsInitService } from './user-settings-init.service';
 import { SAMPLE_DATA } from '../data';
 
 /**
@@ -15,6 +16,7 @@ export class DataInitService {
   private storage = inject(StorageService);
   private notesService = inject(NotesService);
   private authService = inject(AuthService);
+  private userSettingsInitService = inject(UserSettingsInitService);
 
   async initialize(): Promise<void> {
     try {
@@ -63,6 +65,9 @@ export class DataInitService {
 
       // Trigger NotesService to reload data from storage
       this.notesService.reloadData();
+
+      // Load and apply user settings
+      await this.userSettingsInitService.loadAndApplySettings();
 
       console.log('Sample data initialized successfully');
     } catch (error) {

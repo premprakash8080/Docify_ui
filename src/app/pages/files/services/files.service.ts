@@ -1,60 +1,140 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, BehaviorSubject, of } from 'rxjs';
-import { map, delay, tap } from 'rxjs/operators';
-import { Attachment } from '../../../core/models/attachment.model';
-import { generateUUID } from '../../../core/data/sample-data';
-import { AuthService } from '../../../core/services/auth.service';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
+import { FileAttachment } from '../../../core/data/sample-data';
+import { AuthService } from '../../../auth/service/auth.service';
+import { ENDPOINTS } from './api.collection';
 
 /**
- * Extended Attachment interface for files management
- * Adds userId and description fields
+ * Backend file response interfaces
  */
-export interface FileAttachment extends Attachment {
-  userId?: string;
-  description?: string;
+interface BackendFile {
+  id: string;
+  user_id: number;
+  note_id?: string | null;
+  firebase_storage_path: string;
+  filename: string;
+  mime_type: string;
+  size: number;
+  description?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+interface BackendFilesResponse {
+  success: boolean;
+  msg?: string;
+  data: {
+    files: BackendFile[];
+    count: number;
+  };
+}
+
+interface BackendFileResponse {
+  success: boolean;
+  msg?: string;
+  data: {
+    file: BackendFile;
+    url?: string;
+  };
+}
+
+interface BackendSuccessResponse {
+  success: boolean;
+  msg?: string;
 }
 
 /**
  * Service for managing files/attachments data.
  * 
- * This service provides methods to fetch and manage file-related data.
- * Currently uses mock data, but can be easily switched to HTTP calls
- * by replacing the Observable implementations with HttpClient calls.
- * 
- * All methods return Observables to maintain consistency with future HTTP implementations.
+ * This service provides methods to fetch and manage file-related data
+ * using HTTP calls to the backend API.
  */
 @Injectable({
   providedIn: 'root'
 })
 export class FilesService {
+  private http = inject(HttpClient);
   private authService = inject(AuthService);
-  
-  // In-memory storage for uploaded files (in a real app, this would be persisted to backend)
-  private uploadedFiles: FileAttachment[] = [];
   
   // BehaviorSubject to manage files state (single source of truth)
   private filesSubject = new BehaviorSubject<FileAttachment[]>([]);
   public files$ = this.filesSubject.asObservable();
 
   constructor() {
-    // Initialize with empty array
-    this.filesSubject.next([]);
+    // Load files on service initialization
+    this.refreshFiles();
+  }
+
+  /**
+   * Refresh files from API and update state
+   * This can be called to reload files after operations like upload/delete
+   */
+  refreshFiles(noteId?: string): void {
+    this.getAllFiles(noteId, true).subscribe({
+      error: (error) => {
+        console.error('Failed to load files:', error);
+        // Keep existing state on error
+      }
+    });
+  }
+
+  /**
+   * Map backend file to frontend FileAttachment
+   */
+  private mapBackendFileToFrontendFile(backendFile: BackendFile): FileAttachment {
+    return {
+      id: backendFile.id,
+      filename: backendFile.filename,
+      mimeType: backendFile.mime_type,
+      size: backendFile.size,
+      url: backendFile.firebase_storage_path, // Cloudinary URL
+      noteId: backendFile.note_id || undefined,
+      userId: backendFile.user_id.toString(),
+      description: backendFile.description || undefined,
+      createdAt: backendFile.created_at,
+      updatedAt: backendFile.updated_at || backendFile.created_at
+    };
   }
 
   /**
    * Get all files for the current user
+   * @param noteId - Optional note ID to filter files
+   * @param updateState - Whether to update the internal state (default: false)
    * @returns Observable of all files
    */
-  getAllFiles(): Observable<FileAttachment[]> {
-    const userId = this.authService.currentUserValue?.id;
-    if (!userId) {
-      return of([]);
+  getAllFiles(noteId?: string, updateState: boolean = false): Observable<FileAttachment[]> {
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
     }
 
-    // Filter files by current user
-    return this.files$.pipe(
-      map(files => files.filter(file => !file.userId || file.userId === userId)),
-      delay(0) // Simulate API delay (change to delay(100) for realistic delay)
+    let params = new HttpParams();
+    if (noteId) {
+      params = params.set('note_id', noteId);
+    }
+
+    return this.http.get<BackendFilesResponse>(ENDPOINTS.getAllFiles, { params }).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Failed to fetch files');
+        }
+        
+        const mappedFiles = response.data.files.map(file => 
+          this.mapBackendFileToFrontendFile(file)
+        );
+        
+        // Update state if requested
+        if (updateState) {
+          this.filesSubject.next(mappedFiles);
+        }
+        
+        return mappedFiles;
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to fetch files';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
     );
   }
 
@@ -64,75 +144,68 @@ export class FilesService {
    * @returns Observable of the file, or undefined if not found
    */
   getFileById(fileId: string): Observable<FileAttachment | undefined> {
-    return this.files$.pipe(
-      map(files => files.find(f => f.id === fileId)),
-      delay(0)
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
+    }
+
+    return this.http.get<BackendFileResponse>(ENDPOINTS.getFileById(fileId)).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          return undefined;
+        }
+        
+        return this.mapBackendFileToFrontendFile(response.data.file);
+      }),
+      catchError((error): Observable<FileAttachment | undefined> => {
+        if (error?.status === 404) {
+          // If file is not found, return undefined instead of throwing
+          return of(undefined);
+        }
+        const message = error?.error?.msg || error?.message || 'Failed to fetch file';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
     );
   }
 
   /**
-   * Upload a file (mock implementation)
+   * Upload a file
    * @param file - The File object to upload
    * @param description - Optional description for the file
+   * @param noteId - Optional note ID to attach file to
    * @returns Observable of the uploaded file attachment
    */
-  uploadFile(file: File, description?: string): Observable<FileAttachment> {
-    const userId = this.authService.currentUserValue?.id;
-    if (!userId) {
-      return new Observable(observer => {
-        observer.error(new Error('User not authenticated'));
-      });
+  uploadFile(file: File, description?: string, noteId?: string): Observable<FileAttachment> {
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
     }
 
-    // Generate file metadata
-    const fileId = generateUUID();
-    const now = new Date().toISOString();
-    const fileSize = file.size;
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) {
+      formData.append('description', description);
+    }
+    if (noteId) {
+      formData.append('note_id', noteId);
+    }
 
-    // Create file attachment object
-    const newFile: FileAttachment = {
-      id: fileId,
-      filename: file.name,
-      mimeType: file.type || 'application/octet-stream',
-      size: fileSize,
-      userId: userId,
-      description: description,
-      createdAt: now,
-      updatedAt: now,
-      // In mock implementation, create a data URL for preview
-      // In real app, this would be the server URL
-      url: URL.createObjectURL(file)
-    };
-
-    // Optimistic UI update - immediately add to local storage
-    this.uploadedFiles.push(newFile);
-    const updatedFiles = [...this.filesSubject.value, newFile];
-    this.filesSubject.next(updatedFiles);
-
-    // Simulate API call - in real app, this would be:
-    // const formData = new FormData();
-    // formData.append('file', file);
-    // if (description) {
-    //   formData.append('description', description);
-    // }
-    // return this.http.post<FileAttachment>('/api/files/upload', formData).pipe(
-    //   tap(uploadedFile => {
-    //     // Update local state with server response
-    //     const index = this.uploadedFiles.findIndex(f => f.id === fileId);
-    //     if (index >= 0) {
-    //       this.uploadedFiles[index] = uploadedFile;
-    //       const current = this.filesSubject.value;
-    //       const updated = current.map(f => f.id === fileId ? uploadedFile : f);
-    //       this.filesSubject.next(updated);
-    //     }
-    //   })
-    // );
-
-    return of(newFile).pipe(
-      delay(300), // Simulate upload delay
-      tap(() => {
-        // In real app, handle API response here
-        // For now, the optimistic update is sufficient
+    return this.http.post<BackendFileResponse>(ENDPOINTS.uploadFile, formData).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Failed to upload file');
+        }
+        
+        const uploadedFile = this.mapBackendFileToFrontendFile(response.data.file);
+        
+        // Update local state with server response
+        const currentFiles = this.filesSubject.value;
+        const updatedFiles = [uploadedFile, ...currentFiles];
+        this.filesSubject.next(updatedFiles);
+        
+        return uploadedFile;
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to upload file';
+        return throwError(() => ({ message, status: error?.status || 500 }));
       })
     );
   }
@@ -143,72 +216,71 @@ export class FilesService {
    * @returns Observable that completes when file is deleted
    */
   deleteFile(fileId: string): Observable<void> {
-    const currentFiles = this.filesSubject.value;
-    const fileIndex = currentFiles.findIndex(f => f.id === fileId);
-
-    if (fileIndex === -1) {
-      return new Observable(observer => {
-        observer.error(new Error('File not found'));
-      });
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
     }
 
-    // Clean up object URL if it exists
-    const file = currentFiles[fileIndex];
-    if (file.url && file.url.startsWith('blob:')) {
-      URL.revokeObjectURL(file.url);
-    }
-
-    // Optimistic UI update
-    const updatedFiles = currentFiles.filter(f => f.id !== fileId);
-    this.filesSubject.next(updatedFiles);
-
-    // Remove from uploaded files if applicable
-    this.uploadedFiles = this.uploadedFiles.filter(f => f.id !== fileId);
-
-    // Simulate API call
-    return of(undefined).pipe(delay(0));
+    return this.http.delete<BackendSuccessResponse>(ENDPOINTS.deleteFile(fileId)).pipe(
+      map((response) => {
+        if (!response.success) {
+          throw new Error(response.msg || 'Failed to delete file');
+        }
+        
+        // Update local state - remove deleted file
+        const currentFiles = this.filesSubject.value;
+        const updatedFiles = currentFiles.filter(f => f.id !== fileId);
+        this.filesSubject.next(updatedFiles);
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to delete file';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
+    );
   }
 
   /**
-   * Update file metadata (e.g., description)
+   * Update file metadata (e.g., description, filename)
    * @param fileId - The ID of the file to update
-   * @param updates - Partial file data with fields to update
+   * @param updates - Partial file data with fields to update (filename, description)
    * @returns Observable of the updated file
    */
-  updateFile(fileId: string, updates: Partial<FileAttachment>): Observable<FileAttachment> {
-    const currentFiles = this.filesSubject.value;
-    const fileIndex = currentFiles.findIndex(f => f.id === fileId);
-
-    if (fileIndex === -1) {
-      return new Observable(observer => {
-        observer.error(new Error('File not found'));
-      });
+  updateFile(fileId: string, updates: { filename?: string; description?: string }): Observable<FileAttachment> {
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
     }
 
-    // Optimistic UI update
-    const updatedFile: FileAttachment = {
-      ...currentFiles[fileIndex],
-      ...updates,
-      id: fileId, // Ensure ID doesn't change
-      updatedAt: new Date().toISOString()
-    };
-
-    const updatedFiles = [...currentFiles];
-    updatedFiles[fileIndex] = updatedFile;
-    this.filesSubject.next(updatedFiles);
-
-    // Update in uploaded files if applicable
-    const uploadedFileIndex = this.uploadedFiles.findIndex(f => f.id === fileId);
-    if (uploadedFileIndex >= 0) {
-      this.uploadedFiles[uploadedFileIndex] = updatedFile;
+    const payload: { filename?: string; description?: string } = {};
+    if (updates.filename !== undefined) {
+      payload.filename = updates.filename;
+    }
+    if (updates.description !== undefined) {
+      payload.description = updates.description;
     }
 
-    // Simulate API call
-    return of(updatedFile).pipe(delay(0));
+    return this.http.put<BackendFileResponse>(ENDPOINTS.updateFileMeta(fileId), payload).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Failed to update file');
+        }
+        
+        const updatedFile = this.mapBackendFileToFrontendFile(response.data.file);
+        
+        // Update local state with server response
+        const currentFiles = this.filesSubject.value;
+        const updatedFiles = currentFiles.map(f => f.id === fileId ? updatedFile : f);
+        this.filesSubject.next(updatedFiles);
+        
+        return updatedFile;
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to update file';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
+    );
   }
 
   /**
-   * Search files by name
+   * Search files by name (client-side filtering)
    * @param query - Search query string
    * @returns Observable of filtered files
    */
@@ -217,15 +289,109 @@ export class FilesService {
       return this.getAllFiles();
     }
 
+    // Client-side search - filter files by filename or description
     const searchTerm = query.toLowerCase().trim();
-    return this.getAllFiles().pipe(
-      map(files => 
-        files.filter(file => 
-          file.filename.toLowerCase().includes(searchTerm) ||
-          file.description?.toLowerCase().includes(searchTerm)
-        )
-      ),
-      delay(0)
+    return this.files$.pipe(
+      map(files => files.filter(file => {
+        const filenameMatch = file.filename?.toLowerCase().includes(searchTerm);
+        const descriptionMatch = file.description?.toLowerCase().includes(searchTerm);
+        return filenameMatch || descriptionMatch;
+      }))
+    );
+  }
+
+  /**
+   * Attach file to a note
+   * @param fileId - The ID of the file
+   * @param noteId - The ID of the note
+   * @returns Observable of the updated file
+   */
+  attachFileToNote(fileId: string, noteId: string): Observable<FileAttachment> {
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
+    }
+
+    return this.http.put<BackendFileResponse>(
+      ENDPOINTS.attachFileToNote(fileId, noteId),
+      {}
+    ).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Failed to attach file to note');
+        }
+        
+        const updatedFile = this.mapBackendFileToFrontendFile(response.data.file);
+        
+        // Update local state
+        const currentFiles = this.filesSubject.value;
+        const updatedFiles = currentFiles.map(f => f.id === fileId ? updatedFile : f);
+        this.filesSubject.next(updatedFiles);
+        
+        return updatedFile;
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to attach file to note';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
+    );
+  }
+
+  /**
+   * Detach file from note
+   * @param fileId - The ID of the file
+   * @returns Observable of the updated file
+   */
+  detachFileFromNote(fileId: string): Observable<FileAttachment> {
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
+    }
+
+    return this.http.delete<BackendFileResponse>(ENDPOINTS.detachFileFromNote(fileId)).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Failed to detach file from note');
+        }
+        
+        const updatedFile = this.mapBackendFileToFrontendFile(response.data.file);
+        
+        // Update local state
+        const currentFiles = this.filesSubject.value;
+        const updatedFiles = currentFiles.map(f => f.id === fileId ? updatedFile : f);
+        this.filesSubject.next(updatedFiles);
+        
+        return updatedFile;
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to detach file from note';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
+    );
+  }
+
+  /**
+   * Get all files attached to a note
+   * @param noteId - The ID of the note
+   * @returns Observable of files attached to the note
+   */
+  getNoteFiles(noteId: string): Observable<FileAttachment[]> {
+    if (!this.authService.isAuthenticated) {
+      return throwError(() => new Error('User not authenticated'));
+    }
+
+    return this.http.get<BackendFilesResponse>(ENDPOINTS.getNoteFiles(noteId)).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Failed to fetch note files');
+        }
+        
+        return response.data.files.map(file => 
+          this.mapBackendFileToFrontendFile(file)
+        );
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to fetch note files';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
     );
   }
 }

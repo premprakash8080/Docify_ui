@@ -6,11 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { Subject, combineLatest, Observable } from 'rxjs';
-import { map, debounceTime, distinctUntilChanged, startWith, takeUntil } from 'rxjs/operators';
-import { FilesService, FileAttachment } from './services/files.service';
+import { Subject, Observable, of, combineLatest } from 'rxjs';
+import { map, debounceTime, distinctUntilChanged, startWith, takeUntil, switchMap, take, shareReplay } from 'rxjs/operators';
+import { FilesService } from './services/files.service';
+import { FileAttachment } from '../../core/data/sample-data';
 import { AddFileComponent, AddFileDialogResult } from './components/add-file/add-file.component';
 import { FilePreviewComponent } from './components/file-preview/file-preview.component';
+import { ItemListPanelComponent, ItemListPanelItem } from '../ui/components/item-list-panel/item-list-panel.component';
 
 @Component({
   selector: 'vex-files',
@@ -23,7 +25,8 @@ import { FilePreviewComponent } from './components/file-preview/file-preview.com
     MatFormFieldModule,
     MatInputModule,
     MatDialogModule,
-    FilePreviewComponent
+    FilePreviewComponent,
+    ItemListPanelComponent
   ],
   templateUrl: './files.component.html',
   styleUrls: ['./files.component.scss'],
@@ -38,33 +41,49 @@ export class FilesComponent implements OnInit, OnDestroy {
   // Search form control
   searchControl = new FormControl('');
 
-  // File list and selection
-  files$ = this.filesService.getAllFiles();
+  // File list and selection - combine search with files
   filteredFiles$: Observable<FileAttachment[]> = combineLatest([
     this.filesService.getAllFiles(),
     this.searchControl.valueChanges.pipe(
+      startWith(''),
       debounceTime(300),
-      distinctUntilChanged(),
-      startWith('')
+      distinctUntilChanged()
     )
   ]).pipe(
-    map(([files, query]) => {
-      if (!query || query.trim().length === 0) {
-        return files;
+    switchMap(([files, query]) => {
+      const q = (query || '').trim();
+      if (!q) {
+        return of(files);
       }
-      const searchTerm = query.toLowerCase().trim();
-      return files.filter(file =>
-        file.filename.toLowerCase().includes(searchTerm) ||
-        file.description?.toLowerCase().includes(searchTerm)
-      );
-    })
+      return this.filesService.searchFiles(q);
+    }),
+    shareReplay(1)
   );
   
   selectedFile: FileAttachment | null = null;
 
+  // Items for item list panel component - convert to panel items
+  panelItems$: Observable<ItemListPanelItem[]> = this.filteredFiles$.pipe(
+    map(files => files.map(file => ({
+      id: file.id,
+      title: file.filename || 'Unnamed file',
+      description: file.description || '',
+      meta: `${this.formatFileSize(file.size)} • ${this.getRelativeDate(file.createdAt)}`
+    } as ItemListPanelItem))),
+    shareReplay(1)
+  );
+
+  get selectedFileId(): string | null {
+    return this.selectedFile?.id || null;
+  }
+
   ngOnInit(): void {
-    // Component initialization
-    // Search filtering is handled via filteredFiles$ observable
+    // Subscribe to ensure data loads and change detection triggers
+    this.panelItems$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.cdr.markForCheck();
+    });
   }
 
   ngOnDestroy(): void {
@@ -75,6 +94,25 @@ export class FilesComponent implements OnInit, OnDestroy {
   onFileClick(file: FileAttachment): void {
     this.selectedFile = file;
     this.cdr.markForCheck();
+  }
+
+  onItemSelected(item: ItemListPanelItem): void {
+    this.filesService.getFileById(item.id).pipe(take(1)).subscribe(file => {
+      if (file) {
+        this.onFileClick(file);
+      }
+    });
+  }
+
+  onHeaderAction(action: string): void {
+    if (action === 'filter:default') {
+      // placeholder for filter handling
+      return;
+    }
+    if (action.startsWith('sort')) {
+      // placeholder for sort handling
+      return;
+    }
   }
 
   onUploadFile(): void {

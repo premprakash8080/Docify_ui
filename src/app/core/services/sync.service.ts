@@ -4,7 +4,7 @@ import { switchMap, filter, tap } from 'rxjs/operators';
 import { StorageService } from './storage.service';
 import { ApiService } from './api.service';
 import { SyncQueueItem } from '../models';
-import { AuthService } from './auth.service';
+import { AuthService } from '../../auth/service/auth.service';
 // TEMP: Using sample data until API is ready
 import { getNotesByUserId, getNotebooksByUserId, getTagsByUserId } from '../data/sample-data';
 

@@ -6,7 +6,7 @@ import { SearchService } from '../../services/search.service';
 import { NotebooksService } from '../../../notebooks/services/notebooks.service';
 import { Observable, Subject, combineLatest, of } from 'rxjs';
 import { map, takeUntil, switchMap } from 'rxjs/operators';
-import { SideListItem, SideListAction } from '../../../ui/components/side-list/side-list-item.interface';
+import { SideListItem, SideListAction } from '../side-list/side-list-item.interface';
 import { NOTES_LIST_DISPLAY_CONFIG } from './notes-list.config';
 import { formatRelativeDate } from '../utils/date-formatter.util';
 import { getCompletedTasksCount } from '../utils/task-utils.util';
