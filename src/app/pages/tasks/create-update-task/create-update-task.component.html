@@ -1,0 +1,145 @@
+<form (ngSubmit)="save()" [formGroup]="form" class="task-form">
+  <div class="dialog-header" mat-dialog-title>
+    <h2 class="dialog-title">
+      {{ isCreateMode() ? 'Create Task' : 'Edit Task' }}
+    </h2>
+    <button class="close-button" mat-dialog-close mat-icon-button type="button" aria-label="Close">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="task-dialog-content">
+    <!-- Linked Note (Optional) -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Linked Note</mat-label>
+      <mat-select formControlName="note_id">
+        <mat-option value="">No note selected</mat-option>
+        @for (note of notes; track note.id) {
+          <mat-option [value]="note.id">{{ note.title }}</mat-option>
+        }
+      </mat-select>
+      <mat-icon matPrefix svgIcon="mat:note"></mat-icon>
+    </mat-form-field>
+
+    <!-- Task Name (Required) -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Task Name</mat-label>
+      <input formControlName="title" matInput placeholder="Enter task name">
+      @if (form.get('title')?.hasError('required')) {
+        <mat-error>Task name is required</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Task Description (Required) -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Task Description</mat-label>
+      <textarea formControlName="description" matInput placeholder="Enter task description" rows="4"></textarea>
+      @if (form.get('description')?.hasError('required')) {
+        <mat-error>Task description is required</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Date and Time Selection (Single Row) -->
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="flex-auto">
+        <mat-label>Due Date</mat-label>
+        <input formControlName="start_date" matInput [matDatepicker]="startDatepicker">
+        <mat-datepicker-toggle matSuffix [for]="startDatepicker"></mat-datepicker-toggle>
+        <mat-datepicker #startDatepicker></mat-datepicker>
+        @if (form.get('start_date')?.hasError('required')) {
+          <mat-error>Due date is required</mat-error>
+        }
+        @if (form.get('start_date')?.hasError('invalidDate')) {
+          <mat-error>Invalid date</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="flex-auto">
+        <mat-label>Start Time</mat-label>
+        <mat-select formControlName="start_time">
+          <mat-option value="">Select time</mat-option>
+          @for (time of timeOptions; track time) {
+            <mat-option [value]="time">
+              {{ formatTimeDisplay(time) }}
+            </mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix svgIcon="mat:access_time"></mat-icon>
+        @if (form.get('start_time')?.hasError('required')) {
+          <mat-error>Start time is required</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="flex-auto">
+        <mat-label>End Time</mat-label>
+        <mat-select formControlName="end_time">
+          <mat-option value="">Select time</mat-option>
+          @for (time of timeOptions; track time) {
+            <mat-option [value]="time">
+              {{ formatTimeDisplay(time) }}
+            </mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix svgIcon="mat:access_time"></mat-icon>
+        @if (form.get('end_time')?.hasError('required')) {
+          <mat-error>End time is required</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <!-- Additional Details (Single Row) -->
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="flex-auto">
+        <mat-label>Reminder</mat-label>
+        <mat-select formControlName="reminder">
+          <mat-option value="">No reminder</mat-option>
+          @for (reminder of reminderOptions; track reminder.value) {
+            <mat-option [value]="reminder.value">
+              {{ reminder.label }}
+            </mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix svgIcon="mat:notifications"></mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="flex-auto">
+        <mat-label>Assigned To</mat-label>
+        <input formControlName="assignedTo" matInput placeholder="Name or email">
+        <mat-icon matPrefix svgIcon="mat:person"></mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="flex-auto">
+        <mat-label>Priority</mat-label>
+        <mat-select formControlName="priority">
+          <mat-option value="">None</mat-option>
+          <mat-option value="low">Low</mat-option>
+          <mat-option value="medium">Medium</mat-option>
+          <mat-option value="high">High</mat-option>
+        </mat-select>
+        <mat-icon matPrefix svgIcon="mat:flag"></mat-icon>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="dialog-actions">
+    <button mat-button mat-dialog-close type="button">Cancel</button>
+    @if (isCreateMode()) {
+      <button 
+        color="primary" 
+        mat-raised-button 
+        type="submit"
+        [disabled]="!form.valid">
+        Create Task
+      </button>
+    }
+    @if (isUpdateMode()) {
+      <button 
+        color="primary" 
+        mat-raised-button 
+        type="submit"
+        [disabled]="!form.valid">
+        Update Task
+      </button>
+    }
+  </mat-dialog-actions>
+</form>

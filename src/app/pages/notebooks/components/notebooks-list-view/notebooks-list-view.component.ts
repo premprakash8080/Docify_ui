@@ -4,6 +4,8 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { NotebookRow } from '../../../../core/models/notebook.model';
 
 @Component({
@@ -14,7 +16,9 @@ import { NotebookRow } from '../../../../core/models/notebook.model';
     MatTableModule,
     MatButtonModule,
     MatIconModule,
-    MatMenuModule
+    MatMenuModule,
+    MatTooltipModule,
+    ReactiveFormsModule
   ],
   templateUrl: './notebooks-list-view.component.html',
   styleUrls: ['./notebooks-list-view.component.scss'],
@@ -24,6 +28,7 @@ export class NotebooksListViewComponent {
   @Input() flattenedRows: NotebookRow[] = [];
   @Input() sortColumn: string = '';
   @Input() sortDirection: 'asc' | 'desc' | '' = '';
+  @Input() searchControl: FormControl = new FormControl('');
 
   @Output() sort = new EventEmitter<string>();
   @Output() rowClick = new EventEmitter<NotebookRow>();
@@ -34,6 +39,10 @@ export class NotebooksListViewComponent {
   @Output() noteClick = new EventEmitter<NotebookRow>();
   @Output() rowKeydown = new EventEmitter<{ event: KeyboardEvent; row: NotebookRow }>();
   @Output() menuClick = new EventEmitter<Event>();
+  @Output() toggleStack = new EventEmitter<NotebookRow>();
+  @Output() searchChange = new EventEmitter<string>();
+  @Output() filterClick = new EventEmitter<'tag' | 'notebook' | 'created' | 'updated'>();
+  @Output() addNotebook = new EventEmitter<void>();
 
   displayedColumns: string[] = ['title', 'space', 'createdBy', 'updated', 'sharedWith'];
 
@@ -83,5 +92,23 @@ export class NotebooksListViewComponent {
 
   onMenuClick(event: Event): void {
     this.menuClick.emit(event);
+  }
+
+  onToggleStack(row: NotebookRow): void {
+    console.log(row);
+    this.toggleStack.emit(row);
+  }
+
+  onSearchInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.searchChange.emit(target.value);
+  }
+
+  onFilterClick(filterType: 'tag' | 'notebook' | 'created' | 'updated'): void {
+    this.filterClick.emit(filterType);
+  }
+
+  onAddNotebook(): void {
+    this.addNotebook.emit();
   }
 }

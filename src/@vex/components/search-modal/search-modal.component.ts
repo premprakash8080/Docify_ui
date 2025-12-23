@@ -148,7 +148,17 @@ export class SearchModalComponent implements OnInit, OnDestroy {
     if (result.type === 'note') {
       this.router.navigate(['/notes', result.id]);
     } else if (result.type === 'notebook') {
-      this.router.navigate(['/notebooks', result.id]);
+      this.router.navigate(['/notes/notebook', result.id, 'notes']);
+    } else if (result.type === 'stack') {
+      this.router.navigate(['/notes/stack', result.id, 'notebooks']);
+    } else if (result.type === 'tag') {
+      this.router.navigate(['/notes/tag', result.id]);
+    } else if (result.type === 'task') {
+      if (result.noteId) {
+        this.router.navigate(['/notes', result.noteId]);
+      } else {
+        this.router.navigate(['/tasks']);
+      }
     }
     this.close();
   }
@@ -165,10 +175,14 @@ export class SearchModalComponent implements OnInit, OnDestroy {
   }
 
   getResultIcon(result: SearchResult): string {
-    if (result.type === 'notebook') {
-      return result.stackName ? 'folder' : 'book';
-    }
-    return 'description';
+    const iconMap: { [key: string]: string } = {
+      'note': 'description',
+      'notebook': result.stackName ? 'folder' : 'book',
+      'tag': 'label',
+      'stack': 'folder',
+      'task': 'assignment'
+    };
+    return iconMap[result.type] || 'description';
   }
 
   close(): void {

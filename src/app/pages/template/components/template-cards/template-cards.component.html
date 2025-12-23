@@ -1,0 +1,45 @@
+<mat-card class="template-card">
+  <!-- Template Image -->
+  <div class="template-image">
+    <!-- <img
+      [src]="template.thumbnail || defaultThumbnail"
+      alt="{{ template.name }}"
+    /> -->
+    <vex-template-html-preview
+    [content]="template?.content || ''"
+    [title]="'Template Preview'">
+  </vex-template-html-preview>
+  </div>
+
+  <!-- Template Info -->
+  <div class="template-info">
+    <div class="template-title">
+      {{ template.name }}
+    </div>
+
+    <div class="template-badge">
+      {{ template.is_system ? 'Prebuilt Template' : 'My Template' }}
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <mat-card-actions class="template-actions">
+    <button
+      mat-stroked-button
+      color="primary"
+      (click)="onPreview()"
+    >
+      <mat-icon svgIcon="mat:visibility"></mat-icon>
+      Preview
+    </button>
+
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="onClone()"
+    >
+      <mat-icon svgIcon="mat:content_copy"></mat-icon>
+      Use
+    </button>
+  </mat-card-actions>
+</mat-card>

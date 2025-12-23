@@ -16,12 +16,15 @@
       (archive)="onArchive()"
       (export)="onExport()"
       (manageTags)="onManageTags()"
+      (move)="onMove()"
       (duplicate)="onDuplicate()"
       (find)="onFind()"
       (info)="onInfo()"
       (history)="onHistory()"
       (print)="onPrint()"
-      (delete)="onDelete()">
+      (delete)="onDelete()"
+      (save)="onSave()"
+      (hideSidebar)="onHideSidebar()">
     </vex-unified-note-header>
 
     <!-- Note Title Section (appears ONLY ONCE) -->
@@ -98,7 +101,8 @@
         (noteUpdated)="onNoteUpdated($event)"
         (wordCountChange)="onWordCountChange($event)"
         (savingStateChange)="onSavingStateChange($event)"
-        (editorReady)="onEditorReady($event)">
+        (editorReady)="onEditorReady($event)"
+        (titleChange)="onTitleChange($event)">
       </vex-note-editor>
     </div>
 
@@ -135,11 +139,41 @@
             class="tag-input"
             placeholder="Add or select a tag…"
             [(ngModel)]="tagInputValue"
-            (keydown.enter)="onTagInputEnter($event)"
+            (ngModelChange)="onTagInputChange()"
+            (keydown)="onTagInputKeyDown($event)"
             (keydown.escape)="closeTagInput()"
             (blur)="onTagInputBlur()"
+            (focus)="onTagInputFocus()"
             #tagInput
             autocomplete="off">
+          
+          <!-- Tag Suggestions Dropdown -->
+          <div class="tag-suggestions-dropdown" *ngIf="showTagSuggestions && (filteredTags.length > 0 || shouldShowCreateOption())">
+            <!-- Existing Tags List -->
+            <div 
+              *ngFor="let tag of filteredTags; let i = index"
+              class="tag-suggestion-item"
+              [class.selected]="selectedTagIndex === i"
+              (mousedown)="onTagSuggestionClick(tag, $event)"
+              [attr.aria-label]="'Select tag ' + tag.name">
+              <mat-icon svgIcon="mat:label" class="tag-suggestion-icon"></mat-icon>
+              <span class="tag-suggestion-name">{{ tag.name }}</span>
+            </div>
+            
+            <!-- Add Tag Option -->
+            <div 
+              *ngIf="shouldShowCreateOption()"
+              class="tag-suggestion-item create-tag-option"
+              [class.selected]="selectedTagIndex === filteredTags.length"
+              (mousedown)="onCreateTagClick($event)"
+              [attr.aria-label]="'Add tag ' + tagInputValue.trim()">
+              <mat-icon svgIcon="mat:add" class="tag-suggestion-icon create-icon"></mat-icon>
+              <span class="tag-suggestion-name">
+                Add Tag <strong>{{ tagInputValue.trim() }}</strong>
+              </span>
+              <span class="tag-suggestion-hint">Tab</span>
+            </div>
+          </div>
         </div>
 
         <!-- Tags Display (compact chips) -->

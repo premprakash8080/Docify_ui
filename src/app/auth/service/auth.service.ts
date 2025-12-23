@@ -81,7 +81,8 @@ export class AuthService {
     private http: HttpClient
   ) {
     this.loadUserFromStorage();
-    // Load settings if user is already authenticated (using setTimeout to defer execution)
+    // Load settings once if user is already authenticated (using setTimeout to defer execution)
+    // This will only load if not already loaded for the current user
     setTimeout(() => {
       if (this.isAuthenticated) {
         this.userSettingsInitService.loadAndApplySettings();
@@ -134,9 +135,9 @@ export class AuthService {
           };
           
         this.setAuthData(authResponse);
-        // Load and apply user settings after login
+        // Load and apply user settings after login (force reload for new session)
         setTimeout(() => {
-          this.userSettingsInitService.loadAndApplySettings();
+          this.userSettingsInitService.loadAndApplySettings(true);
         }, 0);
         return authResponse;
       }),
@@ -166,9 +167,9 @@ export class AuthService {
         };
         
         this.setAuthData(authResponse);
-        // Load and apply user settings after registration
+        // Load and apply user settings after registration (force reload for new session)
         setTimeout(() => {
-          this.userSettingsInitService.loadAndApplySettings();
+          this.userSettingsInitService.loadAndApplySettings(true);
         }, 0);
         return authResponse;
       }),
@@ -190,22 +191,26 @@ export class AuthService {
     // Clear UserSessionService
     this.userSessionService.accessToken = '';
     
+    // Clear current user
     this.currentUserSubject.next(null);
     
+    // Reset settings loaded state
+    this.userSettingsInitService.resetLoadedState();
+    
     // Call logout API if token exists (fire and forget)
-    if (token) {
-      this.http.post<void>(ENDPOINTS.logout, {}).subscribe({
-        next: () => {
-          this.router.navigate(['/login']);
-        },
-        error: () => {
-          // Even if API call fails, navigate to login
-          this.router.navigate(['/login']);
-        }
-      });
-    } else {
+    // if (token) {
+    //   this.http.post<void>(ENDPOINTS.logout, {}).subscribe({
+    //     next: () => {
+    //       this.router.navigate(['/login']);
+    //     },
+    //     error: () => {
+    //       // Even if API call fails, navigate to login
+    //       this.router.navigate(['/login']);
+    //     }
+    //   });
+    // } else {
     this.router.navigate(['/login']);
-    }
+    // }
   }
 
   private setAuthData(response: AuthResponse): void {
@@ -292,6 +297,42 @@ export class AuthService {
    */
   updateProfile(data: { display_name?: string; avatar_url?: string }): Observable<User> {
     return this.http.put<BackendProfileResponse>(ENDPOINTS.updateProfile, data).pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.msg || 'Failed to update profile');
+        }
+        
+        const user = this.mapBackendUserToFrontendUser(response.data.user);
+        this.currentUserSubject.next(user);
+        localStorage.setItem(this.userKey, JSON.stringify(user));
+        return user;
+      }),
+      catchError((error) => {
+        const message = error?.error?.msg || error?.message || 'Failed to update profile';
+        return throwError(() => ({ message, status: error?.status || 500 }));
+      })
+    );
+  }
+
+  /**
+   * Update user profile with file upload (avatar)
+   */
+  updateProfileWithFile(displayName: string | undefined, avatarFile: File | null, imageUpdated: boolean = true): Observable<User> {
+    const formData = new FormData();
+    
+    if (displayName !== undefined) {
+      formData.append('display_name', displayName);
+    }
+    
+    if (avatarFile) {
+      formData.append('avatar', avatarFile);
+    }
+    
+    if (!imageUpdated) {
+      formData.append('image_updated', 'false');
+    }
+
+    return this.http.put<BackendProfileResponse>(ENDPOINTS.updateProfile, formData).pipe(
       map((response) => {
         if (!response.success || !response.data) {
           throw new Error(response.msg || 'Failed to update profile');

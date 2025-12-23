@@ -15,9 +15,9 @@
             </button>
           </div>
           <div class="flex gap-1">
-            <button (click)="view = CalendarView.Month" mat-button>Month</button>
-            <button (click)="view = CalendarView.Week" mat-button>Week</button>
-            <button (click)="view = CalendarView.Day" mat-button>Day</button>
+            <button (click)="setView(CalendarView.Month)" mat-button>Month</button>
+            <button (click)="setView(CalendarView.Week)" mat-button>Week</button>
+            <button (click)="setView(CalendarView.Day)" mat-button>Day</button>
           </div>
         </div>
       </div>

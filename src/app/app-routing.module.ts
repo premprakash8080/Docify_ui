@@ -19,11 +19,6 @@ const routes: VexRoutes = [
     path: 'forgot-password',
     loadChildren: () => import('./auth/forgot-password/forgot-password.module').then(m => m.ForgotPasswordModule),
   },
-  // Coming soon - NOT USED in sidebar (commented out)
-  // {
-  //   path: 'coming-soon',
-  //   loadChildren: () => import('./pages/pages/coming-soon/coming-soon.module').then(m => m.ComingSoonModule),
-  // },
   {
     path: '',
     component: CustomLayoutComponent,
@@ -84,9 +79,17 @@ const routes: VexRoutes = [
             path: 'social',
             loadChildren: () => import('./pages/apps/social/social.module').then(m => m.SocialModule)
           },
+          {
+            path: 'aio-table',
+            loadChildren: () => import('./pages/apps/aio-table/aio-table.module').then(m => m.AioTableModule),
+          },
         ]
       },
       // Main routes - USED in sidebar
+      {
+        path: 'profile',
+        loadChildren: () => import('./pages/profile/profile.module').then(m => m.ProfileModule),
+      },
       {
         path: 'notes',
         loadChildren: () => import('./pages/notes/notes-page.module').then(m => m.NotesPageModule),

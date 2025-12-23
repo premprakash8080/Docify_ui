@@ -1,7 +1,7 @@
 <div class="notes-dashboard" [class.mobile]="isMobile">
   <!-- Two Column Layout (Desktop) -->
   @if (!isMobile) {
-  <div class="dashboard-layout">
+  <div class="dashboard-layout" [class.sidebar-hidden]="!sidebarVisible">
     <!-- Left Column: Notes List -->
     <div class="dashboard-center">
       <vex-notes-list

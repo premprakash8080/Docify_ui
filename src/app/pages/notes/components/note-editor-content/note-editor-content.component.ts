@@ -1,10 +1,23 @@
-import { Component, OnDestroy, AfterViewInit, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnDestroy, AfterViewInit, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild, ElementRef, HostListener, inject } from '@angular/core';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
+import Image from '@tiptap/extension-image';
+import { TextStyle } from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import Highlight from '@tiptap/extension-highlight';
+import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
+import { Details, DetailsSummary, DetailsContent } from '@tiptap/extension-details';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { createLowlight, common } from 'lowlight';
 import { SlashCommand } from './slash-command.extension';
+import { FontFamily } from '../note-editor-toolbar/font-family.extension';
+import { FontSize } from '../note-editor-toolbar/font-size.extension';
+import { NotesService } from '../../services/notes.service';
+import { Subject, of } from 'rxjs';
+import { takeUntil, map, catchError } from 'rxjs/operators';
 
 /**
  * Component that wraps the Tiptap editor for note content editing.
@@ -22,17 +35,35 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
   /** Initial HTML content to load into the editor */
   @Input() initialContent: string = '';
   
+  /** Note title value */
+  @Input() title: string = '';
+  
+  /** Note ID for saving title */
+  @Input() noteId: string | null = null;
+  
   /** Emits when editor content changes (user-driven edits only) */
   @Output() contentChange = new EventEmitter<string>();
   
+  /** Emits when title changes */
+  @Output() titleChange = new EventEmitter<string>();
+  
+  /** Emits when title should be saved immediately (Enter/blur) */
+  @Output() titleSaveImmediate = new EventEmitter<string>();
+  
   /** ViewChild reference to the editor DOM element */
   @ViewChild('editorElement', { static: false }) editorElement?: ElementRef<HTMLDivElement>;
+  
+  /** ViewChild reference to the title input element */
+  @ViewChild('titleInput', { static: false }) titleInput?: ElementRef<HTMLInputElement>;
   
   /** ViewChild reference to the slash menu component */
   @ViewChild('slashMenu', { static: false }) slashMenuComponent?: any;
   
   /** Tiptap editor instance */
   editor: Editor | null = null;
+  
+  /** Pending content to set once editor is initialized */
+  private pendingContent: string | null = null;
 
   // Slash menu state
   slashMenuVisible = false;
@@ -42,6 +73,15 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
   // Checkbox sync state
   private checkboxSyncPending = false;
   private checkboxObserver: MutationObserver | null = null;
+
+  private notesService = inject(NotesService);
+  private destroy$ = new Subject<void>();
+  
+  // Track last saved title to prevent duplicate saves
+  private lastSavedTitle: string | null = null;
+
+  // Create lowlight instance for syntax highlighting
+  private lowlight = createLowlight(common);
 
   /**
    * Initializes the Tiptap editor ONLY in ngAfterViewInit after ViewChild is available.
@@ -64,12 +104,44 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
   ngOnChanges(changes: SimpleChanges): void {
     // Handle initialContent changes - only update if content differs
     if (changes['initialContent'] && this.editor && !changes['initialContent'].firstChange) {
-      const newContent = changes['initialContent'].currentValue || '';
-      this.updateContent(newContent);
+      const newContent = changes['initialContent'].currentValue;
+      // Ensure we extract content string if an object is passed
+      let contentString = '';
+      if (typeof newContent === 'string') {
+        contentString = newContent || '';
+      } else if (newContent != null && typeof newContent === 'object' && 'content' in newContent) {
+        contentString = newContent.content || '';
+      }
+      this.updateContent(contentString);
+    }
+    
+    // Handle title changes - update input value
+    if (changes['title']) {
+      const newTitle = changes['title'].currentValue || '';
+      if (this.titleInput && this.titleInput.nativeElement.value !== newTitle) {
+        this.titleInput.nativeElement.value = newTitle;
+      }
+      // Only update lastSavedTitle on first change (when note initially loads)
+      // NOT on subsequent changes (which happen when user types and parent updates)
+      if (changes['title'].firstChange) {
+        this.lastSavedTitle = newTitle.trim();
+      }
+    }
+    
+    // Reset last saved title when noteId changes (new note loaded)
+    if (changes['noteId'] && changes['noteId'].currentValue) {
+      // When a new note is loaded, update last saved title to current title
+      if (this.title) {
+        this.lastSavedTitle = this.title.trim();
+      } else {
+        this.lastSavedTitle = null;
+      }
     }
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.destroyEditor();
   }
 
@@ -99,6 +171,26 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
             heading: {
               levels: [1, 2, 3], // Limit to H1, H2, H3
             },
+            codeBlock: false, // Disable default codeBlock to use CodeBlockLowlight
+          }),
+          TextStyle,
+          Color,
+          Highlight.configure({
+            multicolor: true,
+          }),
+          FontFamily,
+          FontSize,
+          Table.configure({
+            resizable: true,
+          }),
+          TableRow,
+          TableHeader,
+          TableCell,
+          Details,
+          DetailsSummary,
+          DetailsContent,
+          CodeBlockLowlight.configure({
+            lowlight: this.lowlight,
           }),
           TaskList.configure({
             HTMLAttributes: {
@@ -114,6 +206,13 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
           }),
           Placeholder.configure({
             placeholder: 'Type "/" for commands, or just start writing...',
+          }),
+          Image.configure({
+            inline: false,
+            allowBase64: false,
+            HTMLAttributes: {
+              style: 'max-width: 100%; height: auto; display: block; margin: 1rem 0;',
+            },
           }),
           SlashCommand.configure({
             onOpen: (query: string, position: { top: number; left: number }) => {
@@ -131,7 +230,7 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
             },
           }),
         ],
-        content: this.initialContent || '',
+        content: (typeof this.initialContent === 'string' ? this.initialContent : '') || '',
         onUpdate: ({ editor }) => {
           // Only emit for user-driven edits (not programmatic updates)
           const html = editor.getHTML();
@@ -142,6 +241,10 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
         editorProps: {
           attributes: {
             class: 'tiptap-editor',
+          },
+          handlePaste: (view, event) => {
+            const handled = this.handlePaste(event);
+            return handled;
           },
           handleKeyDown: (view, event) => {
             // Handle keyboard navigation when slash menu is visible
@@ -192,6 +295,34 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
           editorDOM.style.opacity = '1';
           editorDOM.style.minHeight = '400px';
           editorDOM.style.width = '100%';
+          
+          // If there's pending content, set it now that editor is ready
+          if (this.pendingContent !== null) {
+            setTimeout(() => {
+              if (this.editor) {
+                this.updateContent(this.pendingContent);
+                this.pendingContent = null;
+              }
+            }, 50);
+          } else if (this.initialContent) {
+            // Ensure initial content is set if it wasn't loaded during initialization
+            setTimeout(() => {
+              if (this.editor) {
+                const currentContent = this.editor.getHTML();
+                const normalizeContent = (html: string): string => {
+                  if (!html || html.trim() === '' || html.trim() === '<p></p>' || html.trim() === '<p><br></p>') {
+                    return '';
+                  }
+                  return html.trim();
+                };
+                const normalizedCurrent = normalizeContent(currentContent);
+                const normalizedInitial = normalizeContent(this.initialContent);
+                if (normalizedCurrent !== normalizedInitial && normalizedInitial) {
+                  this.editor.commands.setContent(this.initialContent, { emitUpdate: false });
+                }
+              }
+            }, 50);
+          }
           
           // Sync checkbox states after initialization (with delay to ensure DOM is ready)
           setTimeout(() => this.scheduleCheckboxSync(), 100);
@@ -265,6 +396,12 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
       case 'blockquote':
         this.editor.chain().focus().clearNodes().toggleBlockquote().run();
         break;
+      case 'table':
+        this.editor.chain().focus().clearNodes().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+        break;
+      case 'details':
+        this.editor.chain().focus().clearNodes().setDetails().run();
+        break;
     }
 
     // Close menu after command execution
@@ -278,17 +415,44 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
    * Does NOT trigger onUpdate callback (emitUpdate: false).
    * @param content - HTML content to set
    */
-  updateContent(content: string): void {
+  updateContent(content: string | any): void {
+    // Ensure content is a string - handle case where entire note object might be passed
+    let contentString = '';
+    if (typeof content === 'string') {
+      contentString = content;
+    } else if (content != null) {
+      // If it's an object with a content property, extract it
+      if (typeof content === 'object' && 'content' in content) {
+        contentString = content.content || '';
+      } else {
+        contentString = String(content);
+      }
+    }
+
+    // If editor is not initialized yet, store content to set it later
     if (!this.editor) {
-      console.warn('Editor not initialized, cannot update content');
+      this.pendingContent = contentString;
       return;
     }
 
+    // Normalize empty content - TipTap might return <p></p> for empty content
+    const normalizeContent = (html: string): string => {
+      if (!html || html.trim() === '' || html.trim() === '<p></p>' || html.trim() === '<p><br></p>') {
+        return '';
+      }
+      return html.trim();
+    };
+
+    const normalizedNewContent = normalizeContent(contentString);
     const currentContent = this.editor.getHTML();
-    if (currentContent !== content) {
+    const normalizedCurrentContent = normalizeContent(currentContent);
+
+    // Always update if content differs or if editor is empty and we have content
+    if (normalizedNewContent !== normalizedCurrentContent || (normalizedNewContent && !normalizedCurrentContent)) {
       try {
-        // emitUpdate: false prevents triggering onUpdate (user-driven only)
-        this.editor.commands.setContent(content, { emitUpdate: false });
+        // Set content - use empty paragraph if content is empty to maintain editor structure
+        const contentToSet = contentString || '<p></p>';
+        this.editor.commands.setContent(contentToSet, { emitUpdate: false });
       } catch (error) {
         console.error('Failed to update editor content:', error);
       }
@@ -332,6 +496,100 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
         this.editor?.commands.focus();
       }, 0);
     }
+  }
+
+  /**
+   * Handles title input changes
+   */
+  onTitleInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const newTitle = input.value || '';
+    this.titleChange.emit(newTitle);
+  }
+
+  /**
+   * Handles Enter key in title input - saves and moves focus to editor
+   */
+  onTitleEnter(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    keyboardEvent.preventDefault();
+    keyboardEvent.stopPropagation();
+    
+    // Get new title value
+    const input = keyboardEvent.target as HTMLInputElement;
+    const newTitle = input.value || '';
+    
+    // Emit title change for parent components
+    this.titleChange.emit(newTitle);
+    this.titleSaveImmediate.emit(newTitle);
+    
+    // Save title immediately via API (silent save, no loading indicator)
+    this.saveTitleImmediately(newTitle);
+    
+    // Move focus to editor content area
+    if (this.editor && !this.editor.isDestroyed) {
+      setTimeout(() => {
+        this.editor?.commands.focus();
+      }, 0);
+    }
+  }
+
+  /**
+   * Handles blur event on title input - saves title immediately
+   */
+  onTitleBlur(): void {
+    if (this.titleInput) {
+      const newTitle = this.titleInput.nativeElement.value || '';
+      
+      // Emit title change for parent components
+      this.titleChange.emit(newTitle);
+      this.titleSaveImmediate.emit(newTitle);
+      
+      // Save title immediately via API (silent save, no loading indicator)
+      this.saveTitleImmediately(newTitle);
+    }
+  }
+
+  /**
+   * Saves title immediately to database via API
+   * Uses skipLoadingIndicator to save silently without showing loading bar
+   */
+  private saveTitleImmediately(title: string): void {
+    // Don't save if noteId is not available
+    if (!this.noteId) {
+      console.warn('Cannot save title: noteId is not available');
+      return;
+    }
+
+    // Get trimmed title value
+    const trimmedTitle = (title || '').trim();
+    
+    // Don't save if title hasn't changed from last saved value
+    // Only skip if lastSavedTitle is not null and matches (to allow saving when lastSavedTitle is null on first save)
+    if (this.lastSavedTitle !== null && trimmedTitle === this.lastSavedTitle) {
+      // Title hasn't changed, no need to save
+      return;
+    }
+
+    // Save title silently without showing loading indicators
+    const payload = { title: trimmedTitle };
+    this.notesService.updateNote(this.noteId, payload, true).pipe(
+      takeUntil(this.destroy$),
+      catchError(error => {
+        console.error('Immediate title save failed:', error);
+        return of(null);
+      })
+    ).subscribe({
+      next: (response) => {
+        // Title saved successfully - update last saved title ONLY after successful save
+        this.lastSavedTitle = trimmedTitle;
+        // Silent save, no UI updates needed
+      },
+      error: (error) => {
+        // Silently handle errors - don't interrupt user experience
+        console.error('Title save error:', error);
+      }
+    });
   }
 
   /**
@@ -422,6 +680,107 @@ export class NoteEditorContentComponent implements AfterViewInit, OnDestroy, OnC
     });
   }
 
+
+  /**
+   * Handles paste events to detect and upload images
+   */
+  private handlePaste(event: ClipboardEvent): boolean {
+    if (!this.editor) {
+      return false;
+    }
+
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) {
+      return false;
+    }
+
+    const items = Array.from(clipboardData.items);
+    const imageItem = items.find(item => item.type.startsWith('image/'));
+
+    if (imageItem) {
+      event.preventDefault();
+      event.stopPropagation();
+      const file = imageItem.getAsFile();
+      if (file && file instanceof File && file.size > 0) {
+        this.uploadAndInsertImage(file);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Uploads image and inserts it into editor at cursor position
+   */
+  private uploadAndInsertImage(imageFile: File): void {
+    if (!this.editor || !imageFile) return;
+
+    const formData = new FormData();
+    formData.append('image', imageFile, imageFile.name);
+    
+    // Add note_id to request body if available
+    if (this.noteId) {
+      formData.append('note_id', this.noteId);
+    }
+
+    this.notesService.uploadNoteImage(formData).pipe(
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (backendResponse?.secure_url) {
+          return backendResponse.secure_url;
+        }
+        if (backendResponse?.imageUrl) {
+          return backendResponse.imageUrl;
+        }
+        if (backendResponse?.url) {
+          return backendResponse.url;
+        }
+        if (response?.secure_url) {
+          return response.secure_url;
+        }
+        if (response?.imageUrl) {
+          return response.imageUrl;
+        }
+        if (response?.url) {
+          return response.url;
+        }
+        if (typeof backendResponse === 'string') {
+          return backendResponse;
+        }
+        throw new Error('Image URL not found in response');
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (imageUrl) => {
+        if (imageUrl) {
+          this.insertImageAtCursor(imageUrl);
+        }
+      },
+      error: (error) => {
+        console.error('Failed to upload image:', error);
+      }
+    });
+  }
+
+  /**
+   * Inserts image tag at current cursor position
+   */
+  private insertImageAtCursor(imageUrl: string): void {
+    if (!this.editor) return;
+
+    this.editor.chain()
+      .focus()
+      .setImage({ src: imageUrl, alt: 'Pasted image' })
+      .run();
+
+    setTimeout(() => {
+      if (this.editor) {
+        const html = this.editor.getHTML();
+        this.contentChange.emit(html);
+      }
+    }, 0);
+  }
 
   /**
    * Safely destroys the editor instance

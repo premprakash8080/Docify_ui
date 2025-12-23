@@ -1,11 +1,48 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, Observable, BehaviorSubject, combineLatest } from 'rxjs';
-import { takeUntil, map, withLatestFrom } from 'rxjs/operators';
+import { Subject, Observable, BehaviorSubject, combineLatest, of, throwError } from 'rxjs';
+import { takeUntil, map, withLatestFrom, take, switchMap, catchError } from 'rxjs/operators';
 import { Note } from '../../../../core/models';
 import { NotesService } from '../../services/notes.service';
 import { SearchService } from '../../services/search.service';
 import { LayoutService } from '../../../../../@vex/services/layout.service';
+
+interface BackendNoteResponse {
+  id: string;
+  user_id: number;
+  notebook_id?: string | null;
+  title: string;
+  pinned: boolean;
+  archived: boolean;
+  trashed: boolean;
+  version: number;
+  synced: boolean;
+  created_at: string;
+  updated_at?: string;
+  last_modified?: string;
+  notebook_name?: string | null;
+  notebook_description?: string | null;
+  notebook_color_id?: number | null;
+  notebook_color_hex?: string | null;
+  notebook_color_name?: string | null;
+  stack_id?: string | null;
+  stack_name?: string | null;
+  tag_count?: number;
+  tags?: string[];
+  file_count?: number;
+  task_count?: number;
+  completed_task_count?: number;
+  content?: string;
+}
+
+interface BackendNotesResponse {
+  notes: BackendNoteResponse[];
+  count: number;
+}
+
+interface BackendNoteDetailResponse {
+  note: BackendNoteResponse & { content: string };
+}
 
 @Component({
   selector: 'vex-notes-dashboard',
@@ -26,10 +63,20 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
   // Computed observables
   filteredNotes$: Observable<Note[]>;
   
+  // Local state management
+  private notesSubject = new BehaviorSubject<Note[]>([]);
+  private isLoadingSubject = new BehaviorSubject<boolean>(false);
+  private errorSubject = new BehaviorSubject<string | null>(null);
+  
+  // Loading and error states
+  get isLoading$(): Observable<boolean> { return this.isLoadingSubject.asObservable(); }
+  get error$(): Observable<string | null> { return this.errorSubject.asObservable(); }
+  
   // UI state
   isMobile = false;
   isSaving = false;
   lastSaved: Date | null = null;
+  sidebarVisible = true;
   
   private destroy$ = new Subject<void>();
 
@@ -41,55 +88,12 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
   private layoutService: LayoutService = inject(LayoutService);
 
   constructor() {
-    // Build filtered notes stream that reacts to all filter changes
-    this.filteredNotes$ = combineLatest([
-      this.notesService.getNotes(),
-      this.selectedNotebookId$,
-      this.selectedTagId$,
-      this.currentFilter$,
-      this.searchQuery$
-    ]).pipe(
-      map(([notes, notebookId, tagId, filter, searchQuery]) => {
-        let filtered = [...notes];
-
-        // Apply search filter
-        if (searchQuery && searchQuery.trim().length > 0) {
-          const searchTerm = searchQuery.toLowerCase().trim();
-          filtered = filtered.filter(note => {
-            const titleMatch = note.title.toLowerCase().includes(searchTerm);
-            const contentMatch = note.content.toLowerCase().includes(searchTerm);
-            const tagMatch = note.tags.some(tag => tag.toLowerCase().includes(searchTerm));
-            return titleMatch || contentMatch || tagMatch;
-          });
-        }
-
-        // Apply notebook filter
-        if (notebookId) {
-          filtered = filtered.filter(note => note.notebookId === notebookId);
-        }
-
-        // Apply tag filter
-        if (tagId) {
-          filtered = filtered.filter(note => note.tags.includes(tagId));
-        }
-
-        // Apply status filter
-        switch (filter) {
-          case 'pinned':
-            filtered = filtered.filter(note => note.pinned && !note.trashed);
-            break;
-          case 'archived':
-            filtered = filtered.filter(note => note.archived && !note.trashed);
-            break;
-          case 'trashed':
-            filtered = filtered.filter(note => note.trashed);
-            break;
-          default:
-            filtered = filtered.filter(note => !note.trashed && !note.archived);
-        }
-
-        // Sort: pinned first, then by updatedAt descending
-        return filtered.sort((a, b) => {
+    // Initial filtered notes - will be updated based on route params
+    this.filteredNotes$ = this.notesSubject.asObservable().pipe(
+      map(notes => {
+        return notes
+          .filter(note => !note.trashed && !note.archived)
+          .sort((a, b) => {
           if (a.pinned && !b.pinned) return -1;
           if (!a.pinned && b.pinned) return 1;
           return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
@@ -97,24 +101,88 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Auto-select first note when filtered notes change
+    // Auto-select first note when filtered notes change (only if no note is selected from route)
     this.filteredNotes$.pipe(
       takeUntil(this.destroy$),
       withLatestFrom(this.selectedNote$)
     ).subscribe(([filteredNotes, currentSelected]) => {
       // Only auto-select if no note is currently selected or current note is not in filtered list
-      if (filteredNotes.length > 0) {
-        const currentSelectedId = currentSelected?.id;
-        const isCurrentNoteInList = currentSelectedId && filteredNotes.some(n => n.id === currentSelectedId);
-        
-        if (!currentSelected || !isCurrentNoteInList) {
-          this.selectedNote$.next(filteredNotes[0]);
+      if (filteredNotes.length > 0 && !currentSelected) {
+          // Load full note with content before selecting
+          this.loadNoteById(filteredNotes[0].id).pipe(
+            takeUntil(this.destroy$)
+          ).subscribe(note => {
+            if (note) {
+              this.selectedNote$.next(note);
+            } else {
+              this.selectedNote$.next(filteredNotes[0]);
+            }
+          });
+      } else if (filteredNotes.length === 0) {
+        // No notes in filtered list, clear selection if not from route
+        const routeParams = this.route.snapshot.params;
+        if (!routeParams['noteId'] && !routeParams['id']) {
+          this.selectedNote$.next(null);
         }
-      } else {
-        // No notes in filtered list, clear selection
-        this.selectedNote$.next(null);
       }
     });
+  }
+
+  private mapBackendNoteToFrontend(backendNote: BackendNoteResponse): Note {
+    return {
+      id: backendNote.id,
+      userId: backendNote.user_id.toString(),
+      title: backendNote.title,
+      content: backendNote.content || '',
+      tags: backendNote.tags || [],
+      notebookId: backendNote.notebook_id || undefined,
+      pinned: backendNote.pinned,
+      archived: backendNote.archived,
+      trashed: backendNote.trashed,
+      createdAt: backendNote.created_at,
+      updatedAt: backendNote.updated_at || backendNote.created_at,
+      version: backendNote.version,
+      synced: backendNote.synced,
+      lastModified: backendNote.last_modified || backendNote.updated_at || backendNote.created_at,
+      attachments: [],
+      tasks: []
+    };
+  }
+
+  private loadNoteById(id: string): Observable<Note | undefined> {
+    this.isLoadingSubject.next(true);
+    this.errorSubject.next(null);
+    return this.notesService.getNoteById({ id }).pipe(
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (!backendResponse || !backendResponse.note) {
+          return undefined;
+        }
+        const note = this.mapBackendNoteToFrontend(backendResponse.note);
+        this.updateNoteInCache(note);
+        this.isLoadingSubject.next(false);
+        return note;
+      }),
+      catchError(error => {
+        this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to load note');
+        this.isLoadingSubject.next(false);
+        console.error('Error loading note:', error);
+        return of(undefined);
+      })
+    );
+  }
+
+  private updateNoteInCache(updatedNote: Note): void {
+    const currentNotes = this.notesSubject.value;
+    const noteIndex = currentNotes.findIndex(n => n.id === updatedNote.id);
+    
+    if (noteIndex >= 0) {
+      const updatedNotes = [...currentNotes];
+      updatedNotes[noteIndex] = updatedNote;
+      this.notesSubject.next(updatedNotes);
+    } else {
+      this.notesSubject.next([...currentNotes, updatedNote]);
+    }
   }
 
   ngOnInit(): void {
@@ -126,22 +194,15 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     });
 
     // Helper to collect all params from route tree
-    // Child route params take precedence over parent params
     const getAllParams = (route: ActivatedRoute): { [key: string]: any } => {
       const params: { [key: string]: any } = {};
-      let current: ActivatedRoute | null = route;
-      
-      // First collect all parent params
       const parentParams: { [key: string]: any } = {};
       let parent: ActivatedRoute | null = route.parent;
       while (parent) {
         Object.assign(parentParams, parent.snapshot.params);
         parent = parent.parent;
       }
-      
-      // Then merge with current route params (child params override parent)
       Object.assign(params, parentParams, route.snapshot.params);
-      
       return params;
     };
 
@@ -159,25 +220,203 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
   }
 
   private handleRouteParams(params: { [key: string]: any }): void {
-    // Handle notebook filtering from route
-    if (params['notebookId']) {
-      this.onNotebookSelected(params['notebookId']);
-    }
+    const notebookId = params['notebookId'];
+    const tagId = params['tagId'];
+    const stackId = params['stackId'];
     
-    // Handle stack filtering (for stack notebooks view)
-    // Note: stack filtering is UI-only, we can track it but notes filtering is by notebook
-    if (params['stackId'] && !params['notebookId']) {
-      // This is the stack notebooks list view - we don't filter notes by stack directly
-      // The stack view shows notebooks, not notes, so this is handled at a different level
-      // For now, clear notebook filter when viewing stack notebooks
-      this.selectedNotebookId$.next(null);
+    this.isLoadingSubject.next(true);
+    this.errorSubject.next(null);
+    
+    // Fetch notes from API based on route params
+    if (tagId) {
+      // Fetch notes by tag
+      this.notesService.getAllNotes({ tag_id: tagId, archived: false, trashed: false }).pipe(
+        takeUntil(this.destroy$),
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          const notesArray = backendResponse?.notes || [];
+          return notesArray.map((note: BackendNoteResponse) => this.mapBackendNoteToFrontend(note));
+        }),
+        map(notes => {
+          return notes.sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          });
+        }),
+        catchError(error => {
+          this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to load notes');
+          this.isLoadingSubject.next(false);
+          return of([]);
+        })
+      ).subscribe(notes => {
+        this.notesSubject.next(notes);
+        this.filteredNotes$ = of(notes).pipe(
+          map(filteredNotes => {
+            const searchQuery = this.searchQuery$.value;
+            if (searchQuery && searchQuery.trim().length > 0) {
+              const searchTerm = searchQuery.toLowerCase().trim();
+              return filteredNotes.filter(note => {
+                const titleMatch = note.title.toLowerCase().includes(searchTerm);
+                const contentMatch = note.content.toLowerCase().includes(searchTerm);
+                const tagMatch = note.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+                return titleMatch || contentMatch || tagMatch;
+              });
+            }
+            return filteredNotes;
+          })
+        );
+        this.selectedTagId$.next(tagId);
+        this.selectedNotebookId$.next(null);
+        this.isLoadingSubject.next(false);
+      });
+    } else if (notebookId) {
+      // Fetch notes by notebook
+      this.notesService.getAllNotes({ notebook_id: notebookId, archived: false, trashed: false }).pipe(
+        takeUntil(this.destroy$),
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          const notesArray = backendResponse?.notes || [];
+          return notesArray.map((note: BackendNoteResponse) => this.mapBackendNoteToFrontend(note));
+        }),
+        map(notes => {
+          return notes.sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          });
+        }),
+        catchError(error => {
+          this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to load notes');
+          this.isLoadingSubject.next(false);
+          return of([]);
+        })
+      ).subscribe(notes => {
+        this.notesSubject.next(notes);
+        this.filteredNotes$ = of(notes).pipe(
+          map(filteredNotes => {
+            const searchQuery = this.searchQuery$.value;
+            if (searchQuery && searchQuery.trim().length > 0) {
+              const searchTerm = searchQuery.toLowerCase().trim();
+              return filteredNotes.filter(note => {
+                const titleMatch = note.title.toLowerCase().includes(searchTerm);
+                const contentMatch = note.content.toLowerCase().includes(searchTerm);
+                const tagMatch = note.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+                return titleMatch || contentMatch || tagMatch;
+              });
+            }
+            return filteredNotes;
+          })
+        );
+        this.selectedNotebookId$.next(notebookId);
+        this.selectedTagId$.next(null);
+        this.isLoadingSubject.next(false);
+      });
+    } else if (stackId && !notebookId) {
+      // Fetch notes by stack
+      this.notesService.getAllNotes({ stack_id: stackId, archived: false, trashed: false }).pipe(
+        takeUntil(this.destroy$),
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          const notesArray = backendResponse?.notes || [];
+          return notesArray.map((note: BackendNoteResponse) => this.mapBackendNoteToFrontend(note));
+        }),
+        map(notes => {
+          return notes.sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          });
+        }),
+        catchError(error => {
+          this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to load notes');
+          this.isLoadingSubject.next(false);
+          return of([]);
+        })
+      ).subscribe(notes => {
+        this.notesSubject.next(notes);
+        this.filteredNotes$ = of(notes).pipe(
+          map(filteredNotes => {
+            const searchQuery = this.searchQuery$.value;
+            if (searchQuery && searchQuery.trim().length > 0) {
+              const searchTerm = searchQuery.toLowerCase().trim();
+              return filteredNotes.filter(note => {
+                const titleMatch = note.title.toLowerCase().includes(searchTerm);
+                const contentMatch = note.content.toLowerCase().includes(searchTerm);
+                const tagMatch = note.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+                return titleMatch || contentMatch || tagMatch;
+              });
+            }
+            return filteredNotes;
+          })
+        );
+        this.selectedNotebookId$.next(null);
+        this.selectedTagId$.next(null);
+        this.isLoadingSubject.next(false);
+      });
+    } else {
+      // Default: load all notes
+      this.notesService.getAllNotes({ archived: false, trashed: false }).pipe(
+        takeUntil(this.destroy$),
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          const notesArray = backendResponse?.notes || [];
+          return notesArray.map((note: BackendNoteResponse) => this.mapBackendNoteToFrontend(note));
+        }),
+        catchError(error => {
+          this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to load notes');
+          this.isLoadingSubject.next(false);
+          return of([]);
+        })
+      ).subscribe(notes => {
+        this.notesSubject.next(notes);
+        this.filteredNotes$ = this.notesSubject.asObservable().pipe(
+          map(allNotes => {
+            let filtered = allNotes.filter(note => !note.trashed && !note.archived);
+            
+            // Apply status filter
+            const filter = this.currentFilter$.value;
+            switch (filter) {
+              case 'pinned':
+                filtered = filtered.filter(note => note.pinned);
+                break;
+              case 'archived':
+                filtered = filtered.filter(note => note.archived);
+                break;
+              case 'trashed':
+                filtered = allNotes.filter(note => note.trashed);
+                break;
+            }
+            
+            // Apply search filter
+            const searchQuery = this.searchQuery$.value;
+            if (searchQuery && searchQuery.trim().length > 0) {
+              const searchTerm = searchQuery.toLowerCase().trim();
+              filtered = filtered.filter(note => {
+                const titleMatch = note.title.toLowerCase().includes(searchTerm);
+                const contentMatch = note.content.toLowerCase().includes(searchTerm);
+                const tagMatch = note.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+                return titleMatch || contentMatch || tagMatch;
+              });
+            }
+            
+            return filtered.sort((a, b) => {
+              if (a.pinned && !b.pinned) return -1;
+              if (!a.pinned && b.pinned) return 1;
+              return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            });
+          })
+        );
+        this.selectedNotebookId$.next(null);
+        this.selectedTagId$.next(null);
+        this.isLoadingSubject.next(false);
+      });
     }
     
     // Handle note selection (for routes with :noteId)
     if (params['noteId']) {
       this.selectNoteById(params['noteId']);
     } else if (params['id']) {
-      // Fallback for routes using :id instead of :noteId
       this.selectNoteById(params['id']);
     }
   }
@@ -213,12 +452,44 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
 
   onSearchQueryChanged(query: string): void {
     this.searchQuery$.next(query);
+    
+    // Re-apply search filter to current filtered notes
+    this.filteredNotes$.pipe(
+      takeUntil(this.destroy$),
+      take(1)
+    ).subscribe(currentNotes => {
+      if (query && query.trim().length > 0) {
+        const searchTerm = query.toLowerCase().trim();
+        const filtered = currentNotes.filter(note => {
+          const titleMatch = note.title.toLowerCase().includes(searchTerm);
+          const contentMatch = note.content.toLowerCase().includes(searchTerm);
+          const tagMatch = note.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+          return titleMatch || contentMatch || tagMatch;
+        });
+        this.filteredNotes$ = of(filtered);
+      } else {
+        // Reload based on current route params when search is cleared
+        const getAllParams = (route: ActivatedRoute): { [key: string]: any } => {
+          const params: { [key: string]: any } = {};
+          const parentParams: { [key: string]: any } = {};
+          let parent: ActivatedRoute | null = route.parent;
+          while (parent) {
+            Object.assign(parentParams, parent.snapshot.params);
+            parent = parent.parent;
+          }
+          Object.assign(params, parentParams, route.snapshot.params);
+          return params;
+        };
+        const allParams = getAllParams(this.route);
+        this.handleRouteParams(allParams);
+      }
+    });
   }
 
   // Note selection handlers
   onNoteSelected(note: Note): void {
     // Fetch the latest note data from service to ensure we have complete, up-to-date data
-    this.notesService.getNoteById(note.id).pipe(
+    this.loadNoteById(note.id).pipe(
       takeUntil(this.destroy$)
     ).subscribe(updatedNote => {
       if (updatedNote) {
@@ -255,7 +526,7 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
 
   selectNoteById(noteId: string): void {
     // Fetch note data directly from service to ensure we have the latest, complete data
-    this.notesService.getNoteById(noteId).pipe(
+    this.loadNoteById(noteId).pipe(
       takeUntil(this.destroy$)
     ).subscribe(note => {
       if (note) {
@@ -301,16 +572,53 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     };
 
     // Create note through service (returns Observable)
-    this.notesService.createNote(newNoteData).pipe(
-      takeUntil(this.destroy$)
+    this.isSaving = true;
+    const payload: any = {
+      title: newNoteData.title || 'Untitled'
+    };
+    if (newNoteData.notebookId) {
+      payload.notebook_id = newNoteData.notebookId;
+    }
+    
+    this.notesService.createNote(payload).pipe(
+      takeUntil(this.destroy$),
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Invalid response structure');
+        }
+        return this.mapBackendNoteToFrontend(backendResponse.note);
+      }),
+      switchMap(createdNote => {
+        // Save content if provided
+        if (newNoteData.content) {
+          return this.notesService.saveNoteContent(createdNote.id, { content: newNoteData.content }).pipe(
+            switchMap(() => {
+              createdNote.content = newNoteData.content || '';
+              return this.loadNoteById(createdNote.id);
+            }),
+            catchError(() => of(createdNote))
+          );
+        }
+        return of(createdNote);
+      }),
+      catchError(error => {
+        this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to create note');
+        this.isSaving = false;
+        console.error('Failed to create note:', error);
+        return throwError(() => error);
+      })
     ).subscribe({
       next: (createdNote) => {
-        // Note has been optimistically added to the list via BehaviorSubject update
-        // Now select it and navigate to it
+        this.updateNoteInCache(createdNote);
         this.selectedNote$.next(createdNote);
+        this.isSaving = false;
+        this.lastSaved = new Date();
         
         // Navigate to the new note route
-        if (currentNotebookId) {
+        const noteNotebookId = createdNote.notebookId || currentNotebookId;
+        
+        if (noteNotebookId) {
           // Check if we're in a stack context
           const route = this.route;
           let stackId: string | null = null;
@@ -324,20 +632,18 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
           }
           
           if (stackId) {
-            // Navigate to stack notebook note route
-            this.router.navigate(['/notes/stack', stackId, 'notebook', currentNotebookId, 'note', createdNote.id]);
+            this.router.navigate(['/notes/stack', stackId, 'notebook', noteNotebookId, 'note', createdNote.id]);
           } else {
-            // Navigate to notebook note route
-            this.router.navigate(['/notes/notebook', currentNotebookId, 'note', createdNote.id]);
+            this.router.navigate(['/notes/notebook', noteNotebookId, 'note', createdNote.id]);
           }
         } else {
-          // Navigate to general note route
           this.router.navigate(['/notes', createdNote.id]);
         }
       },
       error: (error) => {
         console.error('Failed to create note:', error);
-        // TODO: Show user-friendly error message (toast/snackbar)
+        this.isSaving = false;
+        alert('Failed to create note: ' + (error?.error?.msg || error?.message || 'Unknown error'));
       }
     });
   }
@@ -437,16 +743,36 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     if (!currentNote) return;
     
     this.isSaving = true;
-    this.notesService.updateNote(currentNote.id, { pinned: !currentNote.pinned })
-      .then(updated => {
+    const pinAction = currentNote.pinned 
+      ? this.notesService.unpinNote(currentNote.id)
+      : this.notesService.pinNote(currentNote.id);
+    
+    pinAction.pipe(
+      takeUntil(this.destroy$),
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Invalid response structure');
+        }
+        return this.mapBackendNoteToFrontend(backendResponse.note);
+      }),
+      catchError(error => {
+        this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to pin/unpin note');
+        this.isSaving = false;
+        console.error('Failed to pin/unpin note:', error);
+        return throwError(() => error);
+      })
+    ).subscribe({
+      next: (updated) => {
+        this.updateNoteInCache(updated);
         this.selectedNote$.next(updated);
         this.isSaving = false;
         this.lastSaved = new Date();
-      })
-      .catch(err => {
-        console.error('Failed to pin note:', err);
+      },
+      error: () => {
         this.isSaving = false;
-      });
+      }
+    });
   }
 
   onArchive(): void {
@@ -454,8 +780,28 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     if (!currentNote) return;
     
     this.isSaving = true;
-    this.notesService.updateNote(currentNote.id, { archived: !currentNote.archived })
-      .then(updated => {
+    const archiveAction = currentNote.archived
+      ? this.notesService.unarchiveNote(currentNote.id)
+      : this.notesService.archiveNote(currentNote.id);
+    
+    archiveAction.pipe(
+      takeUntil(this.destroy$),
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Invalid response structure');
+        }
+        return this.mapBackendNoteToFrontend(backendResponse.note);
+      }),
+      catchError(error => {
+        this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to archive/unarchive note');
+        this.isSaving = false;
+        console.error('Failed to archive/unarchive note:', error);
+        return throwError(() => error);
+      })
+    ).subscribe({
+      next: (updated) => {
+        this.updateNoteInCache(updated);
         this.selectedNote$.next(updated);
         this.isSaving = false;
         this.lastSaved = new Date();
@@ -463,11 +809,11 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
         if (updated.archived) {
           this.router.navigate(['/notes/dashboard']);
         }
-      })
-      .catch(err => {
-        console.error('Failed to archive note:', err);
+      },
+      error: () => {
         this.isSaving = false;
-      });
+      }
+    });
   }
 
   onExport(): void {
@@ -496,29 +842,50 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     if (!currentNote) return;
 
     // Create duplicate with new ID, preserving all content
-    const duplicatedNote: Partial<Note> = {
-      title: `${currentNote.title} (Copy)`,
-      content: currentNote.content,
-      tags: [...(currentNote.tags || [])],
-      notebookId: currentNote.notebookId,
-      pinned: false,
-      archived: false,
-      trashed: false,
-      attachments: currentNote.attachments ? [...currentNote.attachments] : [],
-      tasks: currentNote.tasks ? currentNote.tasks.map(task => ({ ...task })) : []
+    const payload: any = {
+      title: `${currentNote.title} (Copy)`
     };
+    if (currentNote.notebookId) {
+      payload.notebook_id = currentNote.notebookId;
+    }
 
     this.isSaving = true;
-    this.notesService.createNote(duplicatedNote).pipe(
-      takeUntil(this.destroy$)
+    this.notesService.createNote(payload).pipe(
+      takeUntil(this.destroy$),
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Invalid response structure');
+        }
+        return this.mapBackendNoteToFrontend(backendResponse.note);
+      }),
+      switchMap(createdNote => {
+        // Save content if provided
+        if (currentNote.content) {
+          return this.notesService.saveNoteContent(createdNote.id, { content: currentNote.content }).pipe(
+            switchMap(() => {
+              createdNote.content = currentNote.content;
+              return this.loadNoteById(createdNote.id);
+            }),
+            catchError(() => of(createdNote))
+          );
+        }
+        return of(createdNote);
+      }),
+      catchError(error => {
+        this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to duplicate note');
+        this.isSaving = false;
+        console.error('Failed to duplicate note:', error);
+        return throwError(() => error);
+      })
     ).subscribe({
       next: (duplicate) => {
+        this.updateNoteInCache(duplicate);
         this.onNoteSelected(duplicate);
         this.isSaving = false;
         this.lastSaved = new Date();
       },
-      error: (error) => {
-        console.error('Failed to duplicate note:', error);
+      error: () => {
         this.isSaving = false;
       }
     });
@@ -570,17 +937,35 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
     
     if (confirm('Are you sure you want to delete this note?')) {
       this.isSaving = true;
-      this.notesService.deleteNote(currentNote.id)
-        .then(() => {
+      this.notesService.deleteNote(currentNote.id).pipe(
+        takeUntil(this.destroy$),
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          if (!backendResponse?.success) {
+            throw new Error(backendResponse?.msg || 'Failed to delete note');
+          }
+          return true;
+        }),
+        catchError(error => {
+          this.errorSubject.next(error?.error?.msg || error?.message || 'Failed to delete note');
+          this.isSaving = false;
+          console.error('Failed to delete note:', error);
+          return throwError(() => error);
+        })
+      ).subscribe({
+        next: () => {
+          // Remove from cache
+          const currentNotes = this.notesSubject.value;
+          this.notesSubject.next(currentNotes.filter(n => n.id !== currentNote.id));
           this.selectedNote$.next(null);
           this.isSaving = false;
           // Navigate to dashboard
           this.router.navigate(['/notes/dashboard']);
-        })
-        .catch(err => {
-          console.error('Failed to delete note:', err);
+        },
+        error: () => {
           this.isSaving = false;
-        });
+        }
+      });
     }
   }
 
@@ -603,6 +988,10 @@ export class NotesDashboardComponent implements OnInit, OnDestroy {
 
   get searchQuery(): string {
     return this.searchQuery$.value;
+  }
+
+  onHideSidebar(): void {
+    this.sidebarVisible = !this.sidebarVisible;
   }
 }
 

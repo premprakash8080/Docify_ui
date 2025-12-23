@@ -9,6 +9,7 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { CustomLayoutModule } from './custom-layout/custom-layout.module';
 import { DataInitService, initializeAppFactory } from './core/services/data-init.service';
 import { HttpResponseInterceptor } from './core/interceptors/http.interceptor';
+import { LoadingSpinnerModule } from './core/components/loading-spinner/loading-spinner.module';
 
 @NgModule({
   declarations: [AppComponent],
@@ -20,7 +21,8 @@ import { HttpResponseInterceptor } from './core/interceptors/http.interceptor';
 
     // Vex
     VexModule,
-    CustomLayoutModule
+    CustomLayoutModule,
+    LoadingSpinnerModule
   ],
   providers: [
     {

@@ -4,6 +4,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { NotebookRow } from '../../../../core/models/notebook.model';
 
 @Component({
@@ -14,7 +16,9 @@ import { NotebookRow } from '../../../../core/models/notebook.model';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatMenuModule
+    MatMenuModule,
+    MatTooltipModule,
+    ReactiveFormsModule
   ],
   templateUrl: './notebooks-grid-view.component.html',
   styleUrls: ['./notebooks-grid-view.component.scss'],
@@ -22,10 +26,14 @@ import { NotebookRow } from '../../../../core/models/notebook.model';
 })
 export class NotebooksGridViewComponent implements OnInit, OnChanges {
   @Input() notebooks: NotebookRow[] = [];
+  @Input() searchControl: FormControl = new FormControl('');
 
   @Output() notebookClick = new EventEmitter<NotebookRow>();
   @Output() stackClick = new EventEmitter<NotebookRow>();
   @Output() menuClick = new EventEmitter<{ event: Event; row: NotebookRow }>();
+  @Output() searchChange = new EventEmitter<string>();
+  @Output() filterClick = new EventEmitter<'tag' | 'notebook' | 'created' | 'updated'>();
+  @Output() addNotebook = new EventEmitter<void>();
 
   // Navigation stack for breadcrumb-like navigation
   navigationStack: NotebookRow[] = [];
@@ -132,5 +140,18 @@ export class NotebooksGridViewComponent implements OnInit, OnChanges {
 
   get hasBackButton(): boolean {
     return this.navigationStack.length > 0;
+  }
+
+  onSearchInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.searchChange.emit(target.value);
+  }
+
+  onFilterClick(filterType: 'tag' | 'notebook' | 'created' | 'updated'): void {
+    this.filterClick.emit(filterType);
+  }
+
+  onAddNotebook(): void {
+    this.addNotebook.emit();
   }
 }

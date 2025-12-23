@@ -1,227 +1,33 @@
-.tasks-container {
-  min-height: 100vh;
-  background: var(--background-foreground);
-  color: var(--text-color);
+.search-box-on-tabs-table {
+  right: 24px;
+  top: 12px;
+  max-width: 400px;
+  width: 100%;
+  z-index: 10;
+  position: absolute;
 }
 
-// Header Section
-.header-section {
-  padding: 2rem 2rem 1rem;
-}
-
-.title-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-}
-
-.title {
-  font-size: 2.25rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-  color: var(--text-color);
-}
-
-// Tabs
-.tabs-container {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  border-bottom: 1px solid var(--foreground-divider);
-}
-
-.tab-button {
-  padding: 0.75rem 0.25rem;
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: color 0.2s;
-  border-bottom: 2px solid transparent;
-
-  &:hover {
-    color: var(--text-color);
-  }
-
-  &.active {
-    color: var(--text-color);
-    border-bottom-color: var(--color-primary-rgb);
-  }
-}
-
-// Actions Bar
-.actions-bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-left: 2rem;
-}
-
-.new-task-button {
-  background-color: var(--color-primary-rgb);
-  color: var(--color-primary-contrast-rgb);
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  font-size: 0.875rem;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: rgba(var(--color-primary), 0.9);
-  }
-}
-
-.filter-button {
-  color: var(--text-secondary);
-  padding: 0.5rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: color 0.2s;
-
-  &:hover {
-    color: var(--text-color);
-  }
-}
-
-// Search Input
-.search-container {
+.table-with-tabs-header {
   position: relative;
 }
 
-.search-input {
-  width: 12rem;
-  background-color: var(--background-foreground);
-  border: 1px solid var(--foreground-divider);
-  border-radius: 0.375rem;
-  padding: 0.5rem 1rem 0.5rem 2.5rem;
-  font-size: 0.875rem;
-  color: var(--text-color);
+.table-mega-header {
+  position: relative;
+}
 
-  &::placeholder {
-    color: var(--text-hint);
+@media screen and (max-width: 1504px) {
+  .search-box-on-tabs-table {
+    left: unset;
+    right: unset;
+    top: unset;
+    padding-top: 14px;
+    padding-left: 20px;
+    padding-right: 20px;
+    position: relative;
   }
 
-  &:focus {
-    outline: none;
-    border-color: var(--color-primary-rgb);
-  }
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1rem;
-  height: 1rem;
-  color: var(--text-hint);
-  pointer-events: none;
-}
-
-// Tasks Table
-.tasks-table-container {
-  padding: 0 2rem;
-}
-
-.tasks-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.table-header {
-  border-bottom: 1px solid var(--foreground-divider);
-}
-
-.table-header-cell {
-  text-align: left;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  width: 12rem;
-
-  &:first-child {
-    width: 3rem;
-  }
-
-  &:nth-child(3),
-  &:nth-child(4),
-  &:nth-child(5) {
-    width: 10rem;
+  .table-with-tabs-header::before {
+    top: 101px;
   }
 }
 
-.table-row {
-  border-bottom: 1px solid var(--foreground-divider);
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: var(--background-hover);
-  }
-}
-
-.table-cell {
-  padding: 1rem;
-  font-size: 0.875rem;
-  color: var(--text-color);
-
-  &.overdue {
-    color: var(--color-warn-rgb);
-  }
-}
-
-.task-checkbox {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 0.25rem;
-  border: 1px solid var(--foreground-divider);
-  background-color: var(--background-foreground);
-  color: var(--color-primary-rgb);
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    ring: 2px;
-    ring-color: var(--color-primary-rgb);
-  }
-}
-
-.task-title {
-  color: var(--text-color);
-}
-
-.task-icon {
-  width: 1rem;
-  height: 1rem;
-  color: var(--text-secondary);
-}
-
-// Utility classes (can still use Tailwind for layout, but ensuring theme colors)
-.flex {
-  display: flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.gap-2 {
-  gap: 0.5rem;
-}
-
-.overflow-x-auto {
-  overflow-x: auto;
-}
-
-// Empty state (if needed)
-.empty-state {
-  padding: 3rem;
-  text-align: center;
-  color: var(--text-secondary);
-}

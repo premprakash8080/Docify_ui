@@ -1,33 +1,41 @@
 @if (file) {
   <div class="file-preview-container">
-    <!-- Header with breadcrumb and actions -->
+    <!-- Header with Go to Notes button and actions -->
     <div class="file-preview-header">
+      <!-- Top-left: Go to Notes button (for images and PDFs) -->
+      @if ((fileType === 'Image' || fileType === 'PDF') && file.noteId) {
+        <button 
+          mat-button 
+          class="go-to-notes-button"
+          (click)="onGoToNote()"
+          type="button">
+          <mat-icon svgIcon="mat:note"></mat-icon>
+          Go to Notes
+        </button>
+      }
+      
+      <!-- Breadcrumb (centered or after button) -->
       <div class="breadcrumb">
         <span class="breadcrumb-item">Files</span>
         <mat-icon class="breadcrumb-separator" svgIcon="mat:chevron_right"></mat-icon>
         <span class="breadcrumb-item current">{{ file.filename }}</span>
       </div>
+      
+      <!-- Header actions (right side) -->
       <div class="header-actions">
-        @if (file.noteId) {
-          <button 
-            mat-button 
-            (click)="onGoToNote()"
-            type="button">
-            <mat-icon svgIcon="mat:note"></mat-icon>
-            Go to note
-          </button>
-        }
         <button 
           mat-icon-button 
           (click)="onDownload()"
           type="button"
-          [disabled]="!file.url">
+          [disabled]="!file.url"
+          matTooltip="Download">
           <mat-icon svgIcon="mat:download"></mat-icon>
         </button>
         <button 
           mat-icon-button 
           (click)="onClose()"
-          type="button">
+          type="button"
+          matTooltip="Close">
           <mat-icon svgIcon="mat:close"></mat-icon>
         </button>
       </div>

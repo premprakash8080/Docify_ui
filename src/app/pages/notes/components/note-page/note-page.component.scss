@@ -46,6 +46,15 @@
   height: 100%; // Take full height
   margin: 0;
   padding: 0;
+  transition: width 0.3s ease, min-width 0.3s ease, max-width 0.3s ease;
+  
+  &.hidden {
+    width: 0;
+    min-width: 0;
+    max-width: 0;
+    border-right: none;
+    overflow: hidden;
+  }
   
   // Ensure the notes-list component can scroll independently
   ::ng-deep {
@@ -71,6 +80,48 @@
   margin: 0;
   padding: 0;
   
+  // Empty state styling
+  .editor-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    
+    .empty-content {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+      
+      .empty-icon {
+        font-size: 4rem;
+        width: 4rem;
+        height: 4rem;
+        margin: 0 auto 1rem;
+        opacity: 0.5;
+      }
+      
+      .empty-title {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin: 0 0 0.5rem;
+        color: var(--text-primary);
+      }
+      
+      .empty-description {
+        font-size: 0.875rem;
+        margin: 0 0 1.5rem;
+        color: var(--text-secondary);
+      }
+      
+      button {
+        mat-icon {
+          margin-right: 0.5rem;
+        }
+      }
+    }
+  }
+  
   // Ensure child component fills the area
   ::ng-deep {
     vex-note-page-content {
@@ -79,6 +130,50 @@
       height: 100%;
       width: 100%;
       min-height: 0;
+    }
+  }
+}
+
+// Mobile empty state
+.note-page-mobile {
+  .editor-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    
+    .empty-content {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+      
+      .empty-icon {
+        font-size: 4rem;
+        width: 4rem;
+        height: 4rem;
+        margin: 0 auto 1rem;
+        opacity: 0.5;
+      }
+      
+      .empty-title {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin: 0 0 0.5rem;
+        color: var(--text-primary);
+      }
+      
+      .empty-description {
+        font-size: 0.875rem;
+        margin: 0 0 1.5rem;
+        color: var(--text-secondary);
+      }
+      
+      button {
+        mat-icon {
+          margin-right: 0.5rem;
+        }
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-<h3 matDialogTitle>
+<!-- <h3 matDialogTitle>
   {{ event.title }}
 </h3>
 
@@ -30,4 +30,297 @@
 <mat-dialog-actions class="flex justify-end">
   <button mat-button mat-dialog-close>Cancel</button>
   <button (click)="save()" class="save" color="primary" mat-raised-button>Save</button>
+</mat-dialog-actions> -->
+
+<h3 matDialogTitle class="text-lg font-semibold">
+  {{ displayTitle }}
+</h3>
+
+<mat-dialog-content class="mat-typography calendar-dialog-content">
+  @if (isLoading) {
+    <div class="flex flex-col items-center justify-center py-12 gap-4">
+      <mat-spinner diameter="40"></mat-spinner>
+      <span class="text-gray-600">Loading details...</span>
+    </div>
+  } @else if (error) {
+    <div class="flex items-center gap-2 text-red-600 py-8 px-4">
+      <mat-icon>error</mat-icon>
+      <span>{{ error }}</span>
+    </div>
+  } @else {
+    <div class="flex flex-col gap-5 py-2">
+      <!-- Type Badge + Status Icons -->
+      <div class="flex items-center gap-3 flex-wrap pb-2 border-b">
+        <span class="text-sm font-medium text-gray-700">Type:</span>
+        <mat-chip
+          [ngClass]="{
+            'task-chip': event.meta?.type === 'task',
+            'note-chip': event.meta?.type !== 'task'
+          }"
+          selected
+          disableRipple
+        >
+          {{ event.meta?.type === "task" ? "Task" : "Note" }}
+        </mat-chip>
+
+        <mat-icon
+          *ngIf="event.meta?.type === 'task' && event.meta?.completed"
+          class="text-green-600"
+          matTooltip="Completed"
+        >
+          check_circle
+        </mat-icon>
+
+        <mat-icon *ngIf="isOverdue" class="text-red-600" matTooltip="Overdue">
+          warning
+        </mat-icon>
+
+        <mat-icon
+          *ngIf="taskDetail?.flagged"
+          class="text-orange-600"
+          matTooltip="Flagged"
+        >
+          flag
+        </mat-icon>
+      </div>
+
+      <!-- TASK DETAILS -->
+      @if (taskDetail) {
+        @let task = taskDetail;
+        
+        <!-- Title/Label -->
+      <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Task Label</mat-label>
+          <input matInput [value]="task.label || 'Untitled Task'" readonly />
+      </mat-form-field>
+
+        <!-- Description -->
+      <mat-form-field 
+          *ngIf="task.description" 
+        appearance="outline" 
+        class="w-full">
+        <mat-label>Description</mat-label>
+          <textarea matInput [value]="task.description" readonly rows="4"></textarea>
+      </mat-form-field>
+
+      <!-- Start Date -->
+        <mat-form-field *ngIf="task.start_date" appearance="outline" class="w-full">
+          <mat-label>Start Date</mat-label>
+          <input matInput [value]="task.start_date" readonly />
+          <mat-icon svgIcon="mat:event"></mat-icon>
+        </mat-form-field>
+
+        <!-- End Date -->
+        <mat-form-field *ngIf="task.end_date" appearance="outline" class="w-full">
+          <mat-label>End Date</mat-label>
+          <input matInput [value]="task.end_date" readonly />
+          <mat-icon svgIcon="mat:event"></mat-icon>
+        </mat-form-field>
+
+        <!-- Start Time -->
+        <mat-form-field *ngIf="task.start_time && !event.allDay" appearance="outline" class="w-full">
+          <mat-label>Start Time</mat-label>
+          <input matInput [value]="task.start_time" readonly />
+          <mat-icon svgIcon="mat:access_time"></mat-icon>
+        </mat-form-field>
+
+        <!-- End Time -->
+        <mat-form-field *ngIf="task.end_time && !event.allDay" appearance="outline" class="w-full">
+          <mat-label>End Time</mat-label>
+          <input matInput [value]="task.end_time" readonly />
+          <mat-icon svgIcon="mat:access_time"></mat-icon>
+        </mat-form-field>
+
+        <!-- All-day indicator -->
+        <div
+          *ngIf="event.allDay"
+          class="text-sm text-gray-600 flex items-center gap-2"
+        >
+          <mat-icon svgIcon="mat:schedule" class="text-base"></mat-icon>
+          <span>All Day Event</span>
+        </div>
+
+        <!-- Due Date (if different from start_date) -->
+        <mat-form-field *ngIf="task.due_date && task.due_date !== task.start_date" appearance="outline" class="w-full">
+          <mat-label>Due Date</mat-label>
+          <input matInput [value]="task.due_date" readonly />
+          <mat-icon svgIcon="mat:event"></mat-icon>
+        </mat-form-field>
+
+        <!-- Priority -->
+        <mat-form-field *ngIf="task.priority" appearance="outline" class="w-full">
+          <mat-label>Priority</mat-label>
+          <input matInput [value]="task.priority" readonly />
+          <mat-icon svgIcon="mat:priority_high"></mat-icon>
+        </mat-form-field>
+
+        <!-- Reminder -->
+        <mat-form-field *ngIf="task.reminder" appearance="outline" class="w-full">
+          <mat-label>Reminder</mat-label>
+          <input matInput [value]="task.reminder" readonly />
+          <mat-icon svgIcon="mat:notifications"></mat-icon>
+        </mat-form-field>
+
+        <!-- Assigned To -->
+        <mat-form-field *ngIf="task.assigned_to" appearance="outline" class="w-full">
+          <mat-label>Assigned To</mat-label>
+          <input matInput [value]="task.assigned_to" readonly />
+          <mat-icon svgIcon="mat:person"></mat-icon>
+        </mat-form-field>
+
+        <!-- Status -->
+        <div class="flex items-center gap-2 pt-1">
+          <mat-icon [class]="task.completed ? 'text-green-600' : 'text-gray-400'">
+            {{ task.completed ? 'check_circle' : 'radio_button_unchecked' }}
+          </mat-icon>
+          <span svgIcon="mat:check_circle">{{ task.completed ? 'Completed' : 'Incomplete' }}</span>
+        </div>
+
+        <!-- Created/Updated Dates -->
+        <div class="flex flex-col gap-2 text-sm text-gray-600 pt-2 border-t mt-2">
+          <div class="flex items-center gap-2">
+            <mat-icon svgIcon="mat:add_circle_outline" class="text-base"></mat-icon>
+            <span>Created: {{ task.created_at | date : 'medium' }}</span>
+          </div>
+          <div *ngIf="task.updated_at" class="flex items-center gap-2">
+            <mat-icon svgIcon="mat:edit" class="text-base"></mat-icon>
+            <span>Updated: {{ task.updated_at | date : 'medium' }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- NOTE DETAILS -->
+      @if (noteDetail) {
+        @let note = noteDetail;
+        
+        <!-- Title -->
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Title</mat-label>
+          <input matInput [value]="note.title || 'Untitled Note'" readonly />
+        </mat-form-field>
+
+        <!-- Content -->
+        <!-- <mat-form-field 
+          *ngIf="note.content" 
+          appearance="outline" 
+          class="w-full">
+          <mat-label>Content</mat-label>
+          <textarea matInput [value]="note.content" readonly rows="6"></textarea>
+        </mat-form-field> -->
+
+        <!-- Date -->
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Date</mat-label>
+        <input matInput [value]="event.start | date : 'fullDate'" readonly />
+          <mat-icon svgIcon="mat:event"></mat-icon>
+      </mat-form-field>
+
+      <!-- Time if not all-day -->
+      <div
+        *ngIf="!event.allDay"
+        class="text-sm text-gray-600 flex items-center gap-2"
+      >
+          <mat-icon svgIcon="mat:access_time" class="text-base"></mat-icon>
+        <span>
+          {{ event.start | date : "shortTime" }}
+          <span *ngIf="event.end"> – {{ event.end | date : "shortTime" }}</span>
+        </span>
+      </div>
+
+      <!-- All-day indicator -->
+      <div
+        *ngIf="event.allDay"
+        class="text-sm text-gray-600 flex items-center gap-2"
+      >
+          <mat-icon svgIcon="mat:schedule" class="text-base"></mat-icon>
+        <span>All Day Event</span>
+      </div>
+
+        <!-- Tags -->
+        <div *ngIf="note.tags && note.tags.length > 0" class="flex flex-col gap-2 pt-1">
+          <span class="text-sm font-medium text-gray-700">Tags:</span>
+          <div class="flex flex-wrap gap-2">
+            <mat-chip *ngFor="let tag of note.tags" selected>
+              {{ tag }}
+            </mat-chip>
+          </div>
+        </div>
+
+        <!-- Notebook -->
+        <mat-form-field *ngIf="note.notebookId" appearance="outline" class="w-full">
+          <mat-label>Notebook</mat-label>
+          <input matInput [value]="note.notebookId" readonly />
+          <mat-icon svgIcon="mat:folder"></mat-icon>
+        </mat-form-field>
+
+        <!-- Status Indicators -->
+        <div class="flex flex-wrap gap-4 items-center pt-2">
+          <div class="flex items-center gap-2">
+            <mat-icon [class]="note.pinned ? 'text-yellow-600' : 'text-gray-400'" svgIcon="mat:push_pin"></mat-icon>
+            <span class="text-sm">{{ note.pinned ? 'Pinned' : 'Not Pinned' }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <mat-icon [class]="note.archived ? 'text-blue-600' : 'text-gray-400'" svgIcon="mat:archive"></mat-icon>
+            <span class="text-sm">{{ note.archived ? 'Archived' : 'Not Archived' }}</span>
+          </div>
+          <div *ngIf="note.trashed" class="flex items-center gap-2 text-red-600">
+            <mat-icon svgIcon="mat:delete"></mat-icon>
+            <span class="text-sm">Trashed</span>
+          </div>
+        </div>
+
+        <!-- Version & Sync Status -->
+        <div *ngIf="note.version || (note.synced !== undefined && note.synced !== null)" class="flex flex-col gap-2 text-sm text-gray-600 pt-2">
+          <div *ngIf="note.version" class="flex items-center gap-2">
+            <mat-icon svgIcon="mat:history" class="text-base"></mat-icon>
+            <span>Version: {{ note.version }}</span>
+          </div>
+          <div *ngIf="note.synced !== undefined && note.synced !== null" class="flex items-center gap-2">
+            <mat-icon [class]="note.synced ? 'text-green-600' : 'text-gray-400'" [svgIcon]="note.synced ? 'mat:cloud_done' : 'mat:cloud_off'" class="text-base"></mat-icon>
+            <span>{{ note.synced ? 'Synced' : 'Not Synced' }}</span>
+          </div>
+        </div>
+
+        <!-- Created/Updated Dates -->
+        <div class="flex flex-col gap-2 text-sm text-gray-600 pt-2 border-t mt-2">
+          <div class="flex items-center gap-2">
+            <mat-icon svgIcon="mat:add_circle_outline" class="text-base"></mat-icon>
+            <span>Created: {{ note.created_at | date : 'medium' }}</span>
+          </div>
+          <div *ngIf="note.updated_at" class="flex items-center gap-2">
+            <mat-icon svgIcon="mat:edit" class="text-base"></mat-icon>
+            <span>Updated: {{ note.updated_at | date : 'medium' }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="flex gap-2">
+  <button mat-button (click)="onClose()">Close</button>
+  
+  <!-- Go to Notes button (for tasks) -->
+  @if (showGoToNotes && !isLoading && !error) {
+    <button mat-raised-button color="accent" (click)="onNavigateToNotes()">
+      <mat-icon svgIcon="mat:description"></mat-icon>
+      <span class="ml-1">Go to Notes</span>
+    </button>
+  }
+  
+  <!-- Go to Tasks button (for notes) -->
+  @if (showGoToTasks && !isLoading && !error) {
+    <button mat-raised-button color="accent" (click)="onNavigateToTasks()">
+      <mat-icon svgIcon="mat:assignment"></mat-icon>
+      <span class="ml-1">Go to Tasks</span>
+    </button>
+  }
+  
+  <!-- Primary navigation button -->
+  @if (canNavigate && !isLoading && !error) {
+    <button mat-raised-button color="primary" (click)="onNavigate()">
+      <mat-icon [svgIcon]="navigationIcon"></mat-icon>
+      <span class="ml-1">{{ navigationLabel }}</span>
+    </button>
+  }
 </mat-dialog-actions>

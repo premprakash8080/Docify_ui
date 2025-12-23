@@ -1,0 +1,64 @@
+<vex-page-layout mode="card" *ngIf="templateId">
+  <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
+    <div class="container">
+      <h1 class="title mt-0 mb-1">Edit Template</h1>
+      <vex-breadcrumbs
+        [crumbs]="['Apps', 'Templates', 'Edit Template']"
+      ></vex-breadcrumbs>
+    </div>
+  </vex-page-layout-header>
+
+  <vex-page-layout-content class="container -mt-6">
+    <div class="card">
+      <div class="template-form">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="form-grid">
+            <div class="form-section">
+              <mat-form-field appearance="fill">
+                <mat-label>Name</mat-label>
+                <input matInput formControlName="name" required [readonly]="isSystem" />
+              </mat-form-field>
+
+              <mat-form-field appearance="fill">
+                <mat-label>Description</mat-label>
+                <textarea matInput formControlName="description" rows="3" [readonly]="isSystem"></textarea>
+              </mat-form-field>
+
+              <mat-form-field appearance="fill">
+                <mat-label>Image URL</mat-label>
+                <input matInput formControlName="image_url" [readonly]="isSystem" />
+              </mat-form-field>
+
+              <mat-form-field appearance="fill">
+                <mat-label>Content (HTML)</mat-label>
+                <textarea matInput formControlName="content" rows="10" required [readonly]="isSystem"></textarea>
+              </mat-form-field>
+
+              <div class="actions">
+                <button mat-stroked-button color="primary" type="button" routerLink="/templates">
+                  Cancel
+                </button>
+                <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || isSystem">
+                  <mat-icon svgIcon="mat:save" class="mr-1"></mat-icon>
+                  Update Template
+                </button>
+                <button mat-stroked-button color="warn" type="button" (click)="onDelete()" *ngIf="!isSystem">
+                  <mat-icon svgIcon="mat:delete" class="mr-1"></mat-icon>
+                  Delete Template
+                </button>
+              </div>
+            </div>
+
+            <div class="preview-section">
+              <vex-template-html-preview
+                [content]="contentValue"
+                [title]="'Live Preview'">
+              </vex-template-html-preview>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>
+

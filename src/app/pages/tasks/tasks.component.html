@@ -1,126 +1,165 @@
-<!-- Evernote Tasks Page - Pixel Perfect Recreation -->
-<div class="tasks-container">
-  <!-- Header Section -->
-  <div class="header-section">
-    <!-- Title and Top Bar -->
-    <div class="title-bar">
-      <div class="flex-1">
-        <h1 class="title">Tasks</h1>
-        
-        <!-- Tabs -->
-        <div class="tabs-container">
-          <button 
-            (click)="setActiveTab('my-tasks')"
-            [class.active]="activeTab === 'my-tasks'"
-            class="tab-button">
-            My tasks
-          </button>
-          <button 
-            (click)="setActiveTab('notebooks')"
-            [class.active]="activeTab === 'notebooks'"
-            class="tab-button">
-            Notebooks
-          </button>
-          <button 
-            (click)="setActiveTab('notes')"
-            [class.active]="activeTab === 'notes'"
-            class="tab-button">
-            Notes
-          </button>
-          <button 
-            (click)="setActiveTab('today')"
-            [class.active]="activeTab === 'today'"
-            class="tab-button">
-            Today
-          </button>
-          <button 
-            (click)="setActiveTab('assigned')"
-            [class.active]="activeTab === 'assigned'"
-            class="tab-button">
-            Assigned
-          </button>
-        </div>
+<vex-page-layout>
+
+  <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
+    <div [class.container]="layoutCtrl.value === 'boxed'" [class.px-gutter]="layoutCtrl.value === 'fullwidth'"
+      class="w-full flex flex-col sm:flex-row justify-between">
+      <div>
+        <h1 class="title mt-0 mb-1">Tasks</h1>
+        <vex-breadcrumbs [crumbs]="['Apps', 'Tasks']"></vex-breadcrumbs>
       </div>
 
-      <!-- Right Side Actions -->
-      <div class="actions-bar">
-        <button 
-          (click)="openNewTaskModal()"
-          class="new-task-button">
-          + New Task
-        </button>
-        <button class="filter-button">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6l4 4-4 4"></path>
-          </svg>
-        </button>
-        <div class="search-container">
-          <input 
-            type="text" 
-            placeholder="Find tasks…" 
-            class="search-input">
-          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-          </svg>
-        </div>
+      <div class="hidden sm:block">
+        <mat-button-toggle-group [formControl]="layoutCtrl" class="mt-4 sm:mt-0">
+          <mat-button-toggle value="boxed">Boxed</mat-button-toggle>
+          <mat-button-toggle value="fullwidth">Full-Width</mat-button-toggle>
+        </mat-button-toggle-group>
       </div>
     </div>
-  </div>
+  </vex-page-layout-header>
 
-  <!-- Tasks Table -->
-  <div class="tasks-table-container">
-    <div class="overflow-x-auto">
-      <table class="tasks-table">
-        <thead>
-          <tr class="table-header">
-            <th class="table-header-cell">
-              <input type="checkbox" class="task-checkbox">
-            </th>
-            <th class="table-header-cell">Title</th>
-            <th class="table-header-cell">Due date</th>
-            <th class="table-header-cell">Assigned note</th>
-            <th class="table-header-cell">Assigned to</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (task of tasks; track task.id) {
-            <tr class="table-row">
-              <td class="table-cell">
-                <input 
-                  type="checkbox" 
-                  [checked]="task.completed"
-                  class="task-checkbox">
-              </td>
-              <td class="table-cell task-title">
-                {{ task.title }}
-              </td>
-              <td class="table-cell" [class.overdue]="task.isOverdue">
-                {{ task.dueDate }}
-              </td>
-              <td class="table-cell">
-                <div class="flex items-center gap-2">
-                  <svg class="task-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                  <span>{{ task.assignedNote }}</span>
-                </div>
-              </td>
-              <td class="table-cell">
-                {{ task.assignedTo }}
-              </td>
-            </tr>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-gutter]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+
+    <div class="card overflow-auto -mt-16">
+
+      
+      <div class="bg-app-bar px-6 h-16 border-b sticky left-0 flex items-center">
+        <!-- <mat-tab-group
+        animationDuration="0ms"
+        mat-stretch-tabs="false"
+        mat-align-tabs="start"
+        (selectedTabChange)="onTabChange($event)"
+      >
+        <mat-tab label="My Tasks"></mat-tab>
+        <mat-tab label="All Tasks"></mat-tab>
+        <mat-tab label="Complete Tasks"></mat-tab>
+      </mat-tab-group> -->
+        <h2 class="title my-0 ltr:pr-4 rtl:pl-4 ltr:mr-4 rtl:ml-4 ltr:border-r rtl:border-l hidden sm:block flex-none">
+          @if (selection.isEmpty()) {
+            <span>Tasks</span>
           }
-        </tbody>
-      </table>
-    </div>
-  </div>
+          @if (selection.hasValue()) {
+            <span>{{ selection.selected.length }}
+              Task@if (selection.selected.length > 1) {s} selected</span>
+          }
+        </h2>
 
-  <!-- New Task Modal Component -->
-  @if (isNewTaskModalOpen) {
-    <vex-new-task-modal 
-      (closed)="closeNewTaskModal()" 
-      (created)="onCreateTask($event)">
-    </vex-new-task-modal>
+        @if (selection.hasValue()) {
+          <div class="mr-4 pr-4 border-r flex-none">
+          <button (click)="deleteTasks(selection.selected)" color="primary" mat-icon-button
+            matTooltip="Delete selected" type="button">
+            <mat-icon svgIcon="mat:delete"></mat-icon>
+          </button>
+
+          <button color="primary" mat-icon-button matTooltip="Another action" type="button">
+            <mat-icon svgIcon="mat:folder"></mat-icon>
+          </button>
+          </div>
+        }
+
+        <div
+          class="bg-foreground rounded-full border px-4 max-w-[300px] flex-auto flex items-center border border-gray-300">          
+          <mat-icon class="icon-sm text-secondary" svgIcon="mat:search"></mat-icon>
+          <input [formControl]="searchCtrl" class="px-4 py-2 border-0 outline-none w-full bg-transparent"
+            placeholder="Search..." type="search">
+        </div>
+       
+
+        <span class="flex-1"></span>
+
+        <button [matMenuTriggerFor]="columnFilterMenu" class="ml-4 flex-none" mat-icon-button
+          matTooltip="Filter Columns" type="button">
+          <mat-icon svgIcon="mat:filter_list"></mat-icon>
+        </button>
+
+        <button (click)="createTask()" class="ml-4 flex-none" color="primary" mat-mini-fab matTooltip="Add Task"
+          type="button">
+          <mat-icon svgIcon="mat:add"></mat-icon>
+        </button>
+      
+      </div>
+
+      <table @stagger [dataSource]="dataSource" class="w-full" mat-table matSort>
+
+        <!--- Note that these columns can be defined in any order.
+              The actual rendered columns are set as a property on the row definition" -->
+
+        <!-- Checkbox Column -->
+        <ng-container matColumnDef="checkbox">
+          <th *matHeaderCellDef mat-header-cell>
+            <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()"
+              [indeterminate]="selection.hasValue() && !isAllSelected()" color="primary">
+            </mat-checkbox>
+          </th>
+          <td *matCellDef="let row" class="w-4" mat-cell>
+            <mat-checkbox (change)="$event ? selection.toggle(row) : null" (click)="$event.stopPropagation()"
+              [checked]="selection.isSelected(row)" color="primary">
+            </mat-checkbox>
+          </td>
+        </ng-container>
+
+        <!-- Text Columns -->
+        @for (column of columns; track trackByProperty($index, column)) {
+          @if (column.type === 'text') {
+            <ng-container [matColumnDef]="column.property">
+              <th *matHeaderCellDef mat-header-cell (click)="onSortChange(column.property)" class="cursor-pointer"> {{ column.label }}</th>
+              <td *matCellDef="let row" [ngClass]="column.cssClasses" mat-cell>
+                @if (column.property === 'completed') {
+                  <span>{{ row[column.property] ? 'Completed' : 'Pending' }}</span>
+                }
+                @if (column.property === 'due_date' && row[column.property]) {
+                  <span>{{ row[column.property] | date:'short' }}</span>
+                }
+                @if (column.property !== 'completed' && column.property !== 'due_date') {
+                  <span>{{ row[column.property] || '-' }}</span>
+                }
+              </td>
+            </ng-container>
+          }
+        }
+
+        <!-- Action Column -->
+        <ng-container matColumnDef="actions">
+          <th *matHeaderCellDef mat-header-cell mat-sort-header></th>
+          <td *matCellDef="let row" class="w-10 text-secondary" mat-cell>
+            <button (click)="$event.stopPropagation()" [matMenuTriggerData]="{ task: row }"
+              [matMenuTriggerFor]="actionsMenu" mat-icon-button type="button">
+              <mat-icon svgIcon="mat:more_horiz"></mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr *matHeaderRowDef="visibleColumns" mat-header-row></tr>
+        <tr (click)="updateTask(row)" *matRowDef="let row; columns: visibleColumns;" @fadeInUp
+          class="hover:bg-hover trans-ease-out cursor-pointer" mat-row></tr>
+      </table>
+
+      <mat-paginator [pageSizeOptions]="pageSizeOptions" [pageSize]="pageSize" class="sticky left-0"></mat-paginator>
+    </div>
+
+  </vex-page-layout-content>
+
+</vex-page-layout>
+
+<mat-menu #columnFilterMenu="matMenu" xPosition="before" yPosition="below">
+  @for (column of columns; track column.property) {
+    <button (click)="toggleColumnVisibility(column, $event)" class="mat-menu-item block">
+      <mat-checkbox (click)="$event.stopPropagation()" [(ngModel)]="column.visible" color="primary">
+        {{ column.label }}
+      </mat-checkbox>
+    </button>
   }
-</div>
+</mat-menu>
+
+<mat-menu #actionsMenu="matMenu" xPosition="before" yPosition="below">
+  <ng-template let-task="task" matMenuContent>
+    <button (click)="updateTask(task)" mat-menu-item>
+      <mat-icon svgIcon="mat:edit"></mat-icon>
+      <span>Modify</span>
+    </button>
+    <button (click)="deleteTask(task)" mat-menu-item>
+      <mat-icon svgIcon="mat:delete"></mat-icon>
+      <span>Delete</span>
+    </button>
+  </ng-template>
+</mat-menu>

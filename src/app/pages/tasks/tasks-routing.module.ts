@@ -1,7 +1,9 @@
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { TasksComponent } from './tasks.component';
+import { QuicklinkModule } from 'ngx-quicklink';
 import { VexRoutes } from '../../../@vex/interfaces/vex-route.interface';
+import { TasksComponent } from './tasks.component';
+
 
 const routes: VexRoutes = [
   {
@@ -15,7 +17,7 @@ const routes: VexRoutes = [
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule, QuicklinkModule]
 })
-export class TasksRoutingModule { }
-
+export class TasksRoutingModule {
+}

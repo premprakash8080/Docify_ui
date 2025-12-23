@@ -1,0 +1,166 @@
+<div class="profile-container">
+  <div class="card">
+    <!-- Profile Header -->
+    <div class="profile-header px-gutter py-6 border-b">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+        <!-- Avatar Section -->
+        <div class="avatar-section flex flex-col items-center">
+          <div class="avatar-wrapper relative">
+            <img 
+              [src]="getAvatarUrl()" 
+              [alt]="user?.displayName || user?.email || 'User Avatar'"
+              class="avatar-image"
+              onerror="this.src='assets/img/pic_rounded.svg'">
+            <div class="avatar-overlay" (click)="onAvatarSelectClick()">
+              <mat-icon class="avatar-edit-icon" svgIcon="mat:camera_alt"></mat-icon>
+            </div>
+          </div>
+          <input 
+            #avatarInput
+            type="file"
+            accept="image/*"
+            (change)="onAvatarSelected($event)"
+            style="display: none;">
+          @if (selectedAvatarFile) {
+            <button 
+              mat-button 
+              color="warn" 
+              class="mt-2"
+              (click)="removeAvatar()"
+              type="button">
+              <mat-icon svgIcon="mat:close" class="mr-1"></mat-icon>
+              Remove
+            </button>
+          }
+        </div>
+
+        <!-- User Info Section -->
+        <div class="user-info flex-auto">
+          @if (user) {
+            <h1 class="user-name m-0 mb-2">
+              {{ user.displayName || user.email || 'User' }}
+            </h1>
+            <p class="user-email text-secondary m-0 mb-4">{{ user.email }}</p>
+          } @else {
+            <h1 class="user-name m-0 mb-2">Loading...</h1>
+            <p class="user-email text-secondary m-0 mb-4">Loading profile...</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Form -->
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+      <div class="px-gutter py-6">
+        <!-- Success Message -->
+        @if (updateSuccess) {
+          <div class="alert alert-success mb-4">
+            <mat-icon svgIcon="mat:check_circle" class="mr-2"></mat-icon>
+            Profile updated successfully!
+          </div>
+        }
+
+        <!-- Error Message -->
+        @if (updateError) {
+          <div class="alert alert-error mb-4">
+            <mat-icon svgIcon="mat:error" class="mr-2"></mat-icon>
+            {{ updateError }}
+          </div>
+        }
+
+        <!-- Display Name Field -->
+        <div class="form-section mb-6">
+          <h2 class="section-title mb-4">Display Name</h2>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Display Name</mat-label>
+            <input 
+              matInput 
+              formControlName="displayName"
+              placeholder="Enter your display name"
+              maxlength="100">
+            <mat-icon matPrefix svgIcon="mat:person" class="mr-2"></mat-icon>
+            <mat-hint>This name will be displayed in your profile</mat-hint>
+            <mat-error *ngIf="displayNameControl?.hasError('maxlength')">
+              Display name must be less than 100 characters
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Account Information -->
+        <div class="form-section">
+          <h2 class="section-title mb-4">Account Information</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-icon-wrapper">
+                <mat-icon class="info-icon" svgIcon="mat:email"></mat-icon>
+              </div>
+              <div class="info-content">
+                <p class="info-label">Email</p>
+                <p class="info-value">{{ user?.email || 'Not available' }}</p>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <div class="info-icon-wrapper">
+                <mat-icon class="info-icon" svgIcon="mat:account_circle"></mat-icon>
+              </div>
+              <div class="info-content">
+                <p class="info-label">User ID</p>
+                <p class="info-value">{{ user?.id || 'Not available' }}</p>
+              </div>
+            </div>
+
+            @if (user?.createdAt) {
+              <div class="info-item">
+                <div class="info-icon-wrapper">
+                  <mat-icon class="info-icon" svgIcon="mat:calendar_today"></mat-icon>
+                </div>
+                <div class="info-content">
+                  <p class="info-label">Member Since</p>
+                  <p class="info-value">{{ user.createdAt | date:'mediumDate' }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions px-gutter py-4 border-t">
+        <div class="flex justify-end gap-3">
+      
+          <!-- Reset -->
+          <button
+            mat-mini-fab
+            color="primary"
+            type="button"
+            class="flex-none"
+            matTooltip="Reset Profile"
+            (click)="profileForm.reset(); selectedAvatarFile = null; avatarPreview = user?.avatarUrl || null"
+          >
+            <mat-icon svgIcon="mat:refresh"></mat-icon>
+          </button>
+      
+          <!-- Save -->
+          <button
+            mat-mini-fab
+            color="primary"
+            type="submit"
+            class="flex-none"
+            matTooltip="Save Changes"
+            [disabled]="profileForm.invalid || isUpdating"
+          >
+            @if (isUpdating) {
+              <mat-icon class="animate-spin" svgIcon="mat:refresh"></mat-icon>
+            } @else {
+              <mat-icon svgIcon="mat:save"></mat-icon>
+            }
+          </button>
+      
+        </div>
+      </div>
+
+      
+    </form>
+  </div>
+</div>

@@ -1,3 +1,25 @@
+// Notebooks List View Container
+.notebooks-list-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+// Header bar matching task-new design
+.bg-app-bar {
+  background-color: var(--background-app-bar, var(--background-card));
+  border-bottom: 1px solid var(--foreground-divider);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  height: 4rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  left: 0;
+  right: 0;
+}
+
 // Notebooks List View Styles
 ::ng-deep {
   // Ensure table has proper spacing
@@ -24,30 +46,53 @@
   .notebooks-table {
     // Row content indentation levels
     .row-content {
+      display: flex;
+      align-items: center;
+      min-height: 40px;
+      
       &.level-0 {
-        padding-left: 1rem;
+        // Stack level - no indentation
+        padding-left: 0.5rem;
       }
       
       &.level-1 {
-        padding-left: 2rem;
-        border-left: 1px solid var(--foreground-divider);
-        margin-left: 0.5rem;
-        padding-left: 1.5rem;
+        // Notebook level - indent from stack
+        padding-left: 2.5rem;
+        position: relative;
+        
+        &::before {
+          content: '';
+          position: absolute;
+          left: 1.5rem;
+          top: 0;
+          bottom: 0;
+          width: 1px;
+          background-color: var(--foreground-divider);
+        }
       }
       
       &.level-2 {
-        padding-left: 3rem;
-        border-left: 1px solid var(--foreground-divider);
-        margin-left: 1.5rem;
-        padding-left: 1.5rem;
+        // Note level - indent from notebook
+        padding-left: 4.5rem;
+        position: relative;
+        
+        &::before {
+          content: '';
+          position: absolute;
+          left: 3.5rem;
+          top: 0;
+          bottom: 0;
+          width: 1px;
+          background-color: var(--foreground-divider);
+        }
       }
     }
 
     // Chevron button styling (used by both stacks and notebooks)
     .chevron-button {
-      width: 24px;
-      height: 24px;
-      min-width: 24px;
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
       padding: 0;
       margin: 0;
       margin-right: 8px;
@@ -71,9 +116,9 @@
       
       .expand-icon {
         transition: transform 0.2s ease;
-        font-size: 16px;
-        width: 16px;
-        height: 16px;
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
         
         &.expanded {
           transform: rotate(90deg);
@@ -81,12 +126,21 @@
       }
     }
 
+    // Spacer for notes (to align with chevron position)
+    .chevron-spacer {
+      width: 32px;
+      min-width: 32px;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
     // Count text (plain text, no badge styling)
     .count-text {
       color: var(--text-secondary);
       font-size: 0.875rem;
-      margin-left: 6px;
+      margin-left: 8px;
       font-weight: 400;
+      white-space: nowrap;
     }
 
     // Stack row styling
@@ -105,6 +159,9 @@
           color: var(--text-color);
           font-size: 0.9375rem;
           font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         
         .folder-icon {
@@ -112,6 +169,7 @@
           font-size: 20px;
           width: 20px;
           height: 20px;
+          flex-shrink: 0;
         }
         
         .stack-content {
@@ -136,14 +194,18 @@
       td {
         .notebook-icon {
           color: var(--text-secondary);
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+          flex-shrink: 0;
         }
         
         .notebook-name {
           font-weight: 500;
           font-size: 0.9375rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         
         .notebook-chevron {
@@ -163,14 +225,18 @@
       td {
         .note-icon {
           color: var(--text-secondary);
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+          flex-shrink: 0;
         }
         
         .note-name {
           font-weight: 400;
           font-size: 0.9375rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
       }
     }

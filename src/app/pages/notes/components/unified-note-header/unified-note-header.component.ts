@@ -88,12 +88,28 @@ export class UnifiedNoteHeaderComponent implements OnChanges {
   
   /** Emits when print button is clicked */
   @Output() print = new EventEmitter<void>();
+  
+  /** Emits when save button is clicked */
+  @Output() save = new EventEmitter<void>();
+
+  /** Emits when hide sidebar button is clicked */
+  @Output() hideSidebar = new EventEmitter<void>();
+
+  /** Emits when move button is clicked */
+  @Output() move = new EventEmitter<void>();
 
   /**
    * Handles previous note action
    */
   onPrevious(): void {
     this.previous.emit();
+  }
+
+  /**
+   * Handles hide sidebar action
+   */
+  onHideNotesSidebar(): void {
+    this.hideSidebar.emit();
   }
 
   /**
@@ -193,6 +209,21 @@ export class UnifiedNoteHeaderComponent implements OnChanges {
   onPrint(): void {
     this.print.emit();
   }
+
+  /**
+   * Handles save note action
+   */
+  onSave(): void {
+    this.save.emit();
+  }
+
+  /**
+   * Handles move note action
+   */
+  onMove(): void {
+    this.move.emit();
+  }
+
   /**
    * Formats the last saved timestamp for display
    * @returns Formatted time string (e.g., "2m ago", "Just now")

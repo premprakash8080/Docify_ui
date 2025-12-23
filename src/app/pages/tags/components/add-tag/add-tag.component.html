@@ -1,47 +1,84 @@
-<div class="add-tag-dialog">
-  <h2 mat-dialog-title>Create new tag</h2>
+<form (ngSubmit)="onSubmit()" [formGroup]="form" class="tag-form">
+  <div class="dialog-header" mat-dialog-title>
+    <h2 class="dialog-title">{{ title }}</h2>
+    <button class="close-button" mat-dialog-close mat-icon-button type="button" aria-label="Close">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+  </div>
 
-  <mat-dialog-content>
-    <form [formGroup]="form">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Tag name</mat-label>
-        <input 
-          matInput 
-          formControlName="name" 
-          placeholder="Enter tag name"
-          maxlength="50"
-          (keydown.enter)="onCreate()"
-          autocomplete="off">
-        <mat-error *ngIf="nameControl?.hasError('required')">
-          Tag name is required
-        </mat-error>
-        <mat-error *ngIf="nameControl?.hasError('maxlength')">
-          Tag name must be less than 50 characters
-        </mat-error>
-      </mat-form-field>
-    </form>
+  <mat-dialog-content class="tag-dialog-content">
+    <!-- Tag Name (Required) -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Tag name</mat-label>
+      <input 
+        formControlName="name" 
+        matInput 
+        placeholder="Enter tag name"
+        maxlength="50"
+        (keydown.enter)="onSubmit()"
+        autocomplete="off">
+      @if (nameControl?.hasError('required')) {
+        <mat-error>Tag name is required</mat-error>
+      }
+      @if (nameControl?.hasError('maxlength')) {
+        <mat-error>Tag name must be less than 50 characters</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Color picker -->
+    <div class="color-picker-section">
+      <label class="color-picker-label">Tag color (optional)</label>
+      @if (isLoadingColors) {
+        <div class="color-picker-loading">Loading colors...</div>
+      } @else {
+        <div class="color-picker-grid">
+          <button
+            type="button"
+            class="color-option"
+            [class.selected]="getSelectedColorId() === null"
+            (click)="onColorSelect(null)"
+            [attr.aria-label]="'No color'">
+            <div class="color-swatch no-color">
+              <mat-icon svgIcon="mat:close"></mat-icon>
+            </div>
+            <span class="color-name">No color</span>
+          </button>
+          @for (color of colors; track color.id) {
+            <button
+              type="button"
+              class="color-option"
+              [class.selected]="getSelectedColorId() === color.id"
+              (click)="onColorSelect(color.id)"
+              [attr.aria-label]="color.name">
+              <div class="color-swatch" [style.background-color]="color.hex_code"></div>
+              <span class="color-name">{{ color.name }}</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
   </mat-dialog-content>
 
-  <mat-dialog-actions align="end">
+  <mat-dialog-actions align="end" class="dialog-actions">
     <button 
       mat-button 
-      (click)="onCancel()"
-      [disabled]="isCreating"
+      mat-dialog-close
+      [disabled]="isSubmitting"
       type="button">
       Cancel
     </button>
     <button 
       mat-raised-button 
       color="primary"
-      (click)="onCreate()"
-      [disabled]="form.invalid || isCreating"
+      (click)="onSubmit()"
+      [disabled]="form.invalid || isSubmitting"
       type="button">
-      @if (isCreating) {
+      @if (isSubmitting) {
         <mat-icon class="spinning" svgIcon="mat:refresh"></mat-icon>
       } @else {
-        <mat-icon svgIcon="mat:add"></mat-icon>
+        <mat-icon [svgIcon]="submitIcon"></mat-icon>
       }
-      Create
+      {{ submitButtonText }}
     </button>
   </mat-dialog-actions>
-</div>
+</form>

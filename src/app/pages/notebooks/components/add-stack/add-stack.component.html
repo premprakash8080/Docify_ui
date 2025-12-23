@@ -1,0 +1,56 @@
+<div mat-dialog-title class="dialog-title">
+  <h2 class="title-text">Create new stack</h2>
+  <button 
+    type="button" 
+    mat-icon-button 
+    (click)="onCancel()" 
+    class="close-button"
+    aria-label="Close dialog">
+    <mat-icon svgIcon="mat:close"></mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="dialog-content">
+  <p class="description-text">
+    Stacks are useful for grouping notebooks around a common topic. They help organize your notebooks.
+  </p>
+
+  <form [formGroup]="stackForm" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Stack name</mat-label>
+      <input 
+        matInput 
+        formControlName="name" 
+        placeholder="Enter stack name"
+        autocomplete="off"
+        autofocus>
+      <mat-error *ngIf="stackForm.get('name')?.hasError('required')">
+        Stack name is required
+      </mat-error>
+      <mat-error *ngIf="stackForm.get('name')?.hasError('maxlength')">
+        Stack name must be less than 100 characters
+      </mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="dialog-actions">
+  <button 
+    mat-button 
+    type="button"
+    (click)="onCancel()"
+    class="cancel-button">
+    Cancel
+  </button>
+  <button 
+    mat-raised-button 
+    color="primary" 
+    type="button"
+    [disabled]="!stackForm.valid || isSubmitting"
+    (click)="onSubmit()"
+    class="create-button">
+    <span *ngIf="!isSubmitting">Create</span>
+    <span *ngIf="isSubmitting">Creating...</span>
+  </button>
+</mat-dialog-actions>
+
