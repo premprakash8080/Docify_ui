@@ -27,15 +27,21 @@
     visibility: visible !important;
     opacity: 1 !important;
     position: relative !important;
+    padding: 8px 24px !important;
   }
 }
 
 .toolbar-content {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 0;
   max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
   overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
   
   // Hide scrollbar but keep functionality
   scrollbar-width: none; // Firefox
@@ -44,20 +50,38 @@
   &::-webkit-scrollbar {
     display: none; // Chrome/Safari
   }
+  
+  // Smooth scrolling on mobile
+  scroll-behavior: smooth;
+  
+  // Desktop: constrain width for better appearance
+  @media (min-width: 769px) {
+    max-width: 1200px;
+    padding: 0 16px;
+  }
 }
 
 .toolbar-group {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin: 0 4px;
+  
+  // Ensure buttons within group are properly spaced
+  > button {
+    margin: 0;
+  }
 }
 
 .toolbar-divider {
   width: 1px;
   height: 24px;
   background-color: var(--foreground-divider);
-  margin: 0 4px;
+  margin: 0 8px;
   flex-shrink: 0;
+  opacity: 0.5;
 }
 
 // Button styles - Evernote-like clarity
@@ -66,6 +90,7 @@
   height: 32px;
   min-width: 32px;
   padding: 0;
+  margin: 0;
   border-radius: 4px;
   color: var(--text-secondary);
   background: transparent;
@@ -144,15 +169,146 @@
   background-color: var(--background-hover);
 }
 
+// Responsive menu adjustments
+@media (max-width: 480px) {
+  .mat-mdc-menu-panel {
+    max-width: 90vw;
+    min-width: 200px !important;
+  }
+  
+  .mat-mdc-menu-item {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  
+  .heading-option {
+    &.h1 {
+      font-size: 1.25rem;
+    }
+    
+    &.h2 {
+      font-size: 1.125rem;
+    }
+    
+    &.h3 {
+      font-size: 1rem;
+    }
+  }
+}
+
+// Font family and size display
+.font-family-display,
+.font-size-display {
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 40px;
+  text-align: left;
+  display: inline-block;
+}
+
+.font-family-display {
+  font-family: var(--font-family);
+}
+
+.toolbar-group button[mat-icon-button] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  min-width: auto;
+  width: auto;
+  position: relative;
+  margin: 0;
+  
+  .font-family-display,
+  .font-size-display {
+    line-height: 1;
+  }
+  
+  .color-indicator,
+  .highlight-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    border: 1px solid var(--foreground-divider);
+    pointer-events: none;
+  }
+  
+  .highlight-indicator {
+    border-radius: 50%;
+  }
+}
+
+.color-preview,
+.highlight-preview {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  margin-right: 8px;
+  border: 1px solid var(--foreground-divider);
+  vertical-align: middle;
+}
+
+.highlight-preview {
+  border-radius: 50%;
+}
+
 // Responsive design
-@media (max-width: 768px) {
+
+// Tablet (481px - 768px)
+@media (max-width: 768px) and (min-width: 481px) {
   .formatting-toolbar {
-    padding: 6px 8px;
+    padding: 6px 12px;
     min-height: 44px;
   }
   
   .toolbar-content {
+    gap: 3px;
+  }
+  
+  .formatting-toolbar button {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    
+    mat-icon {
+      font-size: 19px;
+      width: 19px;
+      height: 19px;
+    }
+  }
+  
+  .toolbar-divider {
+    height: 22px;
+    margin: 0 3px;
+  }
+  
+  .font-family-display,
+  .font-size-display {
+    font-size: 13px;
+    min-width: 35px;
+  }
+  
+  .toolbar-group button[mat-icon-button] {
+    padding: 0 6px;
+    gap: 3px;
+  }
+}
+
+// Mobile (< 480px)
+@media (max-width: 480px) {
+  .formatting-toolbar {
+    padding: 4px 8px;
+    min-height: 40px;
+  }
+  
+  .toolbar-content {
     gap: 2px;
+    padding: 0 2px;
   }
   
   .formatting-toolbar button {
@@ -170,6 +326,76 @@
   .toolbar-divider {
     height: 20px;
     margin: 0 2px;
+    width: 0.5px;
+  }
+  
+  .font-family-display,
+  .font-size-display {
+    font-size: 12px;
+    min-width: 30px;
+    max-width: 35px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .toolbar-group button[mat-icon-button] {
+    padding: 0 4px;
+    gap: 2px;
+    min-width: auto;
+    
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+  
+  .toolbar-group {
+    gap: 1px;
+    flex-shrink: 0;
+  }
+}
+
+// Small mobile (< 360px)
+@media (max-width: 360px) {
+  .formatting-toolbar {
+    padding: 4px 4px;
+    min-height: 36px;
+  }
+  
+  .toolbar-content {
+    gap: 1px;
+    padding: 0;
+  }
+  
+  .formatting-toolbar button {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+  
+  .font-family-display,
+  .font-size-display {
+    font-size: 11px;
+    min-width: 25px;
+    max-width: 30px;
+  }
+  
+  .toolbar-group button[mat-icon-button] {
+    padding: 0 3px;
+    gap: 1px;
+  }
+  
+  .toolbar-divider {
+    height: 18px;
+    margin: 0 1px;
   }
 }
 
@@ -186,6 +412,19 @@
   box-shadow: none !important;
   border-top: none !important;
   padding: 8px 16px !important;
+  
+  // Responsive padding adjustments
+  @media (max-width: 768px) and (min-width: 481px) {
+    padding: 6px 12px !important;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 4px 8px !important;
+  }
+  
+  @media (max-width: 360px) {
+    padding: 4px 4px !important;
+  }
 }
 
 // Legacy support for floating toolbar (when used in floating context - not always-visible)

@@ -4,6 +4,21 @@
   height: 100%;
 }
 
+// Header bar matching task-new design
+.bg-app-bar {
+  background-color: var(--background-app-bar, var(--background-card));
+  border-bottom: 1px solid var(--foreground-divider);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  height: 4rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  left: 0;
+  right: 0;
+}
+
 .breadcrumb-nav {
   display: flex;
   align-items: center;

@@ -11,47 +11,73 @@
 
   <vex-page-layout-content>
     <div class="tags-container">
-      @if (tagsWithCounts$ | async; as tags) {
-        @if (tags.length > 0) {
-          <div class="tags-list">
-            @for (tag of tags; track trackByTagId($index, tag)) {
-              <div class="tag-card" (click)="onTagClick(tag)" [ngStyle]="getTagColorStyle(tag)">
-                <div class="tag-content">
-                  <div class="tag-header">
-                    <div class="tag-label">
-                      <mat-icon class="tag-icon" svgIcon="mat:label"></mat-icon>
-                      <span class="tag-name">{{ tag.name }}</span>
-                    </div>
-                    <div class="tag-actions">
-                      <button mat-icon-button (click)="onEditTag(tag, $event)" aria-label="Edit tag">
-                        <mat-icon svgIcon="mat:edit"></mat-icon>
-                      </button>
-                      <button mat-icon-button (click)="onDeleteTag(tag, $event)" aria-label="Delete tag">
-                        <mat-icon svgIcon="mat:delete"></mat-icon>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="tag-meta">
-                    <span class="tag-count">
-                      <mat-icon svgIcon="mat:note"></mat-icon>
-                      {{ tag.noteCount }} {{ tag.noteCount === 1 ? 'note' : 'notes' }}
-                    </span>
-                  </div>
-                </div>
+      @if (tags.length > 0) {
+      <div class="tags-list">
+        @for (tag of tags; track trackByTagId($index, tag)) {
+        <div
+          class="tag-card"
+          [style.background-color]="getTagColor(tag) + '20'"
+          [style.border-left-color]="getTagColor(tag)"
+        >
+          <div class="tag-content">
+            <div class="tag-header">
+              <div class="tag-label">
+                <mat-icon
+                  class="tag-icon"
+                  svgIcon="mat:label"
+                  [style.color]="getTagColor(tag)"
+                ></mat-icon>
+                <span class="tag-name" [style.color]="getTagColor(tag)">{{
+                  tag.name
+                }}</span>
               </div>
-            }
+              <div class="tag-actions">
+                <button
+                  mat-icon-button
+                  (click)="onViewNotes(tag, $event)"
+                  aria-label="View notes"
+                  [style.color]="getTagColor(tag)"
+                >
+                  <mat-icon svgIcon="mat:visibility"></mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  (click)="onEditTag(tag, $event)"
+                  aria-label="Edit tag"
+                  [style.color]="getTagColor(tag)"
+                >
+                  <mat-icon svgIcon="mat:edit"></mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  (click)="onDeleteTag(tag, $event)"
+                  aria-label="Delete tag"
+                  [style.color]="getTagColor(tag)"
+                >
+                  <mat-icon svgIcon="mat:delete"></mat-icon>
+                </button>
+              </div>
+            </div>
+            <div class="tag-meta">
+              <span class="tag-count" [style.color]="getTagColor(tag)">
+                <mat-icon svgIcon="mat:note"></mat-icon>
+                {{ tag.noteCount }} {{ tag.noteCount === 1 ? "note" : "notes" }}
+              </span>
+            </div>
           </div>
-        } @else {
-          <div class="empty-state">
-            <mat-icon class="empty-icon" svgIcon="mat:label_outline"></mat-icon>
-            <h3 class="empty-title">No tags yet</h3>
-            <p class="empty-description">Create tags to organize your notes</p>
-            <button mat-raised-button color="primary" (click)="onCreateTag()">
-              <mat-icon svgIcon="mat:add"></mat-icon>
-              Create Tag
-            </button>
-          </div>
+        </div>
         }
+      </div>
+      } @else {
+      <div class="empty-state">
+        <mat-icon class="empty-icon" svgIcon="mat:tag"></mat-icon>
+        <h3 class="empty-title">No tags yet</h3>
+        <p class="empty-description">Create tags to organize your notes</p>
+        <button mat-raised-button color="primary" (click)="onCreateTag()">
+          <mat-icon svgIcon="mat:add"></mat-icon>
+          Create Tag
+        </button>
+      </div>
       }
     </div>
   </vex-page-layout-content>

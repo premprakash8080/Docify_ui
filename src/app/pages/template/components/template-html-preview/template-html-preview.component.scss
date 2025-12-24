@@ -1,0 +1,90 @@
+.preview-card {
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+.preview-content {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  background: #ffffff;
+  min-height: 200px;
+  max-height: 600px;
+  overflow-y: auto;
+
+  // Style common HTML elements
+  :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  :deep(p) {
+    margin: 8px 0;
+    line-height: 1.6;
+  }
+
+  :deep(ul), :deep(ol) {
+    margin: 12px 0;
+    padding-left: 24px;
+  }
+
+  :deep(li) {
+    margin: 4px 0;
+  }
+
+  :deep(blockquote) {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 16px;
+    margin: 16px 0;
+    color: #6b7280;
+  }
+
+  :deep(code) {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+  }
+
+  :deep(pre) {
+    background: #f3f4f6;
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+
+  :deep(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+  }
+
+  :deep(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+    }
+  }
+}
+

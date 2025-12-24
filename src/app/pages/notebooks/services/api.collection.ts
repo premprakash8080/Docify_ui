@@ -13,15 +13,19 @@ export const ENDPOINTS = {
     // Notebooks CRUD
     getAllNotebooks: `${environment.apiUrl}/notebooks/list`,
     getNotebookById: (id: string) => `${environment.apiUrl}/notebooks/${id}`,
-    createNotebook: `${environment.apiUrl}/notebooks`,
+    createNotebook: `${environment.apiUrl}/notebooks/createNotebook`,
     updateNotebook: (id: string) => `${environment.apiUrl}/notebooks/${id}`,
     deleteNotebook: (id: string) => `${environment.apiUrl}/notebooks/${id}`,
     reorderNotebooks: `${environment.apiUrl}/notebooks/reorder`,
     
     // Notebook ↔ Stack
-    moveNotebookToStack: (id: string, stackId: string) => `${environment.apiUrl}/notebooks/${id}/stack/${stackId}`,
-    removeNotebookFromStack: (id: string) => `${environment.apiUrl}/notebooks/${id}/stack`,
+    moveNotebookToStack: environment.apiUrl + '/notebooks/stack/updateNotebookStack',
+    removeNotebookFromStack: environment.apiUrl+ '/notebooks/stack/removeNotebookFromStack',
     
     // Notebook ↔ Notes
     getNotebookNotes: (id: string) => `${environment.apiUrl}/notebooks/${id}/notes`,
+
+    // Get notebook notes by ID (query param: ?id=...)
+    getNotebookNotesById: environment.apiUrl + '/notebooks/getNotebookNotesById',
+    
 }

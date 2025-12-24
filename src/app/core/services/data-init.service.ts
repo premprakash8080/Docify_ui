@@ -32,8 +32,7 @@ export class DataInitService {
       // Check if data already exists for this user
       const existingNotes = await this.storage.getAllByIndex('notes', 'userId', userId);
       if (existingNotes && existingNotes.length > 0) {
-        // Data already exists, trigger reload and skip initialization
-        this.notesService.reloadData();
+        // Data already exists, skip initialization
         return;
       }
 
@@ -62,9 +61,6 @@ export class DataInitService {
       for (const tag of tags) {
         await this.storage.put('tags', tag);
       }
-
-      // Trigger NotesService to reload data from storage
-      this.notesService.reloadData();
 
       // Load and apply user settings
       await this.userSettingsInitService.loadAndApplySettings();

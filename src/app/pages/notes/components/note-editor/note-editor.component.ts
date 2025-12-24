@@ -1,12 +1,30 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, OnChanges, SimpleChanges, Input, Output, EventEmitter, ViewChild, inject, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { Subject, throwError, of, forkJoin } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil, map, switchMap, catchError } from 'rxjs/operators';
 import { Note, Notebook } from '../../../../core/models';
 import { NotesService } from '../../services/notes.service';
 import { AuthService } from '../../../../auth/service/auth.service';
 import { Editor } from '@tiptap/core';
 import { NoteEditorContentComponent } from '../note-editor-content/note-editor-content.component';
+import { environment } from '../../../../../environments/environment';
+
+interface BackendNoteResponse {
+  id: string;
+  user_id: number;
+  notebook_id?: string | null;
+  title: string;
+  pinned: boolean;
+  archived: boolean;
+  trashed: boolean;
+  version: number;
+  synced: boolean;
+  created_at: string;
+  updated_at?: string;
+  last_modified?: string;
+  tags?: string[];
+  content?: string;
+}
 
 /**
  * Main note editor component that orchestrates the editing experience.
@@ -27,6 +45,7 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
   @Output() wordCountChange = new EventEmitter<number>();
   @Output() savingStateChange = new EventEmitter<{ isSaving: boolean; lastSaved: Date | null }>();
   @Output() editorReady = new EventEmitter<Editor | null>();
+  @Output() titleChange = new EventEmitter<string>();
   @ViewChild(NoteEditorContentComponent, { static: false }) editorContentComponent?: NoteEditorContentComponent;
 
   form!: FormGroup<{
@@ -35,6 +54,9 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
   }>;
   isSaving = false;
   lastSaved: Date | null = null;
+  
+  // Flag to prevent autosave during note loading
+  private isLoadingNote = false;
   
   // Formatting toolbar state
   showFormattingToolbar = false;
@@ -57,6 +79,27 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
   private notesService = inject(NotesService);
   private authService = inject(AuthService);
 
+  private mapBackendNoteToFrontend(backendNote: BackendNoteResponse): Note {
+    return {
+      id: backendNote.id,
+      userId: backendNote.user_id.toString(),
+      title: backendNote.title,
+      content: backendNote.content || '',
+      tags: backendNote.tags || [],
+      notebookId: backendNote.notebook_id || undefined,
+      pinned: backendNote.pinned,
+      archived: backendNote.archived,
+      trashed: backendNote.trashed,
+      createdAt: backendNote.created_at,
+      updatedAt: backendNote.updated_at || backendNote.created_at,
+      version: backendNote.version,
+      synced: backendNote.synced,
+      lastModified: backendNote.last_modified || backendNote.updated_at || backendNote.created_at,
+      attachments: [],
+      tasks: []
+    };
+  }
+
   constructor() {
     this.form = this.fb.group({
       title: this.fb.control<string | null>(''),
@@ -70,17 +113,32 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
       this.loadNote(this.note);
     }
 
-    // Autosave with debounce
+    // Autosave with debounce (uses environment.autoSaveDelay)
+    // Autosave saves both content and title silently without loading indicators
     if (this.autoSave) {
-      this.form.valueChanges
+      const autoSaveDelay = environment.autoSaveDelay || 30000; // Default to 30 seconds
+      
+      // Autosave on content changes
+      this.contentControl.valueChanges
         .pipe(
-          debounceTime(800),
+          debounceTime(autoSaveDelay),
           distinctUntilChanged(),
           takeUntil(this.destroy$)
         )
         .subscribe(() => {
-          this.saveNote(false);
+          this.saveNoteContentAndTitle();
           this.updateWordCount();
+        });
+      
+      // Autosave on title changes
+      this.titleControl.valueChanges
+        .pipe(
+          debounceTime(autoSaveDelay),
+          distinctUntilChanged(),
+          takeUntil(this.destroy$)
+        )
+        .subscribe(() => {
+          this.saveNoteContentAndTitle();
         });
     }
     
@@ -96,9 +154,15 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
       const newNote = changes['note'].currentValue;
       const previousNote = changes['note'].previousValue;
       
-      // Only reload if the note ID actually changed (avoid unnecessary reloads)
-      if (newNote && newNote.id !== previousNote?.id) {
-        this.loadNote(newNote);
+      // Reload if note ID changed OR if content changed (for same note updates)
+      if (newNote) {
+        const idChanged = newNote.id !== previousNote?.id;
+        const contentChanged = newNote.content !== previousNote?.content;
+        
+        // Only reload if something actually changed
+        if (idChanged || (contentChanged && newNote.content)) {
+          this.loadNote(newNote);
+        }
       } else if (!newNote && previousNote) {
         // Note was cleared
         this.note = null;
@@ -118,9 +182,11 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
         this.editor = this.editorContentComponent.getEditor();
         
         // If we have a note loaded but editor wasn't ready, update it now
-        if (this.note && this.note.content) {
-          const content = this.note.content || '';
-          this.editorContentComponent.updateContent(content);
+        if (this.note) {
+          const content = typeof this.note.content === 'string' ? this.note.content : '';
+          if (content) {
+            this.editorContentComponent.updateContent(content);
+          }
         }
         
         if (this.editor) {
@@ -128,8 +194,11 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
         }
         
         // If note was loaded before view init, update editor content
-        if (this.note && this.note.content) {
-          this.editorContentComponent.updateContent(this.note.content);
+        if (this.note) {
+          const content = typeof this.note.content === 'string' ? this.note.content : '';
+          if (content) {
+            this.editorContentComponent.updateContent(content);
+          }
         }
       }
     }, 100);
@@ -196,8 +265,15 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
    * Updates the word count from the current content
    */
   private updateWordCount(): void {
-    const content = this.contentControl.value || '';
-    const text = content.replace(/<[^>]*>/g, '').trim();
+    const content = this.contentControl.value;
+    // Ensure content is a string
+    let contentString = '';
+    if (typeof content === 'string') {
+      contentString = content;
+    } else if (content != null) {
+      contentString = String(content);
+    }
+    const text = contentString.replace(/<[^>]*>/g, '').trim();
     this.wordCount = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
     this.wordCountChange.emit(this.wordCount);
   }
@@ -219,22 +295,47 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
    * @param note - Note to load
    */
   loadNote(note: Note): void {
+    if (!note) return;
+    
+    // Set flag to prevent autosave during loading
+    this.isLoadingNote = true;
+    
     this.note = note;
-    const content = note.content || '';
+    const content = typeof note.content === 'string' ? note.content : (note.content || '');
+    
+    // Always update form to ensure state is in sync
     this.form.patchValue({
       title: note.title || '',
       content: content
     }, { emitEvent: false });
     
-    // Update editor content if available
-    // Use setTimeout to ensure editor is ready, especially if called from ngOnChanges
-    setTimeout(() => {
+    // Update editor content - use multiple attempts to ensure it's set
+    const updateEditorContent = () => {
       if (this.editorContentComponent) {
         this.editorContentComponent.updateContent(content);
+        return true;
       }
-    }, 0);
+      return false;
+    };
+    
+    // Try immediately
+    if (!updateEditorContent()) {
+      // If editor not ready yet, try again after delays
+      setTimeout(() => {
+        if (!updateEditorContent()) {
+          setTimeout(() => {
+            updateEditorContent();
+          }, 200);
+        }
+      }, 50);
+    }
     
     this.updateWordCount();
+    
+    // Reset flag after a short delay to allow editor to settle
+    setTimeout(() => {
+      this.isLoadingNote = false;
+    }, 500);
   }
   
   /**
@@ -242,22 +343,116 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
    * @param html - HTML content from editor
    */
   onContentChange(html: string): void {
-    // Update form without triggering change events to prevent loops
+    // Update form and trigger change events for autosave
     const currentContent = this.contentControl.value || '';
     if (html !== currentContent) {
-      this.contentControl.setValue(html, { emitEvent: false });
+      // Emit event to trigger autosave subscription
+      this.contentControl.setValue(html, { emitEvent: true });
       this.updateWordCount();
-      
-      // Trigger save via form update
-      this.form.updateValueAndValidity({ emitEvent: true });
     }
+  }
+
+  /**
+   * Handles title changes from the title input
+   * @param title - New title value
+   */
+  onTitleChange(title: string): void {
+    // Update form and trigger change events for autosave
+    const currentTitle = this.titleControl.value || '';
+    if (title !== currentTitle) {
+      // Emit event to trigger autosave subscription
+      this.titleControl.setValue(title, { emitEvent: true });
+      
+      // Emit titleChange event to parent for real-time updates in notes list
+      this.titleChange.emit(title);
+      
+      // Update local note object immediately for real-time UI updates
+      if (this.note) {
+        this.note = { ...this.note, title: title };
+      }
+    }
+  }
+
+  /**
+   * Handles immediate title save request (from Enter/blur)
+   * @param title - Title to save immediately
+   */
+  onTitleSaveImmediate(title: string): void {
+    // Update form first to ensure state is in sync
+    const currentTitle = this.titleControl.value || '';
+    if (title !== currentTitle) {
+      this.titleControl.setValue(title, { emitEvent: false });
+    }
+    
+    // Save immediately (bypasses debounce)
+    this.saveTitleImmediately(title);
+  }
+
+  /**
+   * Saves title immediately without debounce (for Enter/blur events)
+   * This method saves instantly without waiting for autosave delay
+   */
+  private saveTitleImmediately(title: string): void {
+    if (!this.note || !this.note.id) {
+      // Don't save if note doesn't exist yet
+      return;
+    }
+
+    // Get the current saved title from note object
+    const currentSavedTitle = this.note.title || '';
+    const trimmedTitle = (title || '').trim();
+    const trimmedCurrentTitle = (currentSavedTitle || '').trim();
+
+    // Don't save if title hasn't actually changed
+    if (trimmedTitle === trimmedCurrentTitle) {
+      return;
+    }
+
+    // Don't save if a manual save is in progress
+    if (this.isSaving) {
+      return;
+    }
+
+    // Update note title in memory immediately for UI responsiveness
+    if (this.note) {
+      this.note.title = trimmedTitle;
+    }
+
+    // Save title silently without showing loading indicators
+    // Use skipLoadingIndicator=true to prevent HTTP interceptor from showing loading bar
+    const payload: any = { title: trimmedTitle };
+    this.notesService.updateNote(this.note.id, payload, true).pipe(
+      takeUntil(this.destroy$),
+      catchError(error => {
+        console.error('Immediate title save failed:', error);
+        // Revert title change on error
+        if (this.note) {
+          this.note.title = currentSavedTitle;
+        }
+        return of(null);
+      })
+    ).subscribe({
+      next: () => {
+        // Update lastSaved timestamp silently (without emitting savingStateChange)
+        this.lastSaved = new Date();
+        // Note title already updated in memory above for immediate UI feedback
+        
+        // Emit noteUpdated to ensure parent components (like notes list) are updated
+        if (this.note) {
+          this.noteUpdated.emit({ ...this.note });
+        }
+      },
+      error: () => {
+        // Silently handle errors - don't interrupt user experience
+      }
+    });
   }
 
   /**
    * Saves the current note (creates new or updates existing)
    * @param showIndicator - Whether to show saving indicator
    */
-  async saveNote(showIndicator = true): Promise<void> {
+  saveNote(showIndicator = true): void {
     const content = this.contentControl.value || '';
     const title = this.titleControl.value || 'Untitled';
 
@@ -274,12 +469,53 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
         this.savingStateChange.emit({ isSaving: true, lastSaved: this.lastSaved });
       }
       
-      this.notesService.createNote({
-        title: title,
-        content: content,
-        userId,
-        notebookId: this.notebookId || undefined // Use notebookId from input (route) if available
-      }).subscribe({
+      const payload: any = {
+        title: title
+      };
+      if (this.notebookId) {
+        payload.notebook_id = this.notebookId;
+      }
+      
+      this.notesService.createNote(payload).pipe(
+        takeUntil(this.destroy$),
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          if (!backendResponse || !backendResponse.note) {
+            throw new Error('Invalid response structure');
+          }
+          return this.mapBackendNoteToFrontend(backendResponse.note);
+        }),
+        switchMap(createdNote => {
+          // Save content if provided
+          if (content) {
+            return this.notesService.saveNoteContent(createdNote.id, { content }).pipe(
+              switchMap(() => {
+                createdNote.content = content;
+                return this.notesService.getNoteById({ id: createdNote.id }).pipe(
+                  map((response: any) => {
+                    const backendResponse = response?.data || response;
+                    if (!backendResponse || !backendResponse.note) {
+                      return createdNote;
+                    }
+                    return this.mapBackendNoteToFrontend(backendResponse.note);
+                  }),
+                  catchError(() => of(createdNote))
+                );
+              }),
+              catchError(() => of(createdNote))
+            );
+          }
+          return of(createdNote);
+        }),
+        catchError(error => {
+          console.error('Failed to create note:', error);
+          if (showIndicator) {
+            this.isSaving = false;
+            this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
+          }
+          return throwError(() => error);
+        })
+      ).subscribe({
         next: (newNote) => {
           this.note = newNote;
           this.lastSaved = new Date();
@@ -289,39 +525,174 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
             this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
           }
         },
-        error: (error) => {
-          console.error('Failed to create note:', error);
+        error: () => {
           if (showIndicator) {
             this.isSaving = false;
             this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
           }
         }
       });
-    } else {
-      // Update existing note
-      try {
+      } else {
+        // Update existing note
+        // Content is saved via API
         if (showIndicator) {
           this.isSaving = true;
           this.savingStateChange.emit({ isSaving: true, lastSaved: this.lastSaved });
         }
-        const updated = await this.notesService.updateNote(this.note.id, {
-          title: title,
-          content: content
+        
+        // Update note metadata and content
+        const payload: any = {
+          title: title
+        };
+        
+        // Update metadata first
+        const updateMetadata$ = this.notesService.updateNote(this.note.id, payload);
+        // Save content separately
+        const updateContent$ = this.notesService.saveNoteContent(this.note.id, { content });
+        
+        // Execute both in parallel
+        updateMetadata$.pipe(
+          switchMap(() => updateContent$),
+          switchMap(() => {
+            // Reload note to get updated data
+            return this.notesService.getNoteById({ id: this.note.id });
+          }),
+          map((response: any) => {
+            const backendResponse = response?.data || response;
+            if (!backendResponse || !backendResponse.note) {
+              throw new Error('Invalid response structure');
+            }
+            const updated = this.mapBackendNoteToFrontend(backendResponse.note);
+            updated.content = content; // Ensure content is set
+            return updated;
+          }),
+          catchError(error => {
+            console.error('Failed to update note:', error);
+            if (showIndicator) {
+              this.isSaving = false;
+              this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
+            }
+            return throwError(() => error);
+          }),
+          takeUntil(this.destroy$)
+        ).subscribe({
+          next: (updated) => {
+            this.note = updated;
+            this.lastSaved = new Date();
+            this.noteUpdated.emit(updated);
+            if (showIndicator) {
+              this.isSaving = false;
+              this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
+            }
+          },
+          error: () => {
+            if (showIndicator) {
+              this.isSaving = false;
+              this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
+            }
+          }
         });
-        this.note = updated;
-        this.lastSaved = new Date();
-        this.noteUpdated.emit(updated);
-        if (showIndicator) {
-          this.isSaving = false;
-          this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
-        }
-      } catch (error) {
-        console.error('Failed to update note:', error);
-        if (showIndicator) {
-          this.isSaving = false;
-          this.savingStateChange.emit({ isSaving: false, lastSaved: this.lastSaved });
-        }
       }
+  }
+
+  /**
+   * Saves note content and title silently in the background (for autosave)
+   * Does not show loading indicators
+   * 
+   * IMPORTANT: This method must NEVER:
+   * - Set this.isSaving = true
+   * - Emit savingStateChange event
+   * - Show any loading indicators
+   * - Interfere with manual save operations
+   */
+  private saveNoteContentAndTitle(): void {
+    if (!this.note || !this.note.id) {
+      // Don't autosave if note doesn't exist yet
+      return;
+    }
+
+    // Don't autosave while loading a note
+    if (this.isLoadingNote) {
+      return;
+    }
+
+    // Don't autosave if a manual save is in progress
+    if (this.isSaving) {
+      return;
+    }
+
+    const content = this.contentControl.value || '';
+    const title = this.titleControl.value || 'Untitled';
+    
+    // Don't autosave if neither content nor title has changed
+    const contentChanged = this.note.content !== content;
+    const titleChanged = this.note.title !== title;
+    
+    if (!contentChanged && !titleChanged) {
+      return;
+    }
+    
+    // Prepare payload for updateNote API
+    const payload: any = {};
+    if (titleChanged) {
+      payload.title = title;
+    }
+    // Note: content is saved separately via saveNoteContent
+    
+    // Save title and content silently without showing loading indicators
+    // CRITICAL: Do NOT set isSaving or emit savingStateChange
+    const saveOperations: any[] = [];
+    
+    // Save title if changed
+    if (titleChanged) {
+      saveOperations.push(
+        this.notesService.updateNote(this.note.id, payload, true).pipe(
+          catchError(error => {
+            console.error('Autosave title failed:', error);
+            return of(null);
+          })
+        )
+      );
+    }
+    
+    // Save content if changed
+    if (contentChanged) {
+      saveOperations.push(
+        this.notesService.saveNoteContent(this.note.id, { content }, true).pipe(
+          catchError(error => {
+            console.error('Autosave content failed:', error);
+            return of(null);
+          })
+        )
+      );
+    }
+    
+    // Execute save operations in parallel
+    if (saveOperations.length > 0) {
+      forkJoin(saveOperations).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
+          // Update lastSaved timestamp silently (without emitting savingStateChange)
+          // This ensures autosave doesn't trigger any UI loading indicators
+          this.lastSaved = new Date();
+          // Update note in memory without emitting events
+          if (this.note) {
+            if (titleChanged) {
+              this.note.title = title;
+            }
+            if (contentChanged) {
+              this.note.content = content;
+            }
+          }
+          // CRITICAL: Do NOT emit savingStateChange or set isSaving
+          // Autosave must remain completely silent - no UI updates
+        },
+        error: () => {
+          // Silently handle errors - autosave failures shouldn't interrupt user
+          // Do NOT emit any events or update UI state
+        }
+      });
     }
   }
 
@@ -340,46 +711,94 @@ export class NoteEditorComponent implements OnInit, AfterViewInit, OnDestroy, On
   /**
    * Toggles the pinned state of the note
    */
-  async togglePin(): Promise<void> {
+  togglePin(): void {
     if (!this.note) return;
-    try {
-      await this.notesService.updateNote(this.note.id, { pinned: !this.note.pinned });
-      if (this.note) {
-        this.note.pinned = !this.note.pinned;
-      }
-    } catch (error) {
-      console.error('Failed to toggle pin:', error);
-    }
+    
+    const pinAction = this.note.pinned 
+      ? this.notesService.unpinNote(this.note.id)
+      : this.notesService.pinNote(this.note.id);
+
+    pinAction.pipe(
+      takeUntil(this.destroy$),
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Invalid response structure');
+        }
+        return this.mapBackendNoteToFrontend(backendResponse.note);
+      }),
+      catchError(error => {
+        console.error('Failed to toggle pin:', error);
+        return throwError(() => error);
+      })
+    ).subscribe({
+      next: (updatedNote) => {
+        this.note = updatedNote;
+        this.noteUpdated.emit(updatedNote);
+      },
+      error: () => {}
+    });
   }
 
   /**
    * Toggles the archived state of the note
    */
-  async toggleArchive(): Promise<void> {
+  toggleArchive(): void {
     if (!this.note) return;
-    try {
-      await this.notesService.updateNote(this.note.id, { archived: !this.note.archived });
-      if (this.note) {
-        this.note.archived = !this.note.archived;
-      }
-    } catch (error) {
-      console.error('Failed to toggle archive:', error);
-    }
+    
+    const archiveAction = this.note.archived
+      ? this.notesService.unarchiveNote(this.note.id)
+      : this.notesService.archiveNote(this.note.id);
+
+    archiveAction.pipe(
+      takeUntil(this.destroy$),
+      map((response: any) => {
+        const backendResponse = response?.data || response;
+        if (!backendResponse || !backendResponse.note) {
+          throw new Error('Invalid response structure');
+        }
+        return this.mapBackendNoteToFrontend(backendResponse.note);
+      }),
+      catchError(error => {
+        console.error('Failed to toggle archive:', error);
+        return throwError(() => error);
+      })
+    ).subscribe({
+      next: (updatedNote) => {
+        this.note = updatedNote;
+        this.noteUpdated.emit(updatedNote);
+      },
+      error: () => {}
+    });
   }
 
   /**
    * Deletes the current note after confirmation
    */
-  async deleteNote(): Promise<void> {
+  deleteNote(): void {
     if (!this.note) return;
     if (confirm('Are you sure you want to delete this note?')) {
-      try {
-        await this.notesService.deleteNote(this.note.id);
-        this.note = null;
-        this.form.reset();
-      } catch (error) {
-        console.error('Failed to delete note:', error);
-      }
+      this.notesService.deleteNote(this.note.id).pipe(
+        takeUntil(this.destroy$),
+        map((response: any) => {
+          const backendResponse = response?.data || response;
+          if (!backendResponse?.success) {
+            throw new Error(backendResponse?.msg || 'Failed to delete note');
+          }
+          return true;
+        }),
+        catchError(error => {
+          console.error('Failed to delete note:', error);
+          return throwError(() => error);
+        })
+      ).subscribe({
+        next: () => {
+          this.note = null;
+          this.form.reset();
+          this.noteUpdated.emit(this.note);
+        },
+        error: () => {}
+      });
     }
   }
 

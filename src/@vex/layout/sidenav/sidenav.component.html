@@ -64,18 +64,43 @@
 
   <div *ngIf="userVisible$ | async"
        class="vex-sidenav-user__container flex-none">
-    <div #userProfileMenuOriginRef
+    <div *ngIf="currentUser$ | async as user; else noUser"
+         #userProfileMenuOriginRef
          (click)="openProfileMenu(userProfileMenuOriginRef)"
          [class.vex-sidenav-user--open]="userMenuOpen$ | async"
          class="vex-sidenav-user flex items-center"
          matRipple
          matRippleColor="var(--sidenav-item-ripple-color)">
-      <img alt="User Avatar" class="vex-sidenav-user__image flex-none" src="assets/img/pic_rounded.svg"/>
+      <img [alt]="user.displayName || user.email || 'User Avatar'"
+           [src]="getAvatarUrl(user.avatarUrl)"
+           class="vex-sidenav-user__image flex-none"
+           (error)="onImageError($event)"/>
       <div class="vex-sidenav-user__content flex-auto">
-        <div class="vex-sidenav-user__title">David Smith</div>
-        <div class="vex-sidenav-user__subtitle">Product Manager</div>
+        <div class="vex-sidenav-user__title">
+          {{ user.displayName || user.email || 'User' }}
+        </div>
+        <div class="vex-sidenav-user__subtitle" *ngIf="user.displayName">
+          {{ user.email }}
+        </div>
       </div>
       <mat-icon class="vex-sidenav-user__dropdown-icon flex-none" svgIcon="mat:arrow_drop_down"></mat-icon>
     </div>
+    <ng-template #noUser>
+      <div #userProfileMenuOriginRef
+           (click)="openProfileMenu(userProfileMenuOriginRef)"
+           [class.vex-sidenav-user--open]="userMenuOpen$ | async"
+           class="vex-sidenav-user flex items-center"
+           matRipple
+           matRippleColor="var(--sidenav-item-ripple-color)">
+        <img alt="User Avatar"
+             class="vex-sidenav-user__image flex-none"
+             src="assets/img/pic_rounded.svg"/>
+        <div class="vex-sidenav-user__content flex-auto">
+          <div class="vex-sidenav-user__title">User</div>
+          <div class="vex-sidenav-user__subtitle"></div>
+        </div>
+        <mat-icon class="vex-sidenav-user__dropdown-icon flex-none" svgIcon="mat:arrow_drop_down"></mat-icon>
+      </div>
+    </ng-template>
   </div>
 </div>

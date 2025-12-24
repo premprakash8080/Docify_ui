@@ -1,0 +1,54 @@
+.edit-tags-content {
+  .selected-tags {
+    margin-bottom: 16px;
+    min-height: 40px;
+  }
+
+  .search-field {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .tags-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    padding: 8px 0;
+  }
+
+  .tag-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .tag-item:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  .tag-item.create-tag {
+    color: #1976d2;
+  }
+
+  .tag-item mat-checkbox {
+    margin-right: 12px;
+  }
+
+  .tag-name {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .add-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+

@@ -1,0 +1,118 @@
+.task-form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+
+  .dialog-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-color, #333);
+  }
+
+  .close-button {
+    color: var(--text-secondary, #666);
+    
+    &:hover {
+      background-color: var(--background-hover, #f5f5f5);
+    }
+  }
+}
+
+.task-dialog-content {
+  min-width: 700px;
+  max-width: 900px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  @media (max-width: 900px) {
+    min-width: 100%;
+  }
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.form-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  @media (max-width: 900px) {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .flex-auto {
+    flex: 1;
+  }
+}
+
+.additional-details {
+  margin-top: 8px;
+
+  .full-width {
+    margin-bottom: 8px;
+  }
+}
+
+.dialog-actions {
+  padding: 16px 24px;
+  gap: 8px;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+  margin: 0;
+}
+
+::ng-deep {
+  .mat-mdc-dialog-container {
+    padding: 0 !important;
+    margin: 24px !important;
+    max-width: calc(100vw - 48px) !important;
+    
+    .mat-mdc-dialog-content {
+      padding: 24px !important;
+      margin: 0 !important;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .mat-mdc-dialog-container {
+      .mat-mdc-dialog-content {
+        padding: 16px !important;
+      }
+    }
+  }
+
+  .mat-mdc-form-field {
+    width: 100%;
+  }
+
+  .mat-mdc-text-field-wrapper {
+    background-color: var(--background-foreground, #fff);
+  }
+
+  .mat-mdc-form-field-appearance-outline {
+    .mat-mdc-text-field-wrapper {
+      background-color: transparent;
+    }
+  }
+
+  // Ensure single scrollbar
+  .mat-mdc-dialog-container {
+    .mat-mdc-dialog-content {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+  }
+}

@@ -1,0 +1,91 @@
+.move-note-content {
+  .search-field {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .locations-list {
+    min-height: 200px;
+  }
+
+  .location-group {
+    margin-bottom: 8px;
+  }
+
+  .stack-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+  }
+
+  .stack-header:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+    border-radius: 4px;
+  }
+
+  .expand-icon {
+    transition: transform 0.2s;
+    margin-right: 8px;
+    color: rgba(0, 0, 0, 0.54);
+  }
+
+  .stack-header.expanded .expand-icon {
+    transform: rotate(90deg);
+  }
+
+  .stack-name {
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .notebooks-list {
+    padding-left: 32px;
+    margin-top: 4px;
+  }
+
+  .location-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    margin-bottom: 4px;
+  }
+
+  .location-item:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  .location-item.selected {
+    background-color: rgba(25, 118, 210, 0.08);
+  }
+
+  .location-item.current {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .check-icon {
+    margin-right: 12px;
+    color: #1976d2;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .location-name {
+    flex: 1;
+    font-size: 14px;
+  }
+
+  .loading {
+    padding: 40px;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+

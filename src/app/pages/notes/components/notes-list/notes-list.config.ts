@@ -7,6 +7,15 @@ import { Note } from '../../../../core/models';
 export const NOTES_LIST_DISPLAY_CONFIG: SideListDisplayConfig = {
   titleField: (note: Note) => note.title || 'Untitled',
   dateField: (note: Note) => note.updatedAt,
+  icon: (note: Note) => {
+    return note.pinned ? 'push_pin' : '';
+  },
+  iconColor: (note: Note) => {
+    return note.pinned ? 'var(--color-primary)' : '';
+  },
+  tagsField: (note: Note) => {
+    return note.tags || [];
+  },
   badges: [
     {
       label: '',
@@ -20,14 +29,47 @@ export const NOTES_LIST_DISPLAY_CONFIG: SideListDisplayConfig = {
       },
       color: () => 'var(--color-primary)',
       condition: (note: Note) => note.tasks && note.tasks.length > 0
+    } as SideListBadgeConfig,
+    {
+      label: '',
+      value: (note: Note) => {
+        const tagCount = (note as any).tag_count;
+        if (tagCount && tagCount > 0) {
+          return `${tagCount}`;
+        }
+        if (note.tags && note.tags.length > 0) {
+          return `${note.tags.length}`;
+        }
+        return '';
+      },
+      icon: (note: Note) => {
+        const tagCount = (note as any).tag_count;
+        if (tagCount && tagCount > 0) return 'label';
+        if (note.tags && note.tags.length > 0) return 'label';
+        return '';
+      },
+      color: () => 'var(--text-secondary)',
+      condition: (note: Note) => {
+        const tagCount = (note as any).tag_count;
+        return (tagCount && tagCount > 0) || (note.tags && note.tags.length > 0);
+      }
     } as SideListBadgeConfig
   ]
 };
 
 /**
- * Helper function to get notes list display config
+ * Helper function to get notes list display config with notebook highlighting
  */
-export function getNotesListDisplayConfig(): SideListDisplayConfig {
-  return NOTES_LIST_DISPLAY_CONFIG;
+export function getNotesListDisplayConfig(selectedNotebookId?: string | null): SideListDisplayConfig {
+  return {
+    ...NOTES_LIST_DISPLAY_CONFIG,
+    itemClass: (note: Note) => {
+      const classes: string[] = [];
+      if (selectedNotebookId && note.notebookId === selectedNotebookId) {
+        classes.push('notebook-highlighted');
+      }
+      return classes.join(' ');
+    }
+  };
 }
 

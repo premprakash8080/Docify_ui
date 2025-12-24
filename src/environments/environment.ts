@@ -4,7 +4,9 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:2018/api',
+  // apiUrl: 'http://localhost:2018/api',
+  apiUrl: 'http://77.37.62.160:3012/api',
+  autoSaveDelay: 30000 // 30 seconds in milliseconds
 };
 
 /*

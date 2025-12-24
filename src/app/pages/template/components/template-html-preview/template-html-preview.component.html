@@ -1,0 +1,5 @@
+<mat-card class="preview-card" *ngIf="content">
+  <h3>{{ title }}</h3>
+  <div class="preview-content" [innerHTML]="safeContent"></div>
+</mat-card>
+

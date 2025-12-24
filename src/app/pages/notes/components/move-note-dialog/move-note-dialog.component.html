@@ -1,0 +1,84 @@
+<vex-base-modal
+  [title]="'Move'"
+  [subtitle]="data.noteTitle"
+  [cancelLabel]="'Cancel'"
+  [doneLabel]="'Done'"
+  [doneDisabled]="!canDone()"
+  [customActions]="getCustomActions()"
+  (cancel)="onCancel()"
+  (done)="onDone()">
+  
+  <div class="move-note-content">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Find a location…</mat-label>
+      <input 
+        matInput 
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Find a location…"
+        autocomplete="off">
+      <mat-icon matPrefix svgIcon="mat:search"></mat-icon>
+    </mat-form-field>
+
+    <div class="locations-list" *ngIf="!isLoading">
+      <!-- Stacks -->
+      @for (stack of filteredStacks; track stack.id) {
+        <div class="location-group">
+          <div 
+            class="stack-header" 
+            (click)="toggleStack(stack.id)"
+            [class.expanded]="isStackExpanded(stack.id)">
+            <mat-icon class="expand-icon" svgIcon="mat:chevron_right"></mat-icon>
+            <span class="stack-name">{{ stack.name }}</span>
+          </div>
+          
+          @if (isStackExpanded(stack.id)) {
+            <div class="notebooks-list">
+              @for (notebook of stack.notebooks; track notebook.id) {
+                <div 
+                  class="location-item notebook-item"
+                  [class.selected]="isSelected(notebook.id, stack.id)"
+                  [class.current]="isCurrentLocation(notebook.id, stack.id)"
+                  (click)="selectNotebook(notebook.id, stack.id)">
+                  <mat-icon 
+                    class="check-icon" 
+                    svgIcon="mat:check"
+                    *ngIf="isSelected(notebook.id, stack.id)">
+                  </mat-icon>
+                  <span class="location-name">{{ notebook.name }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Unstacked Notebooks -->
+      @if (filteredNotebooks.length > 0) {
+        <div class="location-group">
+          <div class="notebooks-list">
+            @for (notebook of filteredNotebooks; track notebook.id) {
+              <div 
+                class="location-item notebook-item"
+                [class.selected]="isSelected(notebook.id, null)"
+                [class.current]="isCurrentLocation(notebook.id, null)"
+                (click)="selectNotebook(notebook.id, null)">
+                <mat-icon 
+                  class="check-icon" 
+                  svgIcon="mat:check"
+                  *ngIf="isSelected(notebook.id, null)">
+                </mat-icon>
+                <span class="location-name">{{ notebook.name }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="loading" *ngIf="isLoading">
+      Loading locations...
+    </div>
+  </div>
+</vex-base-modal>
+

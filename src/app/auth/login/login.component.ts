@@ -43,8 +43,8 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     // TODO: Remove default values before production
     this.form = this.fb.group({
-      email: ['dev@yopmail.com', [Validators.required, Validators.email]],
-      password: ['12345678', Validators.required]
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required]
     });
   }
 

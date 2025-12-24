@@ -1,0 +1,86 @@
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.back-btn {
+  color: var(--text-secondary);
+  
+  &:hover {
+    background-color: var(--background-hover);
+  }
+}
+
+.use-btn {
+  white-space: nowrap;
+  
+  mat-icon {
+    margin-right: 0.5rem;
+  }
+}
+
+// Ensure buttons use theme colors
+::ng-deep {
+  .use-btn.mat-mdc-flat-button.mat-primary {
+    --mdc-text-button-container-color: var(--color-primary-rgb);
+    --mdc-text-button-label-text-color: var(--color-primary-contrast-rgb);
+    
+    &:hover {
+      background-color: rgba(var(--color-primary), 0.9) !important;
+    }
+  }
+}
+
+
+/* Content */
+.overview-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+
+  mat-card {
+    padding: 20px;
+    border-radius: 16px;
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+
+    p {
+      color: #4b5563;
+      line-height: 1.6;
+    }
+  }
+}
+
+/* Details rows */
+.details-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  span:first-child {
+    color: #6b7280;
+  }
+
+  span:last-child {
+    font-weight: 500;
+  }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .overview-content {
+    grid-template-columns: 1fr;
+  }
+}

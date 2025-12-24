@@ -1,0 +1,53 @@
+// Header Actions
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  
+  .layout-toggle-group {
+    margin-right: 0;
+  }
+}
+
+// Header bar matching task-new design
+.bg-app-bar {
+  background-color: var(--background-app-bar, var(--background-card));
+  border-bottom: 1px solid var(--foreground-divider);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  height: 4rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  left: 0;
+  right: 0;
+}
+
+// Ensure buttons use theme colors
+::ng-deep {
+  .mat-mdc-mini-fab.mat-primary {
+    background-color: var(--color-primary-rgb) !important;
+    color: var(--color-primary-contrast-rgb) !important;
+    
+    &:hover {
+      background-color: rgba(var(--color-primary), 0.9) !important;
+    }
+  }
+
+  .mat-mdc-button.mat-primary {
+    --mdc-text-button-label-text-color: var(--color-primary-rgb);
+  }
+
+  .mat-mdc-raised-button.mat-primary {
+    --mdc-protected-button-container-color: var(--color-primary-rgb);
+    --mdc-protected-button-label-text-color: var(--color-primary-contrast-rgb);
+  }
+
+  .mat-mdc-flat-button.mat-primary {
+    --mdc-text-button-container-color: var(--color-primary-rgb);
+    --mdc-text-button-label-text-color: var(--color-primary-contrast-rgb);
+  }
+}
+

@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 import { CalendarRoutingModule } from './calendar-routing.module';
 import { CalendarComponent } from './calendar.component';
@@ -16,12 +17,17 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { ReactiveFormsModule } from '@angular/forms';
 import { PageLayoutModule } from '../../../../@vex/components/page-layout/page-layout.module';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 
 @NgModule({
   declarations: [CalendarComponent, CalendarEditComponent],
   imports: [
     CommonModule,
+    RouterModule,
     CalendarRoutingModule,
     AngularCalendarModule.forRoot({
       provide: DateAdapter,
@@ -33,11 +39,14 @@ import { MatNativeDateModule } from '@angular/material/core';
     ScrollbarModule,
     MatSnackBarModule,
     MatInputModule,
+    MatFormFieldModule,
     MatDatepickerModule,
     ReactiveFormsModule,
     PageLayoutModule,
     MatNativeDateModule,
-
+    MatChipsModule,
+    MatTooltipModule,
+    MatProgressSpinnerModule,
   ]
 })
 export class CalendarModule {

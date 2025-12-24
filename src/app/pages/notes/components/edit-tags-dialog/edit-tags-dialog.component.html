@@ -1,0 +1,57 @@
+<vex-base-modal
+  [title]="'Edit tags'"
+  [subtitle]="'Select tags to add or remove from a note'"
+  [cancelLabel]="'Cancel'"
+  [doneLabel]="'Save'"
+  (cancel)="onCancel()"
+  (done)="onSave()">
+  
+  <div class="edit-tags-content">
+    <div class="selected-tags" *ngIf="selectedTagNames.length > 0">
+      <mat-chip-set>
+        @for (tagName of selectedTagNames; track tagName) {
+          <mat-chip (removed)="removeTag(tagName)">
+            {{ tagName }}
+            <button matChipRemove>
+              <mat-icon svgIcon="mat:close"></mat-icon>
+            </button>
+          </mat-chip>
+        }
+      </mat-chip-set>
+    </div>
+
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Find tags or enter new tag name...</mat-label>
+      <input 
+        matInput 
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Find tags or enter new tag name..."
+        autocomplete="off">
+      <mat-icon matPrefix svgIcon="mat:search"></mat-icon>
+    </mat-form-field>
+
+    <div class="tags-list">
+      @if (shouldShowCreateOption()) {
+        <div class="tag-item create-tag" (click)="createAndToggleTag()">
+          <mat-checkbox [checked]="false" (click)="$event.stopPropagation()"></mat-checkbox>
+          <span class="tag-name">
+            <mat-icon svgIcon="mat:add" class="add-icon"></mat-icon>
+            Create "{{ searchQuery.trim() }}"
+          </span>
+        </div>
+      }
+      
+      @for (tag of filteredTags; track tag.id) {
+        <div class="tag-item" (click)="toggleTag(tag)">
+          <mat-checkbox 
+            [checked]="isTagSelected(tag.name)"
+            (click)="$event.stopPropagation(); toggleTag(tag)">
+          </mat-checkbox>
+          <span class="tag-name">{{ tag.name }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</vex-base-modal>
+
