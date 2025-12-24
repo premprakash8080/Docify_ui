@@ -89,35 +89,57 @@
         <mat-tab-group>
           <mat-tab label="Built-in Templates">
             <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              @for (template of filteredSystemTemplates; track template.id) {
-              <vex-template-cards
-                [template]="template"
-                (preview)="onPreview($event)"
-                (clone)="onClone($event)"
-                (delete)="onDelete($event)"
-              />
-              }
-              @empty {
-                <div class="col-span-full text-center py-8 text-secondary">
-                  No built-in templates found
+              @if (isLoading$ | async) {
+                <div class="col-span-full text-center py-8">
+                  <mat-icon class="animate-spin" svgIcon="mat:refresh"></mat-icon>
+                  <p class="mt-2 text-secondary">Loading templates...</p>
                 </div>
+              } @else if (error$ | async; as error) {
+                <div class="col-span-full text-center py-8 text-error">
+                  <mat-icon svgIcon="mat:error_outline"></mat-icon>
+                  <p class="mt-2">{{ error }}</p>
+                </div>
+              } @else if (filteredSystemTemplates$ | async; as templates) {
+                @for (template of templates; track trackByTemplateId($index, template)) {
+                  <vex-template-cards
+                    [template]="template"
+                    (preview)="onPreview($event)"
+                    (clone)="onClone($event)"
+                    (delete)="onDelete($event)"
+                  />
+                } @empty {
+                  <div class="col-span-full text-center py-8 text-secondary">
+                    No built-in templates found
+                  </div>
+                }
               }
             </div>
           </mat-tab>
           <mat-tab label="My Templates">
             <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              @for (template of filteredUserTemplates; track template.id) {
-                <vex-template-cards
-                  [template]="template"
-                  (preview)="onPreview($event)"
-                  (clone)="onClone($event)"
-                  (delete)="onDelete($event)"
-                />
-              }
-              @empty {
-                <div class="col-span-full text-center py-8 text-secondary">
-                  No templates found. Create your first template!
+              @if (isLoading$ | async) {
+                <div class="col-span-full text-center py-8">
+                  <mat-icon class="animate-spin" svgIcon="mat:refresh"></mat-icon>
+                  <p class="mt-2 text-secondary">Loading templates...</p>
                 </div>
+              } @else if (error$ | async; as error) {
+                <div class="col-span-full text-center py-8 text-error">
+                  <mat-icon svgIcon="mat:error_outline"></mat-icon>
+                  <p class="mt-2">{{ error }}</p>
+                </div>
+              } @else if (filteredUserTemplates$ | async; as templates) {
+                @for (template of templates; track trackByTemplateId($index, template)) {
+                  <vex-template-cards
+                    [template]="template"
+                    (preview)="onPreview($event)"
+                    (clone)="onClone($event)"
+                    (delete)="onDelete($event)"
+                  />
+                } @empty {
+                  <div class="col-span-full text-center py-8 text-secondary">
+                    No templates found. Create your first template!
+                  </div>
+                }
               }
             </div>
           </mat-tab>
